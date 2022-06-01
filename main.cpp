@@ -1,8 +1,8 @@
-#include "headers/shader.h"
-#include "headers/mesh.h"
-#include "headers/model.h"
+#include "headers/shader.hpp"
+#include "headers/mesh.hpp"
+#include "headers/model.hpp"
 #include "headers/libs/stb_image.h"
-#include "headers/camera.h"
+#include "headers/camera.hpp"
 //#include "headers/animator.h"
 #include <GLFW/glfw3.h>
 

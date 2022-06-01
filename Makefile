@@ -1,11 +1,10 @@
-default:
-	all
+default: all compile
 
 clean:
 	rm bin/*
 	rm load
 
-all: stbi glad shader mesh model main compile
+all: stbi glad shader mesh model main
 
 compile:
 	g++ bin/*.o -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lassimp -g -o load

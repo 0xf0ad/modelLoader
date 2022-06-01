@@ -29,6 +29,13 @@ if you installed it and want to uninstall it you can do that by executing
 '''bash
 sudo rm /usr/bin/load
 '''
+### dependencies
+
+the repo is dependent on some librarys you should install from your package manager,those librarys are GLFW GLM Assimp on arch linux you can execute the folling command to install them
+
+'''bash
+sudo pacman -S glfw glm assimp
+'''
 
 ## using the tool
 you can use the tool after clonning and compiling the source code by executing
@@ -46,6 +53,7 @@ load [the path of the 3D model file] [the path to the animation if there is any]
 '''
 
 (for now the animation is not yat implemented so you can only view 3D models at T-Pose)
+(dont try to run the program whitout running a display server, it wont work, I tried it :) )
 
 ## keybinding
 

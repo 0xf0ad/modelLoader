@@ -1,4 +1,4 @@
-#include "headers/model.h"
+#include "headers/model.hpp"
 
 void parseMeshes(const aiScene *scene);
 unsigned int TextureFromFile(const char *path, const std::string &directory);
