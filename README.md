@@ -118,3 +118,11 @@ you can change the binding by modifying the souce code (suckless phelo) by modif
 * Modo Model               ( .lxo )
 * CharacterStudio Motion   ( .csm )
 * Stanford Ply             ( .ply )
+
+## library used
+
+* glad : http://glad.dav1d.de
+* glfw : https://www.glfw.org/
+* glm : https://glm.g-truc.net/
+* stb_image : https://github.com/nothings/stb
+* assimp : https://github.com/assimp/assimp
