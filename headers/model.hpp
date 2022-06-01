@@ -20,10 +20,10 @@ struct vertexBoneData{
 	}
 
 	void addBoneData(uint BoneID, float Weight){
-		for(unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(boneIDs); i++){
-			if(!weights[i]){
+		for(unsigned int i = 0; i < (sizeof(boneIDs)/sizeof(uint)); i++){
+			if(!Weights[i]){
 				boneIDs[i] = BoneID;
-				weights[i] = Weight;
+				Weights[i] = Weight;
 				std::cout<<"bone "<<BoneID<<" weight "<<Weight<<" index "<<i<<'\n';
 				return;
 			}

@@ -10,6 +10,21 @@ std::vector<vertexBoneData> vertexToBone;
 std::vector<int>            meshBaseVertex;
 std::map<std::string, uint> boneNameToIndexMap;
 
+int getBoneID(const aiBone* bone){
+    
+	int boneID = 0;
+    std::string boneName(bone->mName.C_Str());
+
+    if (boneNameToIndexMap.find(boneName) == boneNameToIndexMap.end()) {
+        // Allocate an index for a new bone
+        boneID = (int)boneNameToIndexMap.size();
+        boneNameToIndexMap[boneName] = boneID;
+    }else{
+        boneID = boneNameToIndexMap[boneName];
+    }
+
+    return boneID;
+}
 
 void Model::Draw(Shader &shader){
     for(unsigned int i = 0; i < meshes.size(); i++)
@@ -36,26 +51,37 @@ void Model::parseMeshes(const aiScene *scene){
 
 	int Tvertices = 0, Tindices = 0, Tbones = 0;
 
-	for (unsigned int i = 0; i < scene->mNumMeshes; i++){
-		const aiMesh* mesh = scene->mMeshes[i];
+	meshBaseVertex.resize(scene->mNumMeshes);
+
+	for (unsigned int k = 0; k < scene->mNumMeshes; k++){
+		const aiMesh* mesh = scene->mMeshes[k];
 		int Nvertices = mesh->mNumVertices;
 		int Nindices = mesh->mNumFaces * 3;
 		int Nbones = mesh->mNumBones;
+		meshBaseVertex[k] = Tvertices;
 		
-		std::cout<<"Mesh "<<i<<' '<<mesh->mName.C_Str()<<" : vertices "<<Nvertices<<" indices "<<Nindices<<" bones "<<Nbones<<'\n';
+		std::cout<<"Mesh "<<k<<' '<<mesh->mName.C_Str()<<" : vertices "<<Nvertices<<" indices "<<Nindices<<" bones "<<Nbones<<'\n';
 		
 		Tvertices += Nvertices;
 		Tindices += Nindices;
 		Tbones += Nbones;
+		vertexToBone.resize(Tvertices);
 
 		if(mesh->HasBones()){
 			for(unsigned int i = 0; i < mesh->mNumBones; i++){
 				std::cout<<"\tBoner : "<<i<<' '<<mesh->mBones[i]->mName.C_Str()<<" ,vertices effected by that bone : "<<mesh->mBones[i]->mNumWeights<<'\n';
+				int boneID = getBoneID(mesh->mBones[i]);
+				std::cout<<"bone id : "<<boneID<<'\n';
+				
 				for(unsigned int j = 0; j < mesh->mBones[i]->mNumWeights; j++){
 					if(!j){
 						std::cout<<'\n';
 					}
+					unsigned int globalVertexID = meshBaseVertex[k] + mesh->mBones[i]->mWeights[j].mVertexId;
 					std::cout<<'\t'<<j<<" : vertex id "<<mesh->mBones[i]->mWeights[j].mVertexId<<" weight : "<<mesh->mBones[i]->mWeights[j].mWeight<<'\n';
+
+					assert(globalVertexID < vertexToBone.size());
+					vertexToBone[globalVertexID].addBoneData(boneID, mesh->mBones[i]->mWeights[j].mWeight);
 				}
 				std::cout<<'\n';
 			}
