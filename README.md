@@ -61,7 +61,7 @@ load [the path of the 3D model file] [the path to the animation if there is any]
 -------------
 
 |Key                   |action or event            |
-|______________________|___________________________|
+|----------------------|---------------------------|
 |holding MOUSE1        |rotate the camera          |
 |W                     |move Forward               |
 |A                     |move Righ                  |
