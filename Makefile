@@ -1,8 +1,8 @@
 default: all compile
 
 clean:
-	rm bin/*
-	rm load
+	rm bin/* || echo "all the object files are deleted already"
+	rm load  || echo "the binary is deleted already"
 
 all: stbi glad shader mesh model main
 
