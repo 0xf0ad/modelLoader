@@ -1,12 +1,14 @@
 #include "headers/model.hpp"
 
-void parseMeshes(const aiScene *scene);
-unsigned int TextureFromFile(const char *path, const std::string &directory);
-
 // model data
 std::vector<Texture> textures_loaded;
 std::vector<Mesh>    meshes;
 std::string          directory;
+
+//bone data
+std::vector<vertexBoneData> vertexToBone;
+std::vector<int>            meshBaseVertex;
+std::map<std::string, uint> boneNameToIndexMap;
 
 
 void Model::Draw(Shader &shader){
@@ -29,7 +31,7 @@ void Model::loadModel(std::string path){
 	parseMeshes(scene);
 }
 
-void parseMeshes(const aiScene *scene){
+void Model::parseMeshes(const aiScene *scene){
 	std::cout<<"parsing "<<scene->mNumMeshes<<" meshes\n\n";
 
 	int Tvertices = 0, Tindices = 0, Tbones = 0;
@@ -49,14 +51,13 @@ void parseMeshes(const aiScene *scene){
 		if(mesh->HasBones()){
 			for(unsigned int i = 0; i < mesh->mNumBones; i++){
 				std::cout<<"\tBoner : "<<i<<' '<<mesh->mBones[i]->mName.C_Str()<<" ,vertices effected by that bone : "<<mesh->mBones[i]->mNumWeights<<'\n';
-
 				for(unsigned int j = 0; j < mesh->mBones[i]->mNumWeights; j++){
 					if(!j){
 						std::cout<<'\n';
 					}
 					std::cout<<'\t'<<j<<" : vertex id "<<mesh->mBones[i]->mWeights[j].mVertexId<<" weight : "<<mesh->mBones[i]->mWeights[j].mWeight<<'\n';
 				}
-				std::cout<<std::endl;
+				std::cout<<'\n';
 			}
 		}
 	}
@@ -176,7 +177,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType 
     return textures;
 }
 
-unsigned int TextureFromFile(const char *path, const std::string &directory){
+unsigned int Model::TextureFromFile(const char *path, const std::string &directory){
     std::string filename = std::string(path);
     filename = directory + '/' + filename;
 
