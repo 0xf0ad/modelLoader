@@ -1,5 +1,4 @@
 #include "headers/shader.hpp"
-#include "headers/mesh.hpp"
 #include "headers/model.hpp"
 #include "headers/libs/stb_image.h"
 #include "headers/camera.hpp"
@@ -10,9 +9,9 @@
 float deltaTime = 0.0f,	lastFrame = 0.0f;
 
 // settings
-#define WIN_WIDTH 800
+#define WIN_WIDTH  800
 #define WIN_HEIGHT 600
-#define FOV 45.0f
+#define FOV        45.0f
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -175,7 +174,7 @@ void processInput(GLFWwindow *window){
 		glCullFace(GL_FRONT);
 	if(glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
 		glCullFace(GL_BACK);
-	if(glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){}
+	if(glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){}
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

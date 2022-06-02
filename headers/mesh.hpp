@@ -4,7 +4,6 @@
 
 #include "libs/glad.h"
 #include "shader.hpp"
-
 #include <vector>
 
 #define MAX_BONE_INFLUENCE 4
@@ -31,8 +30,6 @@ struct Texture {
 	std::string type;
 	std::string path;
 };
-
-
 
 class Mesh{
 public:

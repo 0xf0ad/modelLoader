@@ -13,7 +13,7 @@ clean:
 	rm -d bin || echo "the bin directory is alredy deleted"
 	rm load   || echo "the binary is deleted already"
 
-all:stbi glad shader mesh model main
+all:stbi glad shader mesh bone model main
 
 compile:
 	$(CXX) bin/*.o $(LDFLAGS) -o load
@@ -35,6 +35,9 @@ model:bin
 
 mesh:bin
 	$(CXX) mesh.cpp $(CFLAGS) -o bin/mesh.o
+
+bone:bin
+	$(CXX) bone.cpp $(CFLAGS) -o bin/bone.o
 
 install:all
 	mv load /usr/bin/

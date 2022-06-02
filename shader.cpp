@@ -3,10 +3,8 @@
 Shader::Shader(const char* vertexPath, const char* fragmentPath){
 	// 1 - retrieve the vertex and fragment source code from filepath
 	// --------------------------------------------------------------
-	std::string vertexCode;
-	std::string fragmentCode;
-	std::ifstream vShaderFile;
-	std::ifstream fShaderFile;
+	std::string vertexCode, fragmentCode;
+	std::ifstream vShaderFile, fShaderFile;
 	//ensure ifstream objects can throw exceptions:
 	vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
 	fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
@@ -43,7 +41,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 	glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
 	if(!success){
 		glGetShaderInfoLog(vertex, 512, NULL, infoLog);
-		std::cout << "ERROR : failed to compile the vertex shader : " << infoLog << '\n';
+		std::cout << "ERROR : failed to compile the vertex shader : \n" <<infoLog<<'\n';
 	}
 	//compile the fragment shader
 	fragment = glCreateShader(GL_FRAGMENT_SHADER);
@@ -53,7 +51,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 	glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
 	if(!success){
 		glGetShaderInfoLog(fragment, 512, NULL, infoLog);
-		std::cout << "ERROR : failed to compile the vertex shader : " << infoLog << '\n';
+		std::cout << "ERROR : failed to compile the vertex shader : \n" <<infoLog<<'\n';
 	}
 	//shader Program
 	//attach the shaders to the program ID
@@ -65,7 +63,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 	glGetProgramiv(ID, GL_LINK_STATUS, &success);
 	if(!success){
 		glGetProgramInfoLog(ID, 512, NULL, infoLog);
-		std::cout << "ERROR : failed to link the shaders to the program : " << infoLog << '\n';
+		std::cout << "ERROR : failed to link the shaders to the program : \n" <<infoLog<<'\n';
 	}
 	//delete shader after linking them
 	glDeleteShader(vertex);

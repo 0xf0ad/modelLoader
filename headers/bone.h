@@ -4,10 +4,12 @@
 #include <assimp/scene.h>
 #include <list>
 #include <glm/glm.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
-#include "libs/assimp_glm_helpers.h"
+#include <map>
+#include "mesh.hpp"
+#include "libs/assimp_glm_helpers.hpp"
 
+#if false
 struct KeyPosition{
     glm::vec3 position;
     float timeStamp;
@@ -197,3 +199,33 @@ private:
     }
 	
 };
+#endif
+
+struct vertexBoneData{
+	unsigned int boneIDs[MAX_BONE_INFLUENCE] = {0};
+	float Weights[MAX_BONE_INFLUENCE] = {0.0f};
+
+	void addBoneData(uint BoneID, float Weight){
+		for(unsigned int i = 0; i < (sizeof(boneIDs)/sizeof(uint)); i++){
+			if(!Weights[i]){
+				boneIDs[i] = BoneID;
+				Weights[i] = Weight;
+				std::cout<<"bone "<<BoneID<<" weight "<<Weight<<" index "<<i<<'\n';
+				return;
+			}
+		}
+		//we should never get here
+		assert(false);
+	}
+};
+
+
+
+
+/*int getBoneID(const aiBone* bone);
+
+void loadSingleBone(unsigned int meshIndex, const aiBone* pBone);
+
+void loadBones(int mesh_index, const aiMesh* pMesh);*/
+	
+void processBone(const aiScene *scene);

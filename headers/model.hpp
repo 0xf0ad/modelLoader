@@ -1,7 +1,7 @@
 #pragma once
 
 #include "libs/stb_image.h"
-#include "mesh.hpp"
+#include "bone.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -9,29 +9,6 @@
 
 #include <map>
 #include <assert.h>
-
-#define MAX_NUMBER_BONES_PER_VERTEX 4 
-
-struct vertexBoneData{
-	unsigned int boneIDs[MAX_NUMBER_BONES_PER_VERTEX] = {0};
-	float Weights[MAX_NUMBER_BONES_PER_VERTEX] = {0.0f};
-
-	vertexBoneData(){
-	}
-
-	void addBoneData(uint BoneID, float Weight){
-		for(unsigned int i = 0; i < (sizeof(boneIDs)/sizeof(uint)); i++){
-			if(!Weights[i]){
-				boneIDs[i] = BoneID;
-				Weights[i] = Weight;
-				std::cout<<"bone "<<BoneID<<" weight "<<Weight<<" index "<<i<<'\n';
-				return;
-			}
-		}
-		//we should never get here
-		assert(false);
-	}
-};
 
 class Model {
 public:
