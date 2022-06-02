@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Wed Jun  1 17:24:36 2022
+# Make data base, printed on Thu Jun  2 09:11:20 2022
 
 # Variables
 
@@ -72,6 +72,7 @@ MFLAGS = -pqrR
 MAKEFILE_LIST := Makefile
 # automatic
 @F = $(notdir $@)
+ 
 # environment
 LC_COLLATE = C
 # environment
@@ -88,7 +89,6 @@ XDG_SESSION_TYPE = tty
 CHROME_DESKTOP = code-oss.desktop
 # environment
 DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
- 
 # automatic
 <D = $(patsubst %/,%,$(dir $<))
 # environment
@@ -144,13 +144,13 @@ USER = heacker
 # default
 MAKE_VERSION := 4.3
 # makefile (from 'Makefile', line 4)
-LDFLAGS = -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lassimp -g -o
+LDFLAGS = -lglfw -lGL -lX11 -lpthread -lXrandr -lXi -ldl -lassimp -g
 # environment
 _ = /usr/bin/make
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # makefile (from 'Makefile', line 3)
-CFLAGS = -c -g -Wall -o
+CFLAGS = -c -g -Wall
 # environment
 XDG_SESSION_CLASS = user
 # environment
@@ -182,7 +182,7 @@ CXX = g++
 # makefile (from 'Makefile', line 2)
 CC = gcc
 # variable set hash-table stats:
-# Load=85/1024=8%, Rehash=0, Collisions=3/118=3%
+# Load=85/1024=8%, Rehash=0, Collisions=3/120=2%
 
 # Pattern-specific Variable Values
 
@@ -190,9 +190,9 @@ CC = gcc
 
 # Directories
 
-# . (device 2051, inode 1447545): 16 files, no impossibilities.
+# . (device 2051, inode 1447545): 19 files, no impossibilities.
 
-# 16 files, no impossibilities in 1 directories.
+# 19 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -205,7 +205,7 @@ compile:
 #  Modification time never checked.
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 19):
-	$(CXX) bin/*.o $(LDFLAGS) load
+	$(CXX) bin/*.o $(LDFLAGS) -o load
 
 default: all compile
 #  Implicit rule search has not been done.
@@ -215,7 +215,7 @@ default: all compile
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-06-01 17:21:44.954793415
+#  Last modified 2022-06-02 09:03:26.20984152
 #  File has been updated.
 #  Successfully updated.
 
@@ -224,7 +224,7 @@ glad: bin
 #  Modification time never checked.
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 25):
-	$(CC) glad.c $(CFLAGS) bin/glad.o
+	$(CC) glad.c $(CFLAGS) -o bin/glad.o
 
 clean:
 #  Implicit rule search has not been done.
@@ -237,13 +237,31 @@ clean:
 
 stbi: bin
 #  Implicit rule search has not been done.
+#  Implicit/static pattern stem: ''
 #  File does not exist.
 #  File has been updated.
 #  Needs to be updated (-q is set).
+# automatic
+# @ := stbi
+# automatic
+# * := 
+ 
+# automatic
+# < := bin
+# automatic
+# + := bin
+# automatic
+# % := 
+# automatic
+# ^ := bin
+# automatic
+# ? := bin
+# automatic
+# | := 
 # variable set hash-table stats:
-# Load=0/32=0%, Rehash=0, Collisions=0/3=0%
+# Load=8/32=25%, Rehash=0, Collisions=2/13=15%
 #  recipe to execute (from 'Makefile', line 31):
-	$(CC) stb_image.c $(CFLAGS) bin/stb_image.o
+	$(CC) stb_image.c $(CFLAGS) -o bin/stb_image.o
 
 # Not a target:
 .DEFAULT:
@@ -258,54 +276,34 @@ all: stbi glad shader mesh model main
 #  File has been updated.
 #  Needs to be updated (-q is set).
 # variable set hash-table stats:
-# Load=0/32=0%, Rehash=0, Collisions=0/3=0%
+# Load=0/32=0%, Rehash=0, Collisions=0/5=0%
 
 shader: bin
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 28):
-	$(CXX) shader.cpp $(CFLAGS) bin/shader.o
+	$(CXX) shader.cpp $(CFLAGS) -o bin/shader.o
 
 main: bin
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 22):
-	$(CXX) main.cpp $(CFLAGS) bin/main.o
+	$(CXX) main.cpp $(CFLAGS) -o bin/main.o
 
 model: bin
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 34):
-	$(CXX) model.cpp $(CFLAGS) bin/model.o
+	$(CXX) model.cpp $(CFLAGS) -o bin/model.o
 
 bin:
 #  Implicit rule search has not been done.
-#  Implicit/static pattern stem: ''
-#  File does not exist.
- 
+#  Last modified 2022-06-02 09:02:13.269843686
 #  File has been updated.
-#  Needs to be updated (-q is set).
-# automatic
-# @ := bin
-# automatic
-# * := 
-# automatic
-# < := 
-# automatic
-# + := 
-# automatic
-# % := 
-# automatic
-# ^ := 
-# automatic
-# ? := 
-# automatic
-# | := 
-# variable set hash-table stats:
-# Load=8/32=25%, Rehash=0, Collisions=1/11=9%
+#  Successfully updated.
 #  recipe to execute (from 'Makefile', line 9):
 	find bin -quit || mkdir bin
 
@@ -314,7 +312,7 @@ mesh: bin
 #  Modification time never checked.
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 37):
-	$(CXX) mesh.cpp $(CFLAGS) bin/mesh.o
+	$(CXX) mesh.cpp $(CFLAGS) -o bin/mesh.o
 
 install: all
 #  Implicit rule search has not been done.
@@ -338,12 +336,12 @@ install: all
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 32 / storage = 257 B / avg = 8 B
-# current buf: size = 8162 B / used = 257 B / count = 32 / avg = 8 B
+# strcache buffers: 1 (0) / strings = 34 / storage = 266 B / avg = 7 B
+# current buf: size = 8162 B / used = 266 B / count = 34 / avg = 7 B
 
-# strcache performance: lookups = 65 / hit rate = 50%
+# strcache performance: lookups = 68 / hit rate = 50%
 # hash-table stats:
-# Load=32/8192=0%, Rehash=0, Collisions=0/65=0%
-# Finished Make data base on Wed Jun  1 17:24:36 2022
+# Load=34/8192=0%, Rehash=0, Collisions=0/68=0%
+# Finished Make data base on Thu Jun  2 09:11:20 2022
 
  
