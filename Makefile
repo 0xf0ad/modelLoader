@@ -38,6 +38,8 @@ mesh:bin
 
 bone:bin
 	$(CXX) bone.cpp $(CFLAGS) -o bin/bone.o
+realise:
+	$(CXX) glad.c stb_image.c shader.cpp mesh.cpp model.cpp bone.cpp main.cpp $(LDFLAGS)0 -o load3
 
 install:all
 	mv load /usr/bin/

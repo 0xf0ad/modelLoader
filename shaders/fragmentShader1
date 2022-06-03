@@ -2,25 +2,14 @@
 
 out vec4 FragColor;
 
-in vec2 TexCoords;
-in vec3 Normals;
-in vec3 Pos;
-flat in ivec4 boneIDs;
-in vec4 weights;
+in vec3 Position;
+in vec3 Normal;
+in vec2 TexCoord;
+flat in ivec4 BoneIDs;
+in vec4 Weights;
 
 uniform sampler2D texture_diffuse1;
-uniform int gDisplayBoneIndex;
 
 void main(){
-	for (int i = 0 ; i < 4 ; i++) {
-    if (boneIDs[i] == gDisplayBoneIndex) {
-        if (Weights[i] >= 0.7) {
-           FragColor = vec4(1.0, 0.0, 0.0, 0.0) * Weights[i];
-        } else if (Weights[i] >= 0.4 && Weights0[i] <= 0.6) {
-           FragColor = vec4(0.0, 1.0, 0.0, 0.0) * Weights[i];
-        } else if (Weights[i] >= 0.1) {
-           FragColor = vec4(1.0, 1.0, 0.0, 0.0) * Weights[i];
-    	}
-	}
-	//FragColor = texture(texture_diffuse1, TexCoords);
+	FragColor = texture(texture_diffuse1, TexCoord);
 }

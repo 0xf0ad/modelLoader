@@ -22,7 +22,7 @@ bool firstMouse = true;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow *window);
-
+int displayBoneIndex = 0;
 int main(int argc, char** argv){
 	
 	//check for number of arguments
@@ -51,9 +51,9 @@ int main(int argc, char** argv){
 
 	// glfw window creation
 	// --------------------
-	GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "LearnOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "wa7d_rajl_l9ito_f_QUAKE", NULL, NULL);
 	if (!window){
-		std::cout << "Failed to create GLFW window" << std::endl;
+		std::cout << "Failed to create GLFW window\n";
 		glfwTerminate();
 		return -1;
 	}
@@ -81,7 +81,7 @@ int main(int argc, char** argv){
 
 	// build and compile shaders
 	// -------------------------
-	Shader ourShader("./shaders/vertexShader", "./shaders/fragmentShader");
+	Shader ourShader("./shaders/vertexShader1", "./shaders/fragmentShader1");
 
 	// load models
 	// -----------
@@ -117,6 +117,10 @@ int main(int argc, char** argv){
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view", view);
 
+		if(glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){
+			displayBoneIndex++;
+		}
+		ourShader.setInt("gDisplayBoneIndex", displayBoneIndex);
 		/*auto transforms = animator.GetFinalBoneMatrices();
 		for (int i = 0; i < transforms.size(); ++i)
 			ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
@@ -133,7 +137,6 @@ int main(int argc, char** argv){
 		// -------------------------------------------------------------------------------
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-		//std::cout<<"beep3\n";
 	}
 
 	// terminate, clearing all previously allocated GLFW resources.
@@ -174,7 +177,6 @@ void processInput(GLFWwindow *window){
 		glCullFace(GL_FRONT);
 	if(glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
 		glCullFace(GL_BACK);
-	if(glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){}
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

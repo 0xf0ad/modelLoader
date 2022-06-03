@@ -51,7 +51,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 	glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
 	if(!success){
 		glGetShaderInfoLog(fragment, 512, NULL, infoLog);
-		std::cout << "ERROR : failed to compile the vertex shader : \n" <<infoLog<<'\n';
+		std::cout << "ERROR : failed to compile the fragment shader : \n" <<infoLog<<'\n';
 	}
 	//shader Program
 	//attach the shaders to the program ID

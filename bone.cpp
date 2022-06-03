@@ -1,7 +1,7 @@
 #include "headers/bone.h"
 
 //bone data
-std::vector<vertexBoneData> vertexToBone;
+std::vector<Vertex>         vertexToBone;
 std::vector<int>            meshBaseVertex;
 std::map<std::string, uint> boneNameToIndexMap;
 
@@ -19,29 +19,45 @@ int getBoneID(const aiBone* bone){
 	return boneID;
 }
 
-void loadSingleBone(unsigned int meshIndex, const aiBone* pBone){
-
-	std::cout<<"\tBone : "<<' '<<pBone->mName.C_Str()<<" ,vertices effected by that bone : "<<pBone->mNumWeights<<'\n';
-
-	int bone_id = getBoneID(pBone);
-	std::cout<<"bone id : "<<bone_id<<'\n';
-
-	for (unsigned int i = 0 ; i < pBone->mNumWeights ; i++) {
-		if (i == 0) std::cout<<'\n';
-		const aiVertexWeight& vw = pBone->mWeights[i];
-
-		uint globalVertexID = meshBaseVertex[meshIndex] + vw.mVertexId;
-		std::cout<<'\t'<<i<<" : vertex id "<<vw.mVertexId<<" weight : "<<vw.mWeight<<'\t';
-
-		assert(globalVertexID < vertexToBone.size());
-		vertexToBone[globalVertexID].addBoneData(bone_id, vw.mWeight);
+void addBoneData(uint BoneID, float Weight,uint globalVertexID){
+	for(unsigned int i = 0; i < (sizeof(vertexToBone[globalVertexID].boneIDs)/sizeof(uint)); i++){
+		if(!vertexToBone[globalVertexID].Weights[i]){
+			vertexToBone[globalVertexID].boneIDs[i] = BoneID;
+			vertexToBone[globalVertexID].Weights[i] = Weight;
+			std::cout<<"\t\tbone "<<BoneID<<" weight "<<Weight<<" index "<<i<<'\n';
+			return;
+		}
 	}
-std::cout<<'\n';
+	//we should never get here
+	assert(false);
 }
 
-void loadBones(int mesh_index, const aiMesh* pMesh){
-	for (unsigned int i = 0 ; i < pMesh->mNumBones ; i++) {
-		loadSingleBone(mesh_index, pMesh->mBones[i]);
+void loadSingleBone(unsigned int meshIndex, const aiBone* bone){
+
+	std::cout<<"\tBone : "<<' '<<bone->mName.C_Str()<<" ,vertices effected by that bone : "<<bone->mNumWeights<<'\n';
+
+	int boneID = getBoneID(bone);
+	std::cout<<"bone id : "<<boneID<<'\n';
+
+	for (unsigned int i = 0; i < bone->mNumWeights; i++) {
+		if (i == 0) std::cout<<'\n';
+		const aiVertexWeight& vw = bone->mWeights[i];
+
+		uint globalVertexID = meshBaseVertex[meshIndex] + vw.mVertexId;
+		std::cout<<'\t'<<i<<" : vertex id "<<vw.mVertexId<<" weight : "<<vw.mWeight<<"\n";
+
+		assert(globalVertexID < vertexToBone.size());
+		addBoneData(boneID, vw.mWeight, globalVertexID);
+	}
+	std::cout<<'\n';
+}
+
+
+
+
+void loadBones(int meshIndex, const aiMesh* mesh){
+	for (unsigned int i = 0 ; i < mesh->mNumBones ; i++) {
+		loadSingleBone(meshIndex, mesh->mBones[i]);
 	}
 }
 	
