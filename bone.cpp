@@ -6,7 +6,7 @@ std::vector<Vertex>         vertexToBone;
 std::vector<int>            meshBaseVertex;
 std::map<std::string, uint> boneNameToIndexMap;
 unsigned char tabsNNNum;
-unsigned char tabNNum(unsigned char tabs){
+void tabNNum(unsigned char tabs){
 	tabsNNNum = tabs;
 }
 

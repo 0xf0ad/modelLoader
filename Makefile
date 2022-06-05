@@ -46,8 +46,8 @@ imgui:bin
 	$(CXX) $(IMGUIDIR)/imgui_tables.cpp $(CFLAGS) -o bin/imgui_tables.o
 	$(CXX) $(IMGUIDIR)/imgui_widgets.cpp $(CFLAGS) -o bin/imgui_widgets.o
 	$(CXX) $(IMGUIDIR)/imgui_draw.cpp $(CFLAGS) -o bin/imgui_draw.o
-	$(CXX) $(IMGUIDIR)/backends/imgui_impl_glfw.cpp $(CFLAGS) -I$(IMGUIDIR) -I$(IMGUIDIR)/backends -o bin/imgui_impl_glfw.o
-	$(CXX) $(IMGUIDIR)/backends/imgui_impl_opengl3.cpp $(CFLAGS) -I$(IMGUIDIR) -I$(IMGUIDIR)/backends -o bin/imgui_impl_opengl3.o
+	$(CXX) $(IMGUIDIR)/backends/imgui_impl_glfw.cpp $(CFLAGS) -I$(IMGUIDIR) -o bin/imgui_impl_glfw.o
+	$(CXX) $(IMGUIDIR)/backends/imgui_impl_opengl3.cpp $(CFLAGS) -I$(IMGUIDIR) -o bin/imgui_impl_opengl3.o
 
 realise:
 	$(CXX) glad.c stb_image.c shader.cpp mesh.cpp model.cpp bone.cpp main.cpp $(LDFLAGS)0 -o load3

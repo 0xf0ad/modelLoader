@@ -201,7 +201,7 @@ private:
 };
 #endif*/
 
-unsigned char tabNNum(unsigned char tabs);
+void tabNNum(unsigned char tabs);
 
 void clearBoneData(Vertex& vertex);
 
