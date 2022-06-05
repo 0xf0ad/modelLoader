@@ -1,0 +1,10 @@
+TODO : load Animation
+TODO : make a GUI
+TODO : add a selection menu to select the animation played
+TODO : optimize things
+TODO : select the model loaded from GUI or as argument if runned from therminal
+TODO : release compiled binary for windows OS
+TODO : maybe use CMake insteade of regulare make to support windows users
+TODO : add a TODO list
+TODO : add telemetry and back doors to windows binary so i can spy on them ans sell there DATA
+  

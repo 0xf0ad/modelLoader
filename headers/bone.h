@@ -201,9 +201,12 @@ private:
 };
 #endif*/
 
-/*struct vertexBoneData{
-	unsigned int boneIDs[MAX_BONE_INFLUENCE] = {0};
-	float Weights[MAX_BONE_INFLUENCE] = {0.0f};
-};*/
+unsigned char tabNNum(unsigned char tabs);
+
+void clearBoneData(Vertex& vertex);
+
+void printTabs(unsigned char i);
+
+void print_assimp_matrix(const aiMatrix4x4& m);
 
 void processBone(const aiScene *scene);

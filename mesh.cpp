@@ -50,7 +50,7 @@ void Mesh::setupMesh(){
 	glGenVertexArrays(true, &VAO);
 	glGenBuffers(true, &VBO);
 	glGenBuffers(true, &EBO);
-  
+
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
