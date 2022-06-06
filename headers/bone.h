@@ -9,8 +9,7 @@
 #include "mesh.hpp"
 #include "libs/assimp_glm_helpers.hpp"
 
-/*#if false 
-struct KeyPosition{
+/*struct KeyPosition{
     glm::vec3 position;
     float timeStamp;
 };
@@ -198,8 +197,7 @@ private:
         return glm::scale(glm::mat4(1.0f), finalScale);
     }
 	
-};
-#endif*/
+};*/
 
 void tabNNum(unsigned char tabs);
 
