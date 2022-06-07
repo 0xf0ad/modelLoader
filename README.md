@@ -121,8 +121,9 @@ you can change the binding by modifying the souce code (suckless phelo) by modif
 
 ## library used
 
-* glad : http://glad.dav1d.de
-* glfw : https://www.glfw.org/
-* glm : https://glm.g-truc.net/
-* stb_image : https://github.com/nothings/stb
-* assimp : https://github.com/assimp/assimp
+* glad : a library to load OpenGL (http://glad.dav1d.de/)
+* glfw : a firmware to commenicate with the graphics card driver (https://www.glfw.org/)
+* glm : a library that support leniar algebra (https://glm.g-truc.net/)
+* stb_image : a library to load images with variaus formats (https://github.com/nothings/stb/)
+* assimp : a library to load 3D models with variaus formats (https://github.com/assimp/assimp/)
+* ImGui : a library to reander a Graphical User Interface (https://github.com/ocornut/imgui/)
