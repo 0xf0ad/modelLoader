@@ -1,5 +1,5 @@
 #include "headers/model.hpp"
-#include "headers/mesh.hpp"
+/*#include "headers/mesh.hpp"
 
 // model data
 std::vector<Texture> textures_loaded;
@@ -14,37 +14,27 @@ void Model::Draw(Shader &shader){
 void Model::loadModel(std::string path){
 	Assimp::Importer import;
 	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace);	
-	//importing error check
+
+	//check for importing errors
 	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 		std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << '\n';
 		return;
+	}else{
+		processNode(scene->mRootNode, scene);
+		//processBone(scene);
 	}
 	directory = path.substr(0, path.find_last_of('/'));
-
-	std::cout<<"\n*******************************************************\n";
-    std::cout<<"Parsing the node hierarchy\n";
-	processNode(scene->mRootNode, scene);
-	processBone(scene);
 }
+
 unsigned char tabNum = 0;
 void Model::processNode(aiNode *node, const aiScene *scene){
-	
-	printTabs(tabNum); std::cout<<"\tNode name : "<<node->mName.C_Str()<<" ,num children : "<<node->mNumChildren<<" ,num meshes : "<<node->mNumMeshes<<'\n';
-	printTabs(tabNum); std::cout<<"\tNode transformation:\n";
-	print_assimp_matrix(node->mTransformation);
-	tabNum++;
-	tabNNum(tabNum);
-
 	// process all the node's meshes (if any)
 	for(unsigned int i = 0; i < node->mNumMeshes; i++){
 		aiMesh *mesh = scene->mMeshes[node->mMeshes[i]]; 
 		meshes.push_back(processMesh(mesh, scene));		// then do the same for each of its children
 	}for(unsigned int i = 0; i < node->mNumChildren; i++){
-		printTabs(tabNum); std::cout<<"\n\t--- "<<i<<" ---\n";
 		processNode(node->mChildren[i], scene);
 	}
-	tabNum--;
-	tabNNum(tabNum);
 }
 
 Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene){
@@ -56,7 +46,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene){
 	// walk through each of the mesh's vertices
 	for(unsigned int i = 0; i < mesh->mNumVertices; i++){
 		Vertex vertex;
-		clearBoneData(vertex);
+		//clearBoneData(vertex);
 		glm::vec3 vector; // we declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
 
 		// positions
@@ -172,9 +162,10 @@ unsigned int Model::TextureFromFile(const char *path, const std::string &directo
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}else{
-		std::cout << "Texture failed to load at path: " <<path<<'\n';
+		std::cout<<"Texture failed to load at path: " <<path<<'\n';
 	}
 	stbi_image_free(data);
 
 	return textureID;
 }
+*/

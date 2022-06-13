@@ -9,7 +9,7 @@
 #include "mesh.hpp"
 #include "libs/assimp_glm_helpers.hpp"
 
-/*struct KeyPosition{
+struct KeyPosition{
     glm::vec3 position;
     float timeStamp;
 };
@@ -29,9 +29,7 @@ private:
     std::vector<KeyPosition> m_Positions;
     std::vector<KeyRotation> m_Rotations;
     std::vector<KeyScale> m_Scales;
-    int m_NumPositions;
-    int m_NumRotations;
-    int m_NumScalings;
+    int m_NumPositions, m_NumRotations, m_NumScalings;
 	
     glm::mat4 m_LocalTransform;
     std::string m_Name;
@@ -47,35 +45,35 @@ public:
         m_LocalTransform(1.0f)
     {
         m_NumPositions = channel->mNumPositionKeys;
+		m_NumRotations = channel->mNumRotationKeys;
+		m_NumScalings = channel->mNumScalingKeys;
 
         for (int positionIndex = 0; positionIndex < m_NumPositions; ++positionIndex)
         {
             aiVector3D aiPosition = channel->mPositionKeys[positionIndex].mValue;
             float timeStamp = channel->mPositionKeys[positionIndex].mTime;
             KeyPosition data;
-            data.position = AGHelpers::GetGLMVec(aiPosition);
+            data.position = AssimpGLMHelpers::GetGLMVec(aiPosition);
             data.timeStamp = timeStamp;
             m_Positions.push_back(data);
         }
 
-        m_NumRotations = channel->mNumRotationKeys;
         for (int rotationIndex = 0; rotationIndex < m_NumRotations; ++rotationIndex)
         {
             aiQuaternion aiOrientation = channel->mRotationKeys[rotationIndex].mValue;
             float timeStamp = channel->mRotationKeys[rotationIndex].mTime;
             KeyRotation data;
-            data.orientation = AGHelpers::GetGLMQuat(aiOrientation);
+            data.orientation = AssimpGLMHelpers::GetGLMQuat(aiOrientation);
             data.timeStamp = timeStamp;
             m_Rotations.push_back(data);
         }
 
-        m_NumScalings = channel->mNumScalingKeys;
         for (int keyIndex = 0; keyIndex < m_NumScalings; ++keyIndex)
         {
             aiVector3D scale = channel->mScalingKeys[keyIndex].mValue;
             float timeStamp = channel->mScalingKeys[keyIndex].mTime;
             KeyScale data;
-            data.scale = AGHelpers::GetGLMVec(scale);
+            data.scale = AssimpGLMHelpers::GetGLMVec(scale);
             data.timeStamp = timeStamp;
             m_Scales.push_back(data);
         }
@@ -86,10 +84,9 @@ public:
     //tranformations
     void Update(float animationTime)
     {
-        glm::mat4 translation = InterpolatePosition(animationTime);
-        glm::mat4 rotation = InterpolateRotation(animationTime);
-        glm::mat4 scale = InterpolateScaling(animationTime);
-        m_LocalTransform = translation * rotation * scale;
+        m_LocalTransform = InterpolatePosition(animationTime)*
+		                   InterpolateRotation(animationTime)*
+		                   InterpolateScaling(animationTime);
     }
 
     glm::mat4 GetLocalTransform() { return m_LocalTransform; }
@@ -106,6 +103,7 @@ public:
             if (animationTime < m_Positions[index + 1].timeStamp)
                 return index;
         }
+		//we should never reach here
         assert(0);
     }
 
@@ -118,6 +116,7 @@ public:
             if (animationTime < m_Rotations[index + 1].timeStamp)
                 return index;
         }
+		//we should never reach here
         assert(0);
     }
 
@@ -197,14 +196,20 @@ private:
         return glm::scale(glm::mat4(1.0f), finalScale);
     }
 	
-};*/
+};/*
 
-void tabNNum(unsigned char tabs);
+struct boneInfo{
+
+    aiMatrix4x4& OffsetMatrix;
+    glm::mat4 FinalTransformation;
+
+    boneInfo(const aiMatrix4x4& Offset){
+        OffsetMatrix = Offset;
+        FinalTransformation = glm::mat4(0.0f);
+    }
+};
 
 void clearBoneData(Vertex& vertex);
 
-void printTabs(unsigned char i);
-
-void print_assimp_matrix(const aiMatrix4x4& m);
-
 void processBone(const aiScene *scene);
+*/

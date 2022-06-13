@@ -5,22 +5,22 @@
 #include "headers/model.hpp"
 #include "headers/libs/stb_image.h"
 #include "headers/camera.hpp"
-//#include "headers/animator.h"
+#include "headers/animator.h"
 #include <GLFW/glfw3.h>
 
 // timing
 float deltaTime = 0.0f,	lastFrame = 0.0f;
 
 // settings
-#define WIN_WIDTH             1600
-#define WIN_HEIGHT             900
+#define WIN_WIDTH             1280
+#define WIN_HEIGHT             720
 #define FOV                  45.0f
 #define glslVersion "#version 130"
 
 // camera
 Camera camera(glm::vec3(0.0f, 3.0f, 9.0f));
-float lastX = WIN_WIDTH  >> 1; //deviding the width by 2 (but divition is expensive 
-float lastY = WIN_HEIGHT >> 1; //insted we will shift the width by 1 witch save us some CPU cycles)
+float lastX = WIN_WIDTH  >> 1;	// deviding the width by 2 (but divition is expensive 
+float lastY = WIN_HEIGHT >> 1;	// insted we will shift the width by 1 witch save us some CPU cycles)
 bool firstMouse = true;
 
 bool showOverlay = true;
@@ -88,13 +88,13 @@ int main(int argc, char** argv){
 
 	// build and compile shaders
 	// -------------------------
-	Shader ourShader("./shaders/vertexShader1", "./shaders/fragmentShader1");
+	Shader ourShader("./shaders/vertexShader", "./shaders/fragmentShader1");
 
 	// load models
 	// -----------
 	Model ourModel(argv[1]);
-	//Animation danceAnimation(argv[2],&ourModel);
-	//Animator animator(&danceAnimation);
+	Animation danceAnimation(argv[2], &ourModel);
+	Animator animator(&danceAnimation);
 
 
 	IMGUI_CHECKVERSION();
@@ -124,6 +124,7 @@ int main(int argc, char** argv){
 		// input
 		// -----
 		processInput(window);
+		animator.UpdateAnimation(deltaTime);
 
 		// render
 		// ------
@@ -182,10 +183,9 @@ int main(int argc, char** argv){
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view", view);
 
-		/*auto transforms = animator.GetFinalBoneMatrices();
+		auto transforms = animator.GetFinalBoneMatrices();
 		for (int i = 0; i < transforms.size(); ++i)
 			ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
-		*/
 
 		// render the loaded model by setting the model transformation
 		glm::mat4 model = glm::mat4(1.0f);
