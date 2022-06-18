@@ -1,4 +1,3 @@
-TODO : load Animation
 TODO : add a selection menu to select the animation played
 TODO : optimize things
 TODO : select the model loaded from GUI or as argument if runned from therminal

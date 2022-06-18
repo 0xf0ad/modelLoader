@@ -1,11 +1,11 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
-#include "headers/shader.hpp"
-#include "headers/model.hpp"
-#include "headers/libs/stb_image.h"
-#include "headers/camera.hpp"
-#include "headers/animator.h"
+#include "../headers/shader.h"
+#include "../headers/model.h"
+#include "../headers/libs/stb_image.h"
+#include "../headers/camera.h"
+#include "../headers/animator.h"
 #include <GLFW/glfw3.h>
 
 // timing
@@ -105,7 +105,7 @@ int main(int argc, char** argv){
 	ImGui_ImplOpenGL3_Init(glslVersion);
 
 
-	bool show_demo_window = true;
+	bool show_demo_window = false;
 	bool show_another_window = false;
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -189,9 +189,8 @@ int main(int argc, char** argv){
 
 		// render the loaded model by setting the model transformation
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));	// it's a bit too big for our scene, so scale it down
+		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));	// it's a bit too big for our scene, so scale it down
 		ourShader.setMat4("model", model);
 
 		ourModel.Draw(ourShader);

@@ -1,5 +1,5 @@
-#include "headers/model.hpp"
-/*#include "headers/mesh.hpp"
+#include "../headers/model.h"
+/*#include "headers/mesh.h"
 
 // model data
 std::vector<Texture> textures_loaded;

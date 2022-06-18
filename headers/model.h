@@ -10,8 +10,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include "mesh.hpp"
-#include "shader.hpp"
+#include "mesh.h"
+#include "shader.h"
 
 #include <string>
 #include <fstream>
@@ -19,7 +19,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
-#include "libs/assimp_glm_helpers.hpp"
+#include "libs/assimp_glm_helpers.h"
 #include "animdata.h"
 
 using namespace std;

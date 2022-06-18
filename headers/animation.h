@@ -7,7 +7,7 @@
 #include "bone.h"
 #include <functional>
 #include "animdata.h"
-#include "model.hpp"
+#include "model.h"
 
 struct AssimpNodeData
 {

@@ -1,0 +1,33 @@
+make --dry-run --keep-going --print-directory
+make: Entering directory '/home/heacker/git-repos/trsh'
+ 
+cc src/glad.c -c -g -Wall -o ./bin/glad.o
+ 
+g++ ./gui/imgui.cpp -c -g -Wall -o ./bin/imgui.o
+ 
+g++ ./gui/imgui_demo.cpp -c -g -Wall -o ./bin/imgui_demo.o
+ 
+g++ ./gui/imgui_tables.cpp -c -g -Wall -o ./bin/imgui_tables.o
+ 
+g++ ./gui/imgui_widgets.cpp -c -g -Wall -o ./bin/imgui_widgets.o
+ 
+g++ ./gui/imgui_draw.cpp -c -g -Wall -o ./bin/imgui_draw.o
+ 
+g++ ./gui/backends/imgui_impl_glfw.cpp -c -g -Wall -I./gui -o ./bin/imgui_impl_glfw.o
+ 
+g++ ./gui/backends/imgui_impl_opengl3.cpp -c -g -Wall -I./gui -o ./bin/imgui_impl_opengl3.o
+ 
+g++ src/shader.cpp -c -g -Wall -o ./bin/shader.o
+ 
+g++ src/mesh.cpp -c -g -Wall -o ./bin/mesh.o
+ 
+g++ src/bone.cpp -c -g -Wall -o ./bin/bone.o
+ 
+g++ src/model.cpp -c -g -Wall -o ./bin/model.o
+ 
+g++ src/main.cpp -c -g -Wall -I./gui -I./gui/backends -o ./bin/main.o
+ 
+g++ ./bin/*.o -lglfw -lGL -lrt -lm -lX11 -lpthread -lXrandr -lXi -ldl -lxcb -lXau -lXdmcp -lassimp -g -o load
+ 
+make: Leaving directory '/home/heacker/git-repos/trsh'
+ 

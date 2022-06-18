@@ -1,0 +1,16 @@
+IMGUI = gui/imgui.o
+
+#default: init build
+
+bin/%.o: %.cpp headers/%.hpp
+	g++ -c -g -Wall -Igui -o $@ $<
+
+#gui/%.o: gui/%.cpp gui/%.h
+#	g++ -c -g -Wall -I. -o $@ $<
+
+#init:
+#	touch bin/main.o bin/shader.o bin/model.o $(IMGUI)
+
+build: bin/main.o bin/shader.o bin/model.o $(IMGUI)
+
+#-lglfw -lGL -lrt -lm lX11 -lpthread -lXrandr -lXi -ldl -lXau -lXdmcp -lassimp -g

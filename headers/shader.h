@@ -1,7 +1,7 @@
 #pragma once
 
 #include "libs/glad.h"
-#include "libs/assimp_glm_helpers.hpp"
+#include "libs/assimp_glm_helpers.h"
 
 #include <string>
 #include <iostream>

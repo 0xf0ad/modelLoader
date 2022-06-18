@@ -1,4 +1,4 @@
-#include "headers/bone.h"
+#include "../headers/bone.h"
 /*#include <stdio.h>
 
 //bone data

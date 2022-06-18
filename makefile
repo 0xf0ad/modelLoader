@@ -18,26 +18,26 @@ all:$(BUILDDIR)/stbi.o $(BUILDDIR)/glad.o imgui $(BUILDDIR)/shader.o $(BUILDDIR)
 link: $(BUILDDIR)/*.o
 	$(CXX) $(BUILDDIR)/*.o $(LDFLAGS) -o load
 
-$(BUILDDIR)/main.o:main.cpp $(BUILDDIR)
-	$(CXX) main.cpp $(CFLAGS) -I$(IMGUIDIR) -I$(IMGUIDIR)/backends -o $(BUILDDIR)/main.o
+$(BUILDDIR)/main.o:src/main.cpp $(BUILDDIR)
+	$(CXX) src/main.cpp $(CFLAGS) -I$(IMGUIDIR) -I$(IMGUIDIR)/backends -o $(BUILDDIR)/main.o
 
-$(BUILDDIR)/glad.o:glad.c $(BUILDDIR)
-	$(CC) glad.c $(CFLAGS) -o $(BUILDDIR)/glad.o
+$(BUILDDIR)/glad.o:src/glad.c $(BUILDDIR)
+	$(CC) src/glad.c $(CFLAGS) -o $(BUILDDIR)/glad.o
 
-$(BUILDDIR)/shader.o:shader.cpp headers/shader.hpp $(BUILDDIR)
-	$(CXX) shader.cpp $(CFLAGS) -o $(BUILDDIR)/shader.o
+$(BUILDDIR)/shader.o:src/shader.cpp headers/shader.h $(BUILDDIR)
+	$(CXX) src/shader.cpp $(CFLAGS) -o $(BUILDDIR)/shader.o
 
-$(BUILDDIR)/stbi.o:stb_image.c headers/libs/stb_image.h $(BUILDDIR)
-	$(CC) stb_image.c $(CFLAGS) -o $(BUILDDIR)/stbi.o
+$(BUILDDIR)/stbi.o:src/stb_image.c headers/libs/stb_image.h $(BUILDDIR)
+	$(CC) src/stb_image.c $(CFLAGS) -o $(BUILDDIR)/stbi.o
 
-$(BUILDDIR)/model.o:model.cpp headers/model.hpp $(BUILDDIR)
-	$(CXX) model.cpp $(CFLAGS) -o $(BUILDDIR)/model.o
+$(BUILDDIR)/model.o:src/model.cpp headers/model.h $(BUILDDIR)
+	$(CXX) src/model.cpp $(CFLAGS) -o $(BUILDDIR)/model.o
 
-$(BUILDDIR)/mesh.o:mesh.cpp headers/mesh.hpp $(BUILDDIR)
-	$(CXX) mesh.cpp $(CFLAGS) -o $(BUILDDIR)/mesh.o
+$(BUILDDIR)/mesh.o:src/mesh.cpp headers/mesh.h $(BUILDDIR)
+	$(CXX) src/mesh.cpp $(CFLAGS) -o $(BUILDDIR)/mesh.o
 
-$(BUILDDIR)/bone.o:bone.cpp headers/bone.h $(BUILDDIR)
-	$(CXX) bone.cpp $(CFLAGS) -o $(BUILDDIR)/bone.o
+$(BUILDDIR)/bone.o:src/bone.cpp headers/bone.h $(BUILDDIR)
+	$(CXX) src/bone.cpp $(CFLAGS) -o $(BUILDDIR)/bone.o
 
 imgui:$(IMGUIDIR)/*.cpp $(IMGUIDIR)/*.h $(IMGUIDIR)/backends/*.cpp $(IMGUIDIR)/backends/*.h $(BUILDDIR)
 	$(CXX) $(IMGUIDIR)/imgui.cpp $(CFLAGS) -o $(BUILDDIR)/imgui.o

@@ -3,7 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "libs/glad.h"
-#include "shader.hpp"
+#include "shader.h"
 #include <vector>
 
 #define MAX_BONE_INFLUENCE 4
