@@ -9,8 +9,7 @@
 #include "animdata.h"
 #include "model.h"
 
-struct AssimpNodeData
-{
+struct AssimpNodeData{
 	glm::mat4 transformation;
 	std::string name;
 	int childrenCount;

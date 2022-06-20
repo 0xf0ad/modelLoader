@@ -13,7 +13,7 @@ clean:
 	rm -d $(BUILDDIR) || echo "the bin directory is alredy deleted"
 	rm ./load         || echo "the binary is deleted already"
 
-all:$(BUILDDIR)/stbi.o $(BUILDDIR)/glad.o imgui $(BUILDDIR)/shader.o $(BUILDDIR)/mesh.o $(BUILDDIR)/bone.o $(BUILDDIR)/model.o $(BUILDDIR)/main.o
+all:$(BUILDDIR)/stbi.o $(BUILDDIR)/glad.o imgui $(BUILDDIR)/shader.o $(BUILDDIR)/mesh.o $(BUILDDIR)/model.o $(BUILDDIR)/main.o
 
 link: $(BUILDDIR)/*.o
 	$(CXX) $(BUILDDIR)/*.o $(LDFLAGS) -o load
