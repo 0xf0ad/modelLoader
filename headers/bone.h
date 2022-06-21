@@ -24,7 +24,6 @@ struct KeyScale{
 	float timeStamp;
 };
 
-
 class Bone{
     std::vector<KeyPosition> m_Positions;
     std::vector<KeyRotation> m_Rotations;
@@ -81,7 +80,6 @@ public:
 	glm::mat4 GetLocalTransform() { return m_LocalTransform; }
 	std::string GetBoneName() const { return m_Name; }
 	int GetBoneID() { return m_ID; }
-
 
 	// Gets the current index on mKeyPositions to interpolate to based on 
 	// the current animation time
