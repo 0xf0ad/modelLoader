@@ -129,7 +129,7 @@ private:
 		int p0Index = GetPositionIndex(animationTime);
 		int p1Index = p0Index + 1;
 		float scaleFactor = GetScaleFactor(m_Positions[p0Index].timeStamp, m_Positions[p1Index].timeStamp, animationTime);
-		glm::vec3 finalPosition = glm::mix(m_Positions[p0Index].position, m_Positions[p1Index].position, scaleFactor);
+		glm::vec3 finalPosition = glm::mix(m_Positions[p0Index].position , m_Positions[p1Index].position , scaleFactor);
 		return glm::translate(glm::mat4(1.0f), finalPosition);
 		// return glm::translate(glm::mat4(1.0f), glm::mix(m_Positions[GetPositionIndex(animationTime)].position, m_Positions[GetPositionIndex(animationTime) + 1].position, GetScaleFactor(m_Positions[GetPositionIndex(animationTime)].timeStamp, m_Positions[GetPositionIndex(animationTime) + 1].timeStamp, animationTime));
 	}
