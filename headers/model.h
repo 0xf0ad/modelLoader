@@ -20,8 +20,28 @@
 #include <map>
 #include <vector>
 #include "libs/assimp_glm_helpers.h"
-#include "animdata.h"
 
+struct BoneInfo{
+	// id is index in finalBoneMatrices
+	int id;
+	// offset matrix transforms vertex from model space to bone space
+	glm::mat4 offset;
+};
+
+class Model {
+public:
+
+	// constructor, expects a filepath to a 3D model.
+	Model(std::string const &path);
+
+	// draws the model, and thus all its meshes
+	void Draw(Shader &shader);
+
+	std::map<std::string, BoneInfo>& GetBoneInfoMap();
+	int& GetBoneCount();
+
+};
+/*
 using namespace std;
 
 class Model 
@@ -205,8 +225,7 @@ private:
 
 	unsigned int TextureFromFile(const char* path, const string& directory, bool gamma = false)
 	{
-		string filename = string(path);
-		filename = directory + '/' + filename;
+		std::string filename = directory + '/' + path;
 
 		unsigned int textureID;
 		glGenTextures(1, &textureID);
@@ -231,12 +250,13 @@ private:
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			std::cout<<"path: "<<path<<"\tdirectory:"<<directory<<"\tfilename: "<<filename<<'\n';
 
 			stbi_image_free(data);
 		}
 		else
 		{
-			std::cout << "Texture failed to load at path: " << path << std::endl;
+			std::cout << "Texture failed to load at path: " << filename << std::endl;
 			stbi_image_free(data);
 		}
 
@@ -276,7 +296,7 @@ private:
         return textures;
     }
 };
-
+*/
 
 
 #endif

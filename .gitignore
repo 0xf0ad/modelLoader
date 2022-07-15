@@ -32,5 +32,6 @@
 *.app
 
 # Folders
-.vscode
-bin
+.vscode/
+bin/
+models/

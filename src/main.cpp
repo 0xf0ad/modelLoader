@@ -93,9 +93,8 @@ int main(int argc, char** argv){
 	// load models
 	// -----------
 	Model ourModel(argv[1]);
-	Animation danceAnimation(argv[2], &ourModel);
-	Animator animator(&danceAnimation);
-
+	Animation animation(argv[2], &ourModel);
+	Animator animator(&animation);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -103,7 +102,6 @@ int main(int argc, char** argv){
 	ImGui::StyleColorsDark();
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init(glslVersion);
-
 
 	bool show_demo_window = false;
 	bool show_another_window = false;
@@ -184,7 +182,7 @@ int main(int argc, char** argv){
 		ourShader.setMat4("view", view);
 
 		auto transforms = animator.GetFinalBoneMatrices();
-		for (int i = 0; i < transforms.size(); ++i)
+		for (unsigned int i = 0; i < transforms.size(); ++i)
 			ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
 
 		// render the loaded model by setting the model transformation
