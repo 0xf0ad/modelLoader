@@ -1,12 +1,7 @@
 #pragma once
 
-#include <vector>
-#include <assimp/scene.h>
 #include <list>
-#include <glm/glm.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <map>
-#include "mesh.h"
+#include "model.h"
 #include "libs/assimp_glm_helpers.h"
 
 struct KeyPosition{

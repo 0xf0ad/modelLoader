@@ -2,7 +2,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "libs/glad.h"
 #include "shader.h"
 #include <vector>
 
