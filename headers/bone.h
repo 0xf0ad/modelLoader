@@ -1,8 +1,11 @@
 #pragma once
-
+#define TEST 1 
 #include <list>
 #include "model.h"
 #include "libs/assimp_glm_helpers.h"
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 
 struct KeyPosition{
 	glm::vec3 position;
@@ -18,7 +21,21 @@ struct KeyScale{
 	glm::vec3 scale;
 	float timeStamp;
 };
+#if TEST 
+class Bone{
+public:
+	// reads keyframes from aiNodeAnim
+	Bone(const std::string& name, int ID, const aiNodeAnim* channel);
 
+	// interpolates  b/w positions,rotations & scaling keys based on the curren time of
+	// the animation and prepares the local transformation matrix by combining all keys tranformations
+	void Update(float animationTime);
+
+	glm::mat4 GetLocalTransform();
+	std::string GetBoneName() const;
+	int GetBoneID();
+};
+#else
 class Bone{
 public:
 	std::vector<KeyPosition> m_Positions;
@@ -40,21 +57,21 @@ public:
 		m_NumScalings  = channel->mNumScalingKeys;
 		m_NumRotations = channel->mNumRotationKeys;
 		
-		for (int i = 0; i < m_NumPositions; ++i){
+		for (int i = 0; i < m_NumPositions; i++){
 			KeyPosition data;
 			data.position = AssimpGLMHelpers::GetGLMVec(channel->mPositionKeys[i].mValue);
 			data.timeStamp = channel->mPositionKeys[i].mTime;
 			m_Positions.push_back(data);
 		}
 
-		for (int i = 0; i < m_NumRotations; ++i){
+		for (int i = 0; i < m_NumRotations; i++){
 			KeyRotation data;
 			data.orientation = AssimpGLMHelpers::GetGLMQuat(channel->mRotationKeys[i].mValue);
 			data.timeStamp = channel->mRotationKeys[i].mTime;
 			m_Rotations.push_back(data);
 		}
 
-		for (int i = 0; i < m_NumScalings; ++i){
+		for (int i = 0; i < m_NumScalings; i++){
 			KeyScale data;
 			data.scale = AssimpGLMHelpers::GetGLMVec(channel->mScalingKeys[i].mValue);
 			data.timeStamp = channel->mScalingKeys[i].mTime;
@@ -81,9 +98,10 @@ public:
 	// Gets the current index on mKeyPositions to interpolate to based on
 	// the current animation time
 	int GetPositionIndex(float animationTime){
-		for (int i = 0; i < (m_NumPositions-1); ++i){
-			if (animationTime < m_Positions[i+1].timeStamp)
+		for (int i = 0; i < (m_NumPositions-1); i++){
+			if (animationTime < m_Positions[i+1].timeStamp){
 				return i;
+			}
 		}
 		assert(false);
 	}
@@ -91,9 +109,11 @@ public:
 	// Gets the current index on mKeyRotations to interpolate to based on the
 	// current animation time
 	int GetRotationIndex(float animationTime){
-		for (int i = 0; i < (m_NumRotations-1); ++i){
-			if (animationTime < m_Rotations[i+1].timeStamp)
+		for (int i = 0; i < (m_NumRotations-1); i++){
+			//std::cout <<"i: "<<i<<"\ttimeStamp: "<<m_Rotations[i+1].timeStamp<<"\tanimationTime: "<<animationTime<<'\n';
+			if (animationTime < m_Rotations[i+1].timeStamp){
 				return i;
+			}
 		}
 		assert(false);
 	}
@@ -101,7 +121,7 @@ public:
 	// Gets the current index on mKeyScalings to interpolate to based on the
 	// current animation time
 	int GetScaleIndex(float animationTime){
-		for (int i = 0; i < (m_NumScalings-1); ++i){
+		for (int i = 0; i < (m_NumScalings-1); i++){
 			if (animationTime < m_Scales[i+1].timeStamp){
 				return i;
 			}
@@ -159,3 +179,4 @@ private:
 		                                          animationTime)));
 	}
 };
+#endif

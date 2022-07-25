@@ -7,15 +7,13 @@
 #include "../headers/camera.h"
 #include "../headers/animator.h"
 #include <GLFW/glfw3.h>
-
-// timing
-float deltaTime = 0.0f,	lastFrame = 0.0f;
+#include <stdio.h>
 
 // settings
-#define WIN_WIDTH             1280
-#define WIN_HEIGHT             720
-#define FOV                  45.0f
-#define glslVersion "#version 130"
+#define WIN_WIDTH                  1280
+#define WIN_HEIGHT                  720
+#define FOV                       45.0f
+#define glslVersion "#version 330 core"
 
 // camera
 Camera camera(glm::vec3(0.0f, 3.0f, 9.0f));
@@ -24,6 +22,9 @@ float lastY = WIN_HEIGHT >> 1;	// insted we will shift the width by 1 witch save
 bool firstMouse = true;
 
 bool showOverlay = true;
+
+// timing
+float deltaTime, lastFrame;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -34,7 +35,7 @@ int main(int argc, char** argv){
 	
 	//check for number of arguments
 	if(argc == 1){
-		std::cout<<"please insert a path to the model you want to view \n";
+		printf("please insert a path to the model you want to view\n");
 		return true;
 	}
 
@@ -52,7 +53,7 @@ int main(int argc, char** argv){
 	//check for GLFW loading errors
 	//-----------------------------
 	if (!glfwInit()){
-		std::cout << "could not initialize glfw \n";
+		printf("could not initialize glfw\n");
 		return -1;
 	}
 
@@ -60,7 +61,7 @@ int main(int argc, char** argv){
 	// --------------------
 	GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "wa7d_rajl_l9ito_f_QUAKE", NULL, NULL);
 	if (!window){
-		std::cout << "Failed to create GLFW window\n";
+		printf("Failed to create GLFW window\n");
 		glfwTerminate();
 		return -1;
 	}
@@ -73,7 +74,7 @@ int main(int argc, char** argv){
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
-		std::cout << "Failed to initialize GLAD" << std::endl;
+		printf("Failed to initialize GLAD\n");
 		return -1;
 	}
 
@@ -105,7 +106,7 @@ int main(int argc, char** argv){
 
 	bool show_demo_window = false;
 	bool show_another_window = false;
-	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+	ImVec4 clear_color = ImVec4(0.2f, 0.3f, 0.3f, 1.0f);
 
 	// disable V-Sync to get more than 60 fps
 	glfwSwapInterval(false);
@@ -182,7 +183,7 @@ int main(int argc, char** argv){
 		ourShader.setMat4("view", view);
 
 		auto transforms = animator.GetFinalBoneMatrices();
-		for (unsigned int i = 0; i < transforms.size(); ++i)
+		for (unsigned int i = 0; i < transforms.size(); i++)
 			ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
 
 		// render the loaded model by setting the model transformation
@@ -284,7 +285,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
 }
 
 static void ShowExampleAppSimpleOverlay(bool* p_open){
-	static int corner = 0;
+	static unsigned char corner = 0;
 	ImGuiIO& io = ImGui::GetIO();
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 	const float PAD = 10.0f;

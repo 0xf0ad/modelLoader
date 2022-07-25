@@ -61,4 +61,3 @@ public:
 		return m_FinalBoneMatrices;
 	}
 };
-

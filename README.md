@@ -7,7 +7,7 @@ a program that loads 3D models
 
 ```bash
 git clone https://github.com/hadsitewa3r/OpenGL.git && \
-cd OpenGL && \
+cd modelLoader && \
 make all compile
 ```
 
