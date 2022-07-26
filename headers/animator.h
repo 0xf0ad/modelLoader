@@ -1,9 +1,5 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <map>
-#include <vector>
-#include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include "animation.h"
 
@@ -46,7 +42,7 @@ public:
 			nodeTransform = m_CurrentAnimation->FindBone(node->name)->GetLocalTransform();
 		}
 
-		auto boneInfoMap = m_CurrentAnimation->m_BoneInfoMap;
+		std::map<std::string, BoneInfo> boneInfoMap = m_CurrentAnimation->m_BoneInfoMap;
 		if (boneInfoMap.find(node->name) != boneInfoMap.end()){
 			m_FinalBoneMatrices[boneInfoMap[node->name].id] = parentTransform *
 			                                                  nodeTransform *

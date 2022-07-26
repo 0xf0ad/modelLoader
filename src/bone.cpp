@@ -4,23 +4,27 @@ int m_NumRotations;
 int m_NumScalings;
 
 glm::mat4 m_LocalTransform;
-int m_ID;
+
+std::vector<KeyPosition> p_Positions;
+std::vector<KeyRotation> p_Rotations;
+std::vector<KeyScale> p_Scales;
 
 // reads keyframes from aiNodeAnim
 Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){
-	Bone::m_Name  = name;
-	m_ID             = ID;
+	Bone::m_Name     = name;
+	Bone::m_ID       = ID;
 	m_NumPositions   = channel->mNumPositionKeys;
 	m_NumScalings    = channel->mNumScalingKeys;
 	m_NumRotations   = channel->mNumRotationKeys;
 	m_LocalTransform = glm::mat4(1.0f);
-	
+
 	for (int i = 0; i < m_NumPositions; i++){
 		KeyPosition data;
 		data.position = AssimpGLMHelpers::GetGLMVec(channel->mPositionKeys[i].mValue);
 		data.timeStamp = channel->mPositionKeys[i].mTime;
 		Bone::m_Positions.push_back(data);
 	}
+	//p_Positions = m_Positions;
 
 	for (int i = 0; i < m_NumRotations; i++){
 		KeyRotation data;
@@ -28,6 +32,7 @@ Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){
 		data.timeStamp = channel->mRotationKeys[i].mTime;
 		Bone::m_Rotations.push_back(data);
 	}
+	//p_Rotations = m_Rotations;
 
 	for (int i = 0; i < m_NumScalings; i++){
 		KeyScale data;
@@ -35,6 +40,7 @@ Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){
 		data.timeStamp = channel->mScalingKeys[i].mTime;
 		Bone::m_Scales.push_back(data);
 	}
+	//p_Scales = m_Scales;
 }
 
 // Gets normalized value for Lerp & Slerp
@@ -82,7 +88,7 @@ glm::mat4 Bone::InterpolatePosition(float animationTime){
 		return glm::translate(glm::mat4(1.0f), Bone::m_Positions[0].position);
 	}
 
-	int index = GetPositionIndex(animationTime);
+	int index = Bone::GetPositionIndex(animationTime);
 	return glm::translate(glm::mat4(1.0f),
 	                      glm::mix(Bone::m_Positions[index].position,
 	                               Bone::m_Positions[index + 1].position,
@@ -97,7 +103,7 @@ glm::mat4 Bone::InterpolateRotation(float animationTime){
 	if (m_NumRotations == 1){
 		return glm::toMat4(glm::normalize(Bone::m_Rotations[0].orientation));
 	}
-	int index = GetRotationIndex(animationTime);
+	int index = Bone::GetRotationIndex(animationTime);
 	return glm::toMat4(glm::normalize(glm::slerp(Bone::m_Rotations[index].orientation,
 	                                             Bone::m_Rotations[index + 1].orientation,
 	                                             GetScaleFactor(Bone::m_Rotations[index].timeStamp,
@@ -131,4 +137,4 @@ void Bone::Update(float animationTime){
 
 glm::mat4 Bone::GetLocalTransform() { return m_LocalTransform; }
 std::string Bone::GetBoneName() const { return Bone::m_Name; }
-int Bone::GetBoneID() { return m_ID; }
+int Bone::GetBoneID() { return Bone::m_ID; }

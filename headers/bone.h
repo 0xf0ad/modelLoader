@@ -21,12 +21,15 @@ struct KeyScale{
 	float timeStamp;
 };
 
+
+
 class Bone{
 public:
 	std::vector<KeyPosition> m_Positions;
 	std::vector<KeyRotation> m_Rotations;
 	std::vector<KeyScale> m_Scales;
 	std::string m_Name;
+	int m_ID;
 
 	// reads keyframes from aiNodeAnim
 	Bone(const std::string& name, int ID, const aiNodeAnim* channel);

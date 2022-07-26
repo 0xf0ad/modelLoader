@@ -23,6 +23,8 @@ bool firstMouse = true;
 
 bool showOverlay = true;
 
+bool animated = true;
+
 // timing
 float deltaTime, lastFrame;
 
@@ -94,8 +96,11 @@ int main(int argc, char** argv){
 	// load models
 	// -----------
 	Model ourModel(argv[1]);
+	
+	//if(animated){
 	Animation animation(argv[2], &ourModel);
 	Animator animator(&animation);
+	//}
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();

@@ -1,12 +1,8 @@
 #pragma once
 
-#include <vector>
-#include <map>
-#include <glm/glm.hpp>
-#include <assimp/scene.h>
-#include "bone.h"
 #include <functional>
-#include "model.h"
+
+#include "bone.h"
 
 struct AssimpNodeData{
 	glm::mat4 transformation;
@@ -41,7 +37,7 @@ public:
 
 	Bone* FindBone(const std::string& name){
 		auto iter = std::find_if(m_Bones.begin(), m_Bones.end(), [&](const Bone& Bone){
-			return Bone.GetBoneName() == name;
+			return Bone.m_Name == name;
 		});
 
 		if (iter == m_Bones.end()) return nullptr;
