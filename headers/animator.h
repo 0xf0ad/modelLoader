@@ -50,7 +50,7 @@ public:
 		if (boneInfoMap.find(node->name) != boneInfoMap.end()){
 			m_FinalBoneMatrices[boneInfoMap[node->name].id] = parentTransform *
 			                                                  nodeTransform *
-															  boneInfoMap[node->name].offset;
+			                                                  boneInfoMap[node->name].offset;
 		}
 
 		for (int i = 0; i < node->childrenCount; i++)
