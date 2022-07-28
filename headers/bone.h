@@ -51,6 +51,4 @@ public:
 	glm::mat4 InterpolateScaling(float animationTime);
 
 	glm::mat4 GetLocalTransform();
-	std::string GetBoneName() const;
-	int GetBoneID();
 };

@@ -28,10 +28,12 @@ bool animated = true;
 // timing
 float deltaTime, lastFrame;
 
+// define functions
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow *window);
 static void ShowExampleAppSimpleOverlay(bool* p_open);
+
 
 int main(int argc, char** argv){
 	
@@ -97,10 +99,8 @@ int main(int argc, char** argv){
 	// -----------
 	Model ourModel(argv[1]);
 	
-	//if(animated){
 	Animation animation(argv[2], &ourModel);
 	Animator animator(&animation);
-	//}
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -109,19 +109,23 @@ int main(int argc, char** argv){
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init(glslVersion);
 
-	bool show_demo_window = false;
+	bool show_demo_window    = false;
 	bool show_another_window = false;
+	bool cullFace            = false;
+	bool wireFrame           = false;
+	bool V_Sync              = true;
+	float f                  = 0.0f;
 	ImVec4 clear_color = ImVec4(0.2f, 0.3f, 0.3f, 1.0f);
 
 	// disable V-Sync to get more than 60 fps
-	glfwSwapInterval(false);
-
+	
 	// render loop
 	// -----------
 	while (!glfwWindowShouldClose(window)){
 		// per-frame time logic
 		// --------------------
 		float currentFrame = static_cast<float>(glfwGetTime());
+		//deltaTime = 1.0f / ImGui::GetIO().Framerate;
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
@@ -132,7 +136,11 @@ int main(int argc, char** argv){
 
 		// render
 		// ------
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		float *clrColorPtr = (float*)&clear_color;
+		glClearColor(*clrColorPtr, *(clrColorPtr+1), *(clrColorPtr+2), *(clrColorPtr+3));
+		//those commented implementation do the same think
+		//glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+		//glClearColor(*(float*)&clear_color, *((float*)&clear_color+1), *((float*)&clear_color+2), *((float*)&clear_color+3));
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		// Start the Dear ImGui frame
@@ -145,9 +153,6 @@ int main(int argc, char** argv){
 			ImGui::ShowDemoWindow(&show_demo_window);
 
 		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
-		
-		static float f = 0.0f;
-		static int counter = 0;
 
 		ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
@@ -156,15 +161,35 @@ int main(int argc, char** argv){
 		ImGui::Checkbox("Another Window", &show_another_window);
 
 		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-		ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+		ImGui::ColorEdit3("clear color", clrColorPtr);          // Edit 3 floats representing a color
 
-		if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-			counter++;
+		//if (ImGui::Button("Botton")) { }                        // Buttons return true when clicked (most widgets return true when edited/activated)
+
+		// controlling face rendering (render only front faces or only back ones)
+		// ----------------------------------------------------------------------
+		ImGui::Checkbox("render back faces", &cullFace);
+		if (cullFace)
+			glCullFace(GL_FRONT);
+		else
+			glCullFace(GL_BACK);
+
+		// controlling wireframe mode
+		// --------------------------
+		ImGui::Checkbox("Render on wireframe", &wireFrame);
+		if (wireFrame)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		else
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+		// controlling V-Sync (fix framerate to display refreshrate(likely 60 Hz))
+		// -----------------------------------------------------------------------
+		ImGui::Checkbox("V-Sync", &V_Sync);
+		glfwSwapInterval(V_Sync);
 		
-		ImGui::SameLine();
-		ImGui::Text("counter = %d", counter);
-
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		// displaying text or some variable for debugging for noow its disabled
+		#if false
+		ImGui::Text("Application average %f ms/frame (FPS)", (1.0f / ImGui::GetIO().Framerate) - deltaTime);
+		#endif
 		ImGui::End();
 
 		// 3. Show another simple window.
@@ -189,7 +214,7 @@ int main(int argc, char** argv){
 
 		auto transforms = animator.GetFinalBoneMatrices();
 		for (unsigned int i = 0; i < transforms.size(); i++)
-			ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+			ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + ']', transforms[i]);
 
 		// render the loaded model by setting the model transformation
 		glm::mat4 model = glm::mat4(1.0f);
@@ -227,10 +252,8 @@ void processInput(GLFWwindow *window){
 	//and transform the camera with WASD keys
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-	if(glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	if(glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	if(glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) { }
+	if(glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) { }
 	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		camera.ProcessKeyboard(FORWARD, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
@@ -248,9 +271,7 @@ void processInput(GLFWwindow *window){
 	if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 		camera.ProcessKeyboard(GO_DOWN, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
-		glCullFace(GL_FRONT);
 	if(glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
-		glCullFace(GL_BACK);
 	if(glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){}
 }
 
@@ -288,6 +309,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 	}
 }
+
 
 static void ShowExampleAppSimpleOverlay(bool* p_open){
 	static unsigned char corner = 0;

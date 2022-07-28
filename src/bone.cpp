@@ -1,13 +1,8 @@
 #include "../headers/bone.h"
-int m_NumPositions;
-int m_NumRotations;
-int m_NumScalings;
+
+int m_NumPositions, m_NumRotations, m_NumScalings;
 
 glm::mat4 m_LocalTransform;
-
-std::vector<KeyPosition> p_Positions;
-std::vector<KeyRotation> p_Rotations;
-std::vector<KeyScale> p_Scales;
 
 // reads keyframes from aiNodeAnim
 Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){
@@ -24,7 +19,6 @@ Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){
 		data.timeStamp = channel->mPositionKeys[i].mTime;
 		Bone::m_Positions.push_back(data);
 	}
-	//p_Positions = m_Positions;
 
 	for (int i = 0; i < m_NumRotations; i++){
 		KeyRotation data;
@@ -32,7 +26,6 @@ Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){
 		data.timeStamp = channel->mRotationKeys[i].mTime;
 		Bone::m_Rotations.push_back(data);
 	}
-	//p_Rotations = m_Rotations;
 
 	for (int i = 0; i < m_NumScalings; i++){
 		KeyScale data;
@@ -40,7 +33,6 @@ Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){
 		data.timeStamp = channel->mScalingKeys[i].mTime;
 		Bone::m_Scales.push_back(data);
 	}
-	//p_Scales = m_Scales;
 }
 
 // Gets normalized value for Lerp & Slerp
@@ -136,5 +128,3 @@ void Bone::Update(float animationTime){
 }
 
 glm::mat4 Bone::GetLocalTransform() { return m_LocalTransform; }
-std::string Bone::GetBoneName() const { return Bone::m_Name; }
-int Bone::GetBoneID() { return Bone::m_ID; }
