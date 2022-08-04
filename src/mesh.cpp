@@ -11,10 +11,10 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std:
 
 void Mesh::Draw(Shader &shader){
 
-	unsigned int diffuseNr  = 1;
-	unsigned int specularNr = 1;
-	unsigned int normalNr   = 1;
-	unsigned int heightNr   = 1;
+	unsigned char diffuseNr  = 0;
+	unsigned char specularNr = 0;
+	unsigned char normalNr   = 0;
+	unsigned char heightNr   = 0;
 
 	for(unsigned int i = 0; i < textures.size(); i++){
 
@@ -59,7 +59,7 @@ void Mesh::setupMesh(){
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 
-	
+
 	// vertex positions
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
