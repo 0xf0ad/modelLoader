@@ -8,7 +8,7 @@ layout (location = 4) in vec3 aBitangent;
 layout (location = 5) in ivec4 boneIds;
 layout (location = 6) in vec4 weights;
 
-//vec4 bones[4] = {(boneIds / (0xFFFFFF)), (boneIds / (0xFFFF)), (boneIds / (0xFF)), (boneIds)};
+//ivec4 bones[4] = ivec4((boneIds / (0xFFFFFF)), (boneIds / (0xFFFF)), (boneIds / (0xFF)), (boneIds));
 
 uniform mat4 projection;
 uniform mat4 view;

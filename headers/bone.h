@@ -38,17 +38,5 @@ public:
 	// the animation and prepares the local transformation matrix by combining all keys tranformations
 	void Update(float animationTime);
 
-	int GetPositionIndex(float animationTime);
-
-	int GetRotationIndex(float animationTime);
-
-	int GetScaleIndex(float animationTime);
-
-	glm::mat4 InterpolatePosition(float animationTime);
-
-	glm::mat4 InterpolateRotation(float animationTime);
-
-	glm::mat4 InterpolateScaling(float animationTime);
-
 	glm::mat4 GetLocalTransform();
 };

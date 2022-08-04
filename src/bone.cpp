@@ -42,9 +42,9 @@ float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float animationTi
 
 // Gets the current index on mKeyPositions to interpolate to based on
 // the current animation time
-int Bone::GetPositionIndex(float animationTime){
-	for (int i = 0; i < (m_NumPositions-1); i++){
-		if (animationTime < Bone::m_Positions[i+1].timeStamp){
+int GetPositionIndex(float animationTime, const std::vector<KeyPosition>& m_Positions){
+	for (int i = 0; i < (m_NumPositions - 1); i++){
+		if (animationTime < m_Positions[i+1].timeStamp){
 			return i;
 		}
 	}
@@ -53,20 +53,20 @@ int Bone::GetPositionIndex(float animationTime){
 
 // Gets the current index on mKeyRotations to interpolate to based on the
 // current animation time
-int Bone::GetRotationIndex(float animationTime){
-	for (int i = 0; i < (m_NumRotations-1); i++){
-		if (animationTime < Bone::m_Rotations[i+1].timeStamp){
+int GetRotationIndex(float animationTime, const std::vector<KeyRotation>& m_Rotations){
+	for (int i = 0; i < (m_NumRotations - 1); i++){
+		if (animationTime < m_Rotations[i+1].timeStamp){
 			return i;
-		}	
+		}
 	}
 	assert(false);
 }
 
 // Gets the current index on mKeyScalings to interpolate to based on the
 // current animation time
-int Bone::GetScaleIndex(float animationTime){
-	for (int i = 0; i < (m_NumScalings-1); i++){
-		if (animationTime < Bone::m_Scales[i+1].timeStamp){
+int GetScaleIndex(float animationTime, const std::vector<KeyScale>& m_Scales){
+	for (int i = 0; i < (m_NumScalings - 1); i++){
+		if (animationTime < m_Scales[i+1].timeStamp){
 			return i;
 		}
 	}
@@ -75,56 +75,56 @@ int Bone::GetScaleIndex(float animationTime){
 
 // figures out which position keys to interpolate b/w and performs the interpolation 
 // and returns the translation matrix
-glm::mat4 Bone::InterpolatePosition(float animationTime){
+glm::mat4 InterpolatePosition(float animationTime, const std::vector<KeyPosition>& m_Positions){
 	if (m_NumPositions == 1){
-		return glm::translate(glm::mat4(1.0f), Bone::m_Positions[0].position);
+		return glm::translate(glm::mat4(1.0f), m_Positions[0].position);
 	}
 
-	int index = Bone::GetPositionIndex(animationTime);
+	int index = GetPositionIndex(animationTime, m_Positions);
 	return glm::translate(glm::mat4(1.0f),
-	                      glm::mix(Bone::m_Positions[index].position,
-	                               Bone::m_Positions[index + 1].position,
-	                               GetScaleFactor(Bone::m_Positions[index].timeStamp,
-	                                              Bone::m_Positions[index + 1].timeStamp,
+	                      glm::mix(m_Positions[index].position,
+	                               m_Positions[index + 1].position,
+	                               GetScaleFactor(m_Positions[index].timeStamp,
+	                                              m_Positions[index + 1].timeStamp,
 	                                              animationTime)));
 }
 
 // figures out which rotations keys to interpolate b/w and performs the interpolation 
 // and returns the rotation matrix
-glm::mat4 Bone::InterpolateRotation(float animationTime){
+glm::mat4 InterpolateRotation(float animationTime, const std::vector<KeyRotation>& m_Rotations){
 	if (m_NumRotations == 1){
-		return glm::toMat4(glm::normalize(Bone::m_Rotations[0].orientation));
+		return glm::toMat4(glm::normalize(m_Rotations[0].orientation));
 	}
-	int index = Bone::GetRotationIndex(animationTime);
-	return glm::toMat4(glm::normalize(glm::slerp(Bone::m_Rotations[index].orientation,
-	                                             Bone::m_Rotations[index + 1].orientation,
-	                                             GetScaleFactor(Bone::m_Rotations[index].timeStamp,
-	                                                            Bone::m_Rotations[index + 1].timeStamp,
+	int index = GetRotationIndex(animationTime, m_Rotations);
+	return glm::toMat4(glm::normalize(glm::slerp(m_Rotations[index].orientation,
+	                                             m_Rotations[index + 1].orientation,
+	                                             GetScaleFactor(m_Rotations[index].timeStamp,
+	                                                            m_Rotations[index + 1].timeStamp,
 	                                                            animationTime))));
 }
 
 // figures out which scaling keys to interpolate b/w and performs the interpolation 
 // and returns the scale matrix
-glm::mat4 Bone::InterpolateScaling(float animationTime){
+glm::mat4 InterpolateScaling(float animationTime, const std::vector<KeyScale>& m_Scales){
 	if (m_NumScalings == 1){
-		return glm::scale(glm::mat4(1.0f), Bone::m_Scales[0].scale);
+		return glm::scale(glm::mat4(1.0f), m_Scales[0].scale);
 	}
 
-	int index = GetScaleIndex(animationTime);
+	int index = GetScaleIndex(animationTime, m_Scales);
 	return glm::scale(glm::mat4(1.0f),
-	                  glm::mix(Bone::m_Scales[index].scale,
-	                           Bone::m_Scales[index + 1].scale,
-	                           GetScaleFactor(Bone::m_Scales[index].timeStamp,
-	                                          Bone::m_Scales[index + 1].timeStamp,
+	                  glm::mix(m_Scales[index].scale,
+	                           m_Scales[index + 1].scale,
+	                           GetScaleFactor(m_Scales[index].timeStamp,
+	                                          m_Scales[index + 1].timeStamp,
 	                                          animationTime)));
 }
 
 // interpolates  b/w positions,rotations & scaling keys based on the curren time of
 // the animation and prepares the local transformation matrix by combining all keys tranformations
 void Bone::Update(float animationTime){
-	m_LocalTransform = Bone::InterpolatePosition(animationTime)*
-	                   Bone::InterpolateRotation(animationTime)*
-	                   Bone::InterpolateScaling(animationTime);
+	m_LocalTransform = InterpolatePosition(animationTime, Bone::m_Positions)*
+	                   InterpolateRotation(animationTime, Bone::m_Rotations)*
+	                   InterpolateScaling (animationTime, Bone::m_Scales);
 }
 
 glm::mat4 Bone::GetLocalTransform() { return m_LocalTransform; }
