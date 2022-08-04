@@ -8,9 +8,13 @@ layout (location = 4) in vec3 aBitangent;
 layout (location = 5) in ivec4 boneIds;
 layout (location = 6) in vec4 weights;
 
+//vec4 bones[4] = {(boneIds / (0xFFFFFF)), (boneIds / (0xFFFF)), (boneIds / (0xFF)), (boneIds)};
+
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
+
+uniform bool animated;
 
 const int MAX_BONES = 100;
 const int MAX_BONE_INFLUENCE = 4;
@@ -19,23 +23,22 @@ uniform mat4 finalBonesMatrices[MAX_BONES];
 out vec2 TexCoords;
 
 void main(){
-
-	vec4 totalPosition = vec4(1.0f);
-	for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++)
-	{
-		if(boneIds[i] == -1)
-			continue;
-		if(boneIds[i] >= MAX_BONES) {
-			totalPosition = vec4(pos,1.0f);
-			break;
+	if (!animated) {
+		gl_Position = projection * view * model * vec4(pos, 1.0);
+	}else{
+		vec4 totalPosition = vec4(1.0f);
+		for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++){
+			if(boneIds[i] == 0)
+				continue;
+			if(boneIds[i] >= MAX_BONES) {
+				totalPosition = vec4(pos,1.0f);
+				break;
+			}
+			vec4 localPosition = finalBonesMatrices[boneIds[i]] * vec4(pos,1.0f);
+			totalPosition += localPosition * weights[i];
+			//vec3 localNormal = mat3(finalBonesMatrices[boneIds[i]]) * norm;
 		}
-		vec4 localPosition = finalBonesMatrices[boneIds[i]] * vec4(pos,1.0f);
-		totalPosition += localPosition * weights[i];
-		vec3 localNormal = mat3(finalBonesMatrices[boneIds[i]]) * norm;
+		gl_Position =  projection * view * model * totalPosition;
 	}
-
-	mat4 viewModel = view * model;
-	gl_Position =  projection * viewModel * totalPosition;
-	//gl_Position = projection * view * model * vec4(pos, 1.0);
 	TexCoords = tex;
 }

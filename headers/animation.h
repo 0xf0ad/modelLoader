@@ -17,7 +17,7 @@ public:
 	int m_TicksPerSecond;
 	std::vector<Bone> m_Bones;
 	AssimpNodeData m_RootNode;
-	std::map<std::string, BoneInfo> m_BoneInfoMap;
+	std::unordered_map<std::string, BoneInfo> m_BoneInfoMap;
 
 	Animation() = default;
 
@@ -47,13 +47,13 @@ public:
 private:
 	void ReadMissingBones(const aiAnimation* animation, Model& model){
 		auto& boneInfoMap = model.GetBoneInfoMap();//getting m_BoneInfoMap from Model class
-		int& boneCount = model.GetBoneCount(); //getting the m_BoneCounter from Model class
+		unsigned char* boneCount = model.GetBoneCount(); //getting the m_BoneCounter from Model class
 
 		//reading channels(bones engaged in an animation and their keyframes)
 		for (unsigned int i = 0; i < animation->mNumChannels; i++){
 			if (boneInfoMap.find(animation->mChannels[i]->mNodeName.data) == boneInfoMap.end()){
-				boneInfoMap[animation->mChannels[i]->mNodeName.data].id = boneCount;
-				boneCount++;
+				boneInfoMap[animation->mChannels[i]->mNodeName.data].id = *(boneCount);
+				*(boneCount)++;
 			}
 			m_Bones.push_back(Bone(animation->mChannels[i]->mNodeName.data,
 			                       boneInfoMap[animation->mChannels[i]->mNodeName.data].id,

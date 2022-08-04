@@ -19,10 +19,9 @@
 Camera camera(glm::vec3(0.0f, 3.0f, 9.0f));
 float lastX = WIN_WIDTH  >> 1;	// deviding the width by 2 (but divition is expensive 
 float lastY = WIN_HEIGHT >> 1;	// insted we will shift the width by 1 witch save us some CPU cycles)
+
 bool firstMouse = true;
-
 bool showOverlay = true;
-
 bool animated = true;
 
 // timing
@@ -32,11 +31,11 @@ float deltaTime, lastFrame;
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow *window);
-static void ShowExampleAppSimpleOverlay(bool* p_open);
+static void ShowOverlay(bool* p_open);
 
 
 int main(int argc, char** argv){
-	
+
 	//check for number of arguments
 	if(argc == 1){
 		printf("please insert a path to the model you want to view\n");
@@ -93,14 +92,19 @@ int main(int argc, char** argv){
 
 	// build and compile shaders
 	// -------------------------
-	Shader ourShader("./shaders/vertexShader", "./shaders/fragmentShader1");
+	Shader ourShader("shaders/vertexShader", "shaders/fragmentShader");
 
 	// load models
 	// -----------
 	Model ourModel(argv[1]);
-	
-	Animation animation(argv[2], &ourModel);
-	Animator animator(&animation);
+
+	Animation *animation;
+	Animator  *animator;
+
+	if (animated){
+		animation = new Animation(argv[2], &ourModel);
+		animator  = new Animator(animation);
+	}
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -111,13 +115,19 @@ int main(int argc, char** argv){
 
 	bool show_demo_window    = false;
 	bool show_another_window = false;
+	bool show_cordSet_window = false;
 	bool cullFace            = false;
 	bool wireFrame           = false;
-	bool V_Sync              = true;
+	bool V_Sync              = false;
 	float f                  = 0.0f;
 	ImVec4 clear_color = ImVec4(0.2f, 0.3f, 0.3f, 1.0f);
 
 	// disable V-Sync to get more than 60 fps
+	glfwSwapInterval(V_Sync);
+	glm::mat4 model = glm::mat4(1.0f);
+	glm::mat4 projection;
+	glm::mat4 view;
+
 	
 	// render loop
 	// -----------
@@ -132,7 +142,12 @@ int main(int argc, char** argv){
 		// input
 		// -----
 		processInput(window);
-		animator.UpdateAnimation(deltaTime);
+		if (animated){
+			animator->UpdateAnimation(deltaTime);
+			std::vector<glm::mat4> transforms = animator->GetFinalBoneMatrices();
+			for (unsigned int i = 0; i < transforms.size(); i++)
+				ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + ']', transforms[i]);
+		}
 
 		// render
 		// ------
@@ -154,16 +169,16 @@ int main(int argc, char** argv){
 
 		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
 
-		ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+		ImGui::Begin("some settings");                          // Create a window called "Hello, world!" and append into it.
 
-		ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+		ImGui::Text("This is a text.");                         // Display some text (you can use a format strings too)
 		ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 		ImGui::Checkbox("Another Window", &show_another_window);
 
 		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 		ImGui::ColorEdit3("clear color", clrColorPtr);          // Edit 3 floats representing a color
 
-		//if (ImGui::Button("Botton")) { }                        // Buttons return true when clicked (most widgets return true when edited/activated)
+		//if (ImGui::Button("Botton")) { }                      // Buttons return true when clicked (most widgets return true when edited/activated)
 
 		// controlling face rendering (render only front faces or only back ones)
 		// ----------------------------------------------------------------------
@@ -184,8 +199,28 @@ int main(int argc, char** argv){
 		// controlling V-Sync (fix framerate to display refreshrate(likely 60 Hz))
 		// -----------------------------------------------------------------------
 		ImGui::Checkbox("V-Sync", &V_Sync);
-		glfwSwapInterval(V_Sync);
-		
+		if (ImGui::Button("apply"))
+			glfwSwapInterval(V_Sync);
+
+		// corect cordinates if loaded incorrectly
+		// ---------------------------------------
+		ImGui::Checkbox("cordinate System incorrect ?", &show_cordSet_window);
+		if (show_cordSet_window){
+			ImGui::Begin("correct cordinate system", &show_cordSet_window);
+			ImGui::Text("how we can correct your model's cordinates ?");
+			if (ImGui::Button("Rotate by  90° on X axis")){}
+			if (ImGui::Button("Rotate by -90° on X axis")){}
+			if (ImGui::Button("Rotate by  90° on Y axis")){}
+			if (ImGui::Button("Rotate by -90° on Y axis")){}
+			if (ImGui::Button("Rotate by  90° on Z axis")){}
+			if (ImGui::Button("Rotate by -90° on Z axis")){}
+			if (ImGui::Button("Close"))
+				show_cordSet_window = false;
+			ImGui::End();
+		}
+
+
+
 		// displaying text or some variable for debugging for noow its disabled
 		#if false
 		ImGui::Text("Application average %f ms/frame (FPS)", (1.0f / ImGui::GetIO().Framerate) - deltaTime);
@@ -201,27 +236,28 @@ int main(int argc, char** argv){
 			ImGui::End();
 		}
 
-		ShowExampleAppSimpleOverlay(&showOverlay);
+		ShowOverlay(&showOverlay);
 
 		//enable shader before setting uniforms
 		ourShader.use();
+		ourShader.setBool("animated", animated);
 
 		// view/projection transformations
-		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIN_WIDTH / (float)WIN_HEIGHT, 0.1f, 100.0f);
-		glm::mat4 view = camera.GetViewMatrix();
+		projection = glm::perspective(glm::radians(camera.Zoom), (float)WIN_WIDTH / (float)WIN_HEIGHT, 0.1f, 100.0f);
+		view = camera.GetViewMatrix();
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view", view);
 
-		auto transforms = animator.GetFinalBoneMatrices();
-		for (unsigned int i = 0; i < transforms.size(); i++)
-			ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + ']', transforms[i]);
-
 		// render the loaded model by setting the model transformation
-		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
 		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));	// it's a bit too big for our scene, so scale it down
 		ourShader.setMat4("model", model);
 
+		// write to stencil buffer
+		glStencilMask(0x00);
+
+		// draw our model
 		ourModel.Draw(ourShader);
 
 		// tell ImGui to render the windows
@@ -231,6 +267,12 @@ int main(int argc, char** argv){
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+	}
+
+	if (animated){
+		// free animation data from memory
+		delete animation;
+		delete animator;
 	}
 
 	//terminate ImGui processs after quitting the loop
@@ -311,7 +353,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
 }
 
 
-static void ShowExampleAppSimpleOverlay(bool* p_open){
+static void ShowOverlay(bool* p_open){
 	static unsigned char corner = 0;
 	ImGuiIO& io = ImGui::GetIO();
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;

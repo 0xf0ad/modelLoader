@@ -12,16 +12,17 @@ struct Vertex {
 	glm::vec3 Position;
 	// normal
 	glm::vec3 Normal;
-	// texCoords
+	// texture cordinates
 	glm::vec2 TexCoords;
 	// tangent
 	glm::vec3 Tangent;
 	// bitangent
 	glm::vec3 Bitangent;
 	//bone id
-	int m_BoneIDs[MAX_BONE_INFLUENCE] = {0};
+	int m_BoneIDs[MAX_BONE_INFLUENCE];
+	int BoneIDs;
 	//bone weight
-	float m_Weights[MAX_BONE_INFLUENCE] = {0.0f};
+	float m_Weights[MAX_BONE_INFLUENCE];
 };
 
 struct Texture {

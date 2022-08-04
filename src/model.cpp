@@ -1,10 +1,12 @@
 #include <assert.h>
+#include <stdio.h>
 #include "../headers/model.h"
+
 // model data
-std::vector<Texture>            textures_loaded;
-std::vector<Mesh>               meshes;
-std::map<std::string, BoneInfo> m_BoneInfoMap;
-int                             m_BoneCounter = 0;
+std::vector<Texture> textures_loaded;
+std::vector<Mesh>    meshes;
+unsigned char        m_BoneCounter = 1;
+std::unordered_map<std::string, BoneInfo> m_BoneInfoMap;
 
 unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma = false){
 
@@ -31,12 +33,11 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		stbi_image_free(data);
 	}else{
-		std::cout<<"Texture failed to load at path: "<<filename<<'\n';
-		stbi_image_free(data);
+		printf("Texture failed to load at path: %s\n", filename.c_str());
 	}
+	
+	stbi_image_free(data);
 	return textureID;
 }
 
@@ -47,7 +48,6 @@ std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, s
 	for(unsigned int i = 0; i < mat->GetTextureCount(type); i++){
 		aiString str;
 		mat->GetTexture(type, i, &str);
-		
 		// check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
 		bool skip = false;
 		for(unsigned int j = 0; j < textures_loaded.size(); j++){
@@ -70,22 +70,29 @@ std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, s
 }
 
 Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
-	std::vector<Vertex>       vertices;
-	std::vector<unsigned int> indices;
-	std::vector<Texture>      textures;
+	std::vector<Vertex>  vertices;
+	std::vector<uint>    indices;
+	std::vector<Texture> textures;
 
+	// process meshes
+	// --------------
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++){
 		Vertex vertex;
 		for (int i = 0; i < MAX_BONE_INFLUENCE; i++){
-			vertex.m_BoneIDs[i] = -1;
+			vertex.m_BoneIDs[i] = 0;
 			vertex.m_Weights[i] = 0.0f;
 		}
 
-		vertex.Position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
-		// does the mesh contain normals
+		//process mesh positions if it has any
+		if(mesh->HasPositions()){
+			vertex.Position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
+		}
+		// process normals if it has any
 		if (mesh->HasNormals()){
 			vertex.Normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
-		}if (mesh->mTextureCoords[0]){
+		}
+		// load textures if it has any
+		if (mesh->mTextureCoords[0]){
 			glm::vec2 vec;
 			vec.x = mesh->mTextureCoords[0][i].x;
 			vec.y = mesh->mTextureCoords[0][i].y;
@@ -95,11 +102,51 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 		}
 		vertices.push_back(vertex);
 	}
+
+	// process faces
+	// -------------
 	for (unsigned int i = 0; i < mesh->mNumFaces; i++){
 		aiFace face = mesh->mFaces[i];
 		for (unsigned int j = 0; j < face.mNumIndices; j++)
 			indices.push_back(face.mIndices[j]);
 	}
+
+	// process bones
+	// -------------
+	if (mesh->HasBones()){
+		for (uint boneIndex = 0; boneIndex != mesh->mNumBones; boneIndex++){
+			unsigned char boneID = 0;
+			std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
+			if (m_BoneInfoMap.find(boneName) == m_BoneInfoMap.end()){
+				BoneInfo newBoneInfo;
+				newBoneInfo.id = m_BoneCounter;
+				newBoneInfo.offset = AssimpGLMHelpers::ConvertMatrixToGLMFormat(mesh->mBones[boneIndex]->mOffsetMatrix);
+				m_BoneInfoMap[boneName] = newBoneInfo;
+				boneID = m_BoneCounter;
+				m_BoneCounter++;
+			}else{
+				boneID = m_BoneInfoMap[boneName].id;
+			}
+			assert(boneID);
+
+			for (uint weightIndex = 0; weightIndex != mesh->mBones[boneIndex]->mNumWeights; weightIndex++){
+				int vertexId = mesh->mBones[boneIndex]->mWeights[weightIndex].mVertexId;
+				assert(vertexId <= (int)vertices.size());
+			
+				for (unsigned char i = 0; i != MAX_BONE_INFLUENCE; i++){
+					if (!vertices[vertexId].m_BoneIDs[i]){
+						vertices[vertexId].m_Weights[i] = mesh->mBones[boneIndex]->mWeights[weightIndex].mWeight;
+						vertices[vertexId].m_BoneIDs[i] = boneID;
+						break;
+					}
+				}
+				vertices[vertexId].BoneIDs = *(int*)vertices[vertexId].m_BoneIDs;
+			}
+		}
+	}
+
+	// assigne textures
+	// ----------------
 	aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
 	std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", dir);
@@ -111,34 +158,7 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 	std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", dir);
 	textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
-	for (uint boneIndex = 0; boneIndex != mesh->mNumBones; boneIndex++){
-		int boneID = -1;
-		std::string boneName = mesh->mBones[boneIndex]->mName.C_Str();
-		if (m_BoneInfoMap.find(boneName) == m_BoneInfoMap.end()){
-			BoneInfo newBoneInfo;
-			newBoneInfo.id = m_BoneCounter;
-			newBoneInfo.offset = AssimpGLMHelpers::ConvertMatrixToGLMFormat(mesh->mBones[boneIndex]->mOffsetMatrix);
-			m_BoneInfoMap[boneName] = newBoneInfo;
-			boneID = m_BoneCounter;
-			m_BoneCounter++;
-		}else{
-			boneID = m_BoneInfoMap[boneName].id;
-		}
-		assert(boneID != -1);
 
-		for (uint weightIndex = 0; weightIndex != mesh->mBones[boneIndex]->mNumWeights; weightIndex++){
-			int vertexId = mesh->mBones[boneIndex]->mWeights[weightIndex].mVertexId;
-			//assert(vertexId <= vertices.size());
-			
-			for (unsigned char i = 0; i != MAX_BONE_INFLUENCE; i++){
-				if (vertices[vertexId].m_BoneIDs[i] < 0){
-					vertices[vertexId].m_Weights[i] = mesh->mBones[boneIndex]->mWeights[weightIndex].mWeight;
-					vertices[vertexId].m_BoneIDs[i] = boneID;
-					break;
-				}
-			}
-		}
-	}
 	return Mesh(vertices, indices, textures);
 }
 
@@ -158,7 +178,7 @@ void loadModel(std::string path){
 	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
 	//check for importing errors
 	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode){
-		std::cout <<"ERROR::ASSIMP::"<< import.GetErrorString()<<'\n';
+		printf("ERROR::ASSIMP::%s\n", import.GetErrorString());
 		return;
 	}
 	std::string directory = path.substr(0, path.find_last_of('/'));
@@ -175,5 +195,5 @@ void Model::Draw(Shader &shader){
 		meshes[i].Draw(shader);
 }
 
-std::map<std::string, BoneInfo>& Model::GetBoneInfoMap() { return m_BoneInfoMap; }
-int& Model::GetBoneCount() { return m_BoneCounter; }
+std::unordered_map<std::string, BoneInfo>& Model::GetBoneInfoMap() { return m_BoneInfoMap; }
+unsigned char* Model::GetBoneCount() { return &m_BoneCounter; }

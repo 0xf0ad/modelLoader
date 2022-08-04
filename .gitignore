@@ -39,4 +39,5 @@ models/
 # custom files i dont want to share
 run.sh
 makefile1
+load
 

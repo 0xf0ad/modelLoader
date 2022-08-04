@@ -42,7 +42,7 @@ public:
 			nodeTransform = m_CurrentAnimation->FindBone(node->name)->GetLocalTransform();
 		}
 
-		std::map<std::string, BoneInfo> boneInfoMap = m_CurrentAnimation->m_BoneInfoMap;
+		std::unordered_map<std::string, BoneInfo> boneInfoMap = m_CurrentAnimation->m_BoneInfoMap;
 		if (boneInfoMap.find(node->name) != boneInfoMap.end()){
 			m_FinalBoneMatrices[boneInfoMap[node->name].id] = parentTransform *
 			                                                  nodeTransform *

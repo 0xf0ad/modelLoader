@@ -19,6 +19,7 @@ public:
 
 	//use the shader
 	const void use();
+
 	// utility uniform functions
 	const void setBool(const std::string &name, bool value);
 	const void setInt(const std::string &name, int value);

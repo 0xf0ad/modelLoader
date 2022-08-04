@@ -5,13 +5,13 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include <map>
+#include <unordered_map>
 
 #include "mesh.h"
 
 struct BoneInfo{
 	// id is index in finalBoneMatrices
-	int id;
+	unsigned char id;
 	// offset matrix transforms vertex from model space to bone space
 	glm::mat4 offset;
 };
@@ -25,7 +25,7 @@ public:
 	// draws the model, and thus all its meshes
 	void Draw(Shader &shader);
 
-	std::map<std::string, BoneInfo>& GetBoneInfoMap();
-	int& GetBoneCount();
+	std::unordered_map<std::string, BoneInfo>& GetBoneInfoMap();
+	unsigned char* GetBoneCount();
 
 };
