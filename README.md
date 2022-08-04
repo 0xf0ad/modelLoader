@@ -8,7 +8,7 @@ a program that loads 3D models
 ```bash
 git clone https://github.com/hadsitewa3r/OpenGL.git && \
 cd modelLoader && \
-make all compile
+make
 ```
 
 if you want to access the tool as a command from the tharminal you can add
