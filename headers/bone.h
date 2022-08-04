@@ -38,5 +38,6 @@ public:
 	// the animation and prepares the local transformation matrix by combining all keys tranformations
 	void Update(float animationTime);
 
+	// getting the local transofmation outside of the class
 	glm::mat4 GetLocalTransform();
 };

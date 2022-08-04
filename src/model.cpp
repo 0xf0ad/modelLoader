@@ -43,7 +43,7 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.
-std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName, const char* dir){
+std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, const char* typeName, const char* dir){
 	std::vector<Texture> textures;
 	for(unsigned int i = 0; i < mat->GetTextureCount(type); i++){
 		aiString str;
@@ -172,7 +172,7 @@ void processNode(aiNode *node, const aiScene *scene, const char *dir){
 }
 
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
-void loadModel(std::string path){
+void loadModel(const std::string& path){
 	// read file via ASSIMP
 	Assimp::Importer import;
 	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
