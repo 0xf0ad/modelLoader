@@ -34,12 +34,10 @@ public:
 		Bone* bone = m_CurrentAnimation->FindBone(node->name);
 
 		if (bone){
-			//bone->Update(m_CurrentTime);
 			nodeTransform = glm::mat4(1.0f);
 			boneScale     = bone->InterpolateScaling (m_CurrentTime);
 			boneRotation  = bone->InterpolateRotation(m_CurrentTime);
 			bonePosition  = bone->InterpolatePosition(m_CurrentTime);
-			//nodeTransform = bone->GetLocalTransform();
 		}
 
 		std::unordered_map<std::string, BoneInfo> boneInfoMap = m_CurrentAnimation->m_BoneInfoMap;
