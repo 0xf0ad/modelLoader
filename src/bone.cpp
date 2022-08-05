@@ -75,7 +75,7 @@ int GetScaleIndex(float animationTime, const std::vector<KeyScale>& m_Scales){
 
 // figures out which position keys to interpolate b/w and performs the interpolation 
 // and returns the translation matrix
-glm::mat4 InterpolatePosition(float animationTime, const std::vector<KeyPosition>& m_Positions){
+glm::mat4 Bone::InterpolatePosition(float animationTime){
 	if (m_NumPositions == 1){
 		return glm::translate(glm::mat4(1.0f), m_Positions[0].position);
 	}
@@ -91,7 +91,7 @@ glm::mat4 InterpolatePosition(float animationTime, const std::vector<KeyPosition
 
 // figures out which rotations keys to interpolate b/w and performs the interpolation 
 // and returns the rotation matrix
-glm::mat4 InterpolateRotation(float animationTime, const std::vector<KeyRotation>& m_Rotations){
+glm::mat4 Bone::InterpolateRotation(float animationTime){
 	if (m_NumRotations == 1){
 		return glm::toMat4(glm::normalize(m_Rotations[0].orientation));
 	}
@@ -105,7 +105,7 @@ glm::mat4 InterpolateRotation(float animationTime, const std::vector<KeyRotation
 
 // figures out which scaling keys to interpolate b/w and performs the interpolation 
 // and returns the scale matrix
-glm::mat4 InterpolateScaling(float animationTime, const std::vector<KeyScale>& m_Scales){
+glm::mat4 Bone::InterpolateScaling(float animationTime){
 	if (m_NumScalings == 1){
 		return glm::scale(glm::mat4(1.0f), m_Scales[0].scale);
 	}
@@ -122,9 +122,9 @@ glm::mat4 InterpolateScaling(float animationTime, const std::vector<KeyScale>& m
 // interpolates  b/w positions,rotations & scaling keys based on the curren time of
 // the animation and prepares the local transformation matrix by combining all keys tranformations
 void Bone::Update(float animationTime){
-	m_LocalTransform = InterpolatePosition(animationTime, Bone::m_Positions)*
-	                   InterpolateRotation(animationTime, Bone::m_Rotations)*
-	                   InterpolateScaling (animationTime, Bone::m_Scales);
+	m_LocalTransform = InterpolatePosition(animationTime)*
+	                   InterpolateRotation(animationTime)*
+	                   InterpolateScaling (animationTime);
 }
 
 glm::mat4 Bone::GetLocalTransform() { return m_LocalTransform; }

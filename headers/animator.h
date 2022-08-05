@@ -17,7 +17,7 @@ public:
 		if (m_CurrentAnimation){
 			m_CurrentTime += m_CurrentAnimation->m_TicksPerSecond * dt;
 			m_CurrentTime = fmod(m_CurrentTime, m_CurrentAnimation->m_Duration);
-			CalculateBoneTransform(&m_CurrentAnimation->m_RootNode, glm::mat4(1.0f));
+			CalculateBoneTransform(&(m_CurrentAnimation->m_RootNode), glm::mat4(1.0f));
 		}
 	}
 
@@ -28,21 +28,28 @@ public:
 
 	void CalculateBoneTransform(const AssimpNodeData* node, glm::mat4 parentTransform){
 		glm::mat4 nodeTransform = node->transformation;
+		glm::mat4 boneScale(1.0f);
+		glm::mat4 boneRotation(1.0f);
+		glm::mat4 bonePosition(1.0f);
 		Bone* bone = m_CurrentAnimation->FindBone(node->name);
 
 		if (bone){
-			bone->Update(m_CurrentTime);
-			nodeTransform = bone->GetLocalTransform();
+			//bone->Update(m_CurrentTime);
+			nodeTransform = glm::mat4(1.0f);
+			boneScale     = bone->InterpolateScaling (m_CurrentTime);
+			boneRotation  = bone->InterpolateRotation(m_CurrentTime);
+			bonePosition  = bone->InterpolatePosition(m_CurrentTime);
+			//nodeTransform = bone->GetLocalTransform();
 		}
 
 		std::unordered_map<std::string, BoneInfo> boneInfoMap = m_CurrentAnimation->m_BoneInfoMap;
+		glm::mat4 mutip = parentTransform * bonePosition * boneRotation * boneScale * nodeTransform;
+		
 		if (boneInfoMap.find(node->name) != boneInfoMap.end()){
-			m_FinalBoneMatrices[boneInfoMap[node->name].id] = parentTransform *
-			                                                  nodeTransform *
-			                                                  boneInfoMap[node->name].offset;
+			m_FinalBoneMatrices[boneInfoMap[node->name].id] = mutip * boneInfoMap[node->name].offset;
 		}
 
 		for (int i = 0; i < node->childrenCount; i++)
-			CalculateBoneTransform(&node->children[i], parentTransform * nodeTransform);
+			CalculateBoneTransform(&node->children[i], mutip);
 	}
 };

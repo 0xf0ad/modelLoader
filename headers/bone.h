@@ -34,6 +34,10 @@ public:
 	// reads keyframes from aiNodeAnim
 	Bone(const std::string& name, int ID, const aiNodeAnim* channel);
 
+	glm::mat4 InterpolatePosition(float animationTime);
+	glm::mat4 InterpolateRotation(float animationTime);
+	glm::mat4 InterpolateScaling (float animationTime);
+
 	// interpolates  b/w positions,rotations & scaling keys based on the curren time of
 	// the animation and prepares the local transformation matrix by combining all keys tranformations
 	void Update(float animationTime);

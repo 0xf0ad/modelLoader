@@ -68,10 +68,6 @@ load [the path of the 3D model file] [the path to the animation if there is any]
 |S                     |move Backward              |
 |D                     |move Left                  |
 |LEFT_SHIFT            |slowing movement           |
-|Z                     |switch to normal mode      |
-|X                     |switch to wireframe mode   |
-|H                     |render the front faces     |
-|J                     |render the back faces      |
 |ESCAPE                |exit the application       |
 
 you can change the binding by modifying the souce code (suckless phelo) by modifing the processInput function on the bottom of main.cpp
