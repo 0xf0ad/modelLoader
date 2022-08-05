@@ -144,9 +144,8 @@ int main(int argc, char** argv){
 		processInput(window);
 		if (animated){
 			animator->UpdateAnimation(deltaTime);
-			std::vector<glm::mat4> transforms = animator->GetFinalBoneMatrices();
-			for (unsigned int i = 0; i < transforms.size(); i++)
-				ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + ']', transforms[i]);
+			for (unsigned int i = 0; i < 100; i++)
+				ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + ']', animator->m_FinalBoneMatrices[i]);
 		}
 
 		// render

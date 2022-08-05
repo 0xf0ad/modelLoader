@@ -4,24 +4,16 @@
 #include "animation.h"
 
 class Animator{
-	std::vector<glm::mat4> m_FinalBoneMatrices;
-	Animation* m_CurrentAnimation;
-	float m_CurrentTime;
-	float m_DeltaTime;
-
 public:
+	glm::mat4 m_FinalBoneMatrices[100] = { glm::mat4(1.0f) };
+	Animation* m_CurrentAnimation;
+	float m_CurrentTime = 0.0f;
+
 	Animator(Animation* animation){
-		m_CurrentTime = 0.0;
 		m_CurrentAnimation = animation;
-
-		m_FinalBoneMatrices.reserve(100);
-
-		for (int i = 0; i < 100; i++)
-			m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
 	}
 
 	void UpdateAnimation(float dt){
-		m_DeltaTime = dt;
 		if (m_CurrentAnimation){
 			m_CurrentTime += m_CurrentAnimation->m_TicksPerSecond * dt;
 			m_CurrentTime = fmod(m_CurrentTime, m_CurrentAnimation->m_Duration);
@@ -36,10 +28,11 @@ public:
 
 	void CalculateBoneTransform(const AssimpNodeData* node, glm::mat4 parentTransform){
 		glm::mat4 nodeTransform = node->transformation;
+		Bone* bone = m_CurrentAnimation->FindBone(node->name);
 
-		if (m_CurrentAnimation->FindBone(node->name)){
-			m_CurrentAnimation->FindBone(node->name)->Update(m_CurrentTime);
-			nodeTransform = m_CurrentAnimation->FindBone(node->name)->GetLocalTransform();
+		if (bone){
+			bone->Update(m_CurrentTime);
+			nodeTransform = bone->GetLocalTransform();
 		}
 
 		std::unordered_map<std::string, BoneInfo> boneInfoMap = m_CurrentAnimation->m_BoneInfoMap;
@@ -51,9 +44,5 @@ public:
 
 		for (int i = 0; i < node->childrenCount; i++)
 			CalculateBoneTransform(&node->children[i], parentTransform * nodeTransform);
-	}
-
-	std::vector<glm::mat4> GetFinalBoneMatrices(){
-		return m_FinalBoneMatrices;
 	}
 };
