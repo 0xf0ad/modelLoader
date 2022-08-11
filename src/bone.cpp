@@ -127,4 +127,4 @@ void Bone::Update(float animationTime){
 	                   InterpolateScaling (animationTime, Bone::m_Scales);
 }
 
-glm::mat4 Bone::GetLocalTransform() { return m_LocalTransform; }
+glm::mat4* Bone::GetLocalTransform() const { return &m_LocalTransform; }

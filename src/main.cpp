@@ -1,6 +1,9 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
+//#include "../gui/imgui.h"
+//#include "../gui/backends/imgui_impl_glfw.h"
+//#include "../gui/backends/imgui_impl_opengl3.h"
 #include "../headers/shader.h"
 #include "../headers/model.h"
 #include "../headers/libs/stb_image.h"
@@ -8,6 +11,7 @@
 #include "../headers/animator.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+#include <string>
 
 // settings
 #define WIN_WIDTH                  1280
@@ -40,6 +44,8 @@ int main(int argc, char** argv){
 	if(argc == 1){
 		printf("please insert a path to the model you want to view\n");
 		return true;
+	}else if(argc == 2){
+		animated = false;
 	}
 
 	// glfw: initialize and configure
@@ -87,12 +93,16 @@ int main(int argc, char** argv){
 	// configure global opengl state
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_STENCIL_TEST);
+	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	// build and compile shaders
 	// -------------------------
 	Shader ourShader("shaders/vertexShader", "shaders/fragmentShader");
+	Shader outLiner ("shaders/outlinervs"  , "shaders/outlinerfs"    );
 
 	// load models
 	// -----------
@@ -120,6 +130,7 @@ int main(int argc, char** argv){
 	bool wireFrame           = false;
 	bool V_Sync              = false;
 	float f                  = 0.0f;
+	float scale              = 1.0f;
 	ImVec4 clear_color = ImVec4(0.2f, 0.3f, 0.3f, 1.0f);
 
 	// disable V-Sync to get more than 60 fps
@@ -174,7 +185,7 @@ int main(int argc, char** argv){
 		ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 		ImGui::Checkbox("Another Window", &show_another_window);
 
-		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+		ImGui::SliderFloat("outline scale", &scale, 0.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
 		ImGui::ColorEdit3("clear color", clrColorPtr);          // Edit 3 floats representing a color
 
 		//if (ImGui::Button("Botton")) { }                      // Buttons return true when clicked (most widgets return true when edited/activated)
@@ -254,10 +265,26 @@ int main(int argc, char** argv){
 		ourShader.setMat4("model", model);
 
 		// write to stencil buffer
-		glStencilMask(0x00);
+		glStencilFunc(GL_ALWAYS, true, 0xFF);
+		glStencilMask(0xFF);
 
 		// draw our model
 		ourModel.Draw(ourShader);
+
+		glStencilFunc(GL_NOTEQUAL, true, 0xFF);
+		glStencilMask(0x00);
+		glDisable(GL_DEPTH_TEST);
+		outLiner.use();
+		outLiner.setFloat("scale", scale);
+		outLiner.setMat4("projection", projection);
+		outLiner.setMat4("view", view);
+		outLiner.setMat4("model", model);
+		
+		ourModel.Draw(outLiner);
+
+		glStencilMask(0xFF);
+		glStencilFunc(GL_ALWAYS, false, 0xFF);
+		glEnable(GL_DEPTH_TEST);
 
 		// tell ImGui to render the windows
 		ImGui::Render();

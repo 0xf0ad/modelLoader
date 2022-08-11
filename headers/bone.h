@@ -39,5 +39,5 @@ public:
 	void Update(float animationTime);
 
 	// getting the local transofmation outside of the class
-	glm::mat4 GetLocalTransform();
+	glm::mat4* GetLocalTransform() const;
 };

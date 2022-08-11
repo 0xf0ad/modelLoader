@@ -185,7 +185,7 @@ void loadModel(const std::string& path){
 	processNode(scene->mRootNode, scene, directory.c_str());
 }
 
-Model::Model(std::string const &path){
+Model::Model(const char* path){
 	loadModel(path);
 }
 

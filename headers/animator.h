@@ -32,7 +32,7 @@ public:
 
 		if (bone){
 			bone->Update(m_CurrentTime);
-			nodeTransform = bone->GetLocalTransform();
+			nodeTransform = *(bone->GetLocalTransform());
 		}
 
 		std::unordered_map<std::string, BoneInfo> boneInfoMap = m_CurrentAnimation->m_BoneInfoMap;
