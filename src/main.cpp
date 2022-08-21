@@ -1,11 +1,13 @@
-#include <imgui.h>
+/*#include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_opengl3.h>
-//#include "../gui/imgui.h"
-//#include "../gui/backends/imgui_impl_glfw.h"
-//#include "../gui/backends/imgui_impl_opengl3.h"
+#include <backends/imgui_impl_opengl3.h>*/
+#include "../gui/imgui.h"
+#include "../gui/backends/imgui_impl_glfw.h"
+#include "../gui/backends/imgui_impl_opengl3.h"
 #include "../headers/shader.h"
 #include "../headers/model.h"
+#include "../headers/frambuffer.h"
+#include "../headers/cubemap.h"
 #include "../headers/libs/stb_image.h"
 #include "../headers/camera.h"
 #include "../headers/animator.h"
@@ -16,8 +18,7 @@
 // settings
 #define WIN_WIDTH                  1280
 #define WIN_HEIGHT                  720
-#define FOV                       45.0f
-#define glslVersion "#version 330 core"
+#define glslVersion "#version 450 core"
 
 // camera
 Camera camera(glm::vec3(0.0f, 3.0f, 9.0f));
@@ -27,6 +28,7 @@ float lastY = WIN_HEIGHT >> 1;	// insted we will shift the width by 1 witch save
 bool firstMouse = true;
 bool showOverlay = true;
 bool animated = true;
+bool outlined = false;
 
 // timing
 float deltaTime, lastFrame;
@@ -36,7 +38,18 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow *window);
 static void ShowOverlay(bool* p_open);
+static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre);
 
+float quadVertices[] = {
+	// positions   // texCoords
+	-1.0f,  1.0f,  0.0f, 1.0f,
+	-1.0f, -1.0f,  0.0f, 0.0f,
+	 1.0f, -1.0f,  1.0f, 0.0f,
+
+	-1.0f,  1.0f,  0.0f, 1.0f,
+	 1.0f, -1.0f,  1.0f, 0.0f,
+	 1.0f,  1.0f,  1.0f, 1.0f
+};
 
 int main(int argc, char** argv){
 
@@ -51,8 +64,8 @@ int main(int argc, char** argv){
 	// glfw: initialize and configure
 	// ------------------------------
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef __APPLE__
@@ -87,14 +100,16 @@ int main(int argc, char** argv){
 		return -1;
 	}
 
-	// tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
-	stbi_set_flip_vertically_on_load(true);
-
 	// configure global opengl state
 	// -----------------------------
+	// enable depth buffer 
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
+	// enable face culling 
 	glEnable(GL_CULL_FACE);
+	// enable blending
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//enable stencil buffer
 	glEnable(GL_STENCIL_TEST);
 	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -103,6 +118,68 @@ int main(int argc, char** argv){
 	// -------------------------
 	Shader ourShader("shaders/vertexShader", "shaders/fragmentShader");
 	Shader outLiner ("shaders/outlinervs"  , "shaders/outlinerfs"    );
+
+	// define a framebuffer object
+	//FrameBuffer framebuffer(WIN_WIDTH, WIN_HEIGHT);
+
+	unsigned int skyboxVAO, skyboxVBO;
+	unsigned int cubemapTexture;
+
+		float skyboxVertices[] = {
+		//   Coordinates
+		-1.0f, -1.0f,  1.0f,//        7--------6
+		 1.0f, -1.0f,  1.0f,//       /|       /|
+		 1.0f, -1.0f, -1.0f,//      4--------5 |
+		-1.0f, -1.0f, -1.0f,//      | |      | |
+		-1.0f,  1.0f,  1.0f,//      | 3------|-2
+		 1.0f,  1.0f,  1.0f,//      |/       |/
+		 1.0f,  1.0f, -1.0f,//      0--------1
+		-1.0f,  1.0f, -1.0f
+	};
+
+	unsigned int skyboxIndices[] = {
+		// Right
+		1, 6, 2,
+		6, 1, 5,
+		// Left
+		0, 7, 4,
+		7, 0, 3,
+		// Top
+		4, 6, 5,
+		6, 4, 7,
+		// Bottom
+		0, 2, 3,
+		2, 0, 1,
+		// Back
+		0, 5, 1,
+		5, 0, 4,
+		// Front
+		3, 6, 7,
+		6, 3, 2
+	};
+
+
+		std::vector<std::string> faces = { 
+			"./textures/skybox/right.jpg",
+			"./textures/skybox/left.jpg",
+			"./textures/skybox/top.jpg",
+			"./textures/skybox/bottom.jpg",
+			"./textures/skybox/front.jpg",
+			"./textures/skybox/back.jpg"
+		};
+
+		Shader skyboxShader("shaders/skyboxvs","shaders/skyboxfs");
+
+		// skybox VAO
+		glGenVertexArrays(1, &skyboxVAO);
+		glGenBuffers(1, &skyboxVBO);
+		glBindVertexArray(skyboxVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+
+		cubemapTexture = loadCubemap(faces);
 
 	// load models
 	// -----------
@@ -124,13 +201,12 @@ int main(int argc, char** argv){
 	ImGui_ImplOpenGL3_Init(glslVersion);
 
 	bool show_demo_window    = false;
-	bool show_another_window = false;
 	bool show_cordSet_window = false;
-	bool cullFace            = false;
+	bool cullFace            = true;
 	bool wireFrame           = false;
 	bool V_Sync              = false;
-	float f                  = 0.0f;
-	float scale              = 1.0f;
+	//float f                = 0.0f;
+	float scale              = 0.0f;
 	ImVec4 clear_color = ImVec4(0.2f, 0.3f, 0.3f, 1.0f);
 
 	// disable V-Sync to get more than 60 fps
@@ -138,6 +214,8 @@ int main(int argc, char** argv){
 	glm::mat4 model = glm::mat4(1.0f);
 	glm::mat4 projection;
 	glm::mat4 view;
+	glm::vec3 AxisRot = glm::vec3(0.0f);
+	float rotDegre = 0.0f;
 
 	
 	// render loop
@@ -153,14 +231,11 @@ int main(int argc, char** argv){
 		// input
 		// -----
 		processInput(window);
-		if (animated){
-			animator->UpdateAnimation(deltaTime);
-			for (unsigned int i = 0; i < 100; i++)
-				ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + ']', animator->m_FinalBoneMatrices[i]);
-		}
-
+		
 		// render
 		// ------
+		//framebuffer.firstPass();
+		glEnable(GL_DEPTH_TEST);
 		float *clrColorPtr = (float*)&clear_color;
 		glClearColor(*clrColorPtr, *(clrColorPtr+1), *(clrColorPtr+2), *(clrColorPtr+3));
 		//those commented implementation do the same think
@@ -168,6 +243,7 @@ int main(int argc, char** argv){
 		//glClearColor(*(float*)&clear_color, *((float*)&clear_color+1), *((float*)&clear_color+2), *((float*)&clear_color+3));
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+		//view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -183,53 +259,46 @@ int main(int argc, char** argv){
 
 		ImGui::Text("This is a text.");                         // Display some text (you can use a format strings too)
 		ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-		ImGui::Checkbox("Another Window", &show_another_window);
+		ImGui::Checkbox("outlining", &outlined);
 
-		ImGui::SliderFloat("outline scale", &scale, 0.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+		if(outlined) ImGui::SliderFloat("outline scale", &scale, 0.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+		//ImGui::SliderFloat("field of view", &FOV, 0.0f, 200.0f);
 		ImGui::ColorEdit3("clear color", clrColorPtr);          // Edit 3 floats representing a color
 
+		ImGui::SliderFloat("field of view", &camera.Zoom, 0.0f, 180.0f);
 		//if (ImGui::Button("Botton")) { }                      // Buttons return true when clicked (most widgets return true when edited/activated)
 
 		// controlling face rendering (render only front faces or only back ones)
 		// ----------------------------------------------------------------------
-		ImGui::Checkbox("render back faces", &cullFace);
-		if (cullFace)
-			glCullFace(GL_FRONT);
-		else
-			glCullFace(GL_BACK);
-
+		ImGui::Checkbox("mapping uniforms", &ourShader.mapped);
+		ImGui::Checkbox("render front and back faces", &cullFace);
+		ImGui::SameLine();
+		if (ImGui::Button("apply face culling")){
+			if (cullFace)
+				glEnable(GL_CULL_FACE);
+			else
+				glDisable(GL_CULL_FACE);
+		}
 		// controlling wireframe mode
 		// --------------------------
 		ImGui::Checkbox("Render on wireframe", &wireFrame);
-		if (wireFrame)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		else
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		ImGui::SameLine();
+		if (ImGui::Button("apply wireframe")){
+			if (wireFrame)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			else
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
 
 		// controlling V-Sync (fix framerate to display refreshrate(likely 60 Hz))
 		// -----------------------------------------------------------------------
 		ImGui::Checkbox("V-Sync", &V_Sync);
-		if (ImGui::Button("apply"))
+		ImGui::SameLine();
+		if (ImGui::Button("apply V-Sync"))
 			glfwSwapInterval(V_Sync);
 
-		// corect cordinates if loaded incorrectly
-		// ---------------------------------------
-		ImGui::Checkbox("cordinate System incorrect ?", &show_cordSet_window);
-		if (show_cordSet_window){
-			ImGui::Begin("correct cordinate system", &show_cordSet_window);
-			ImGui::Text("how we can correct your model's cordinates ?");
-			if (ImGui::Button("Rotate by  90° on X axis")){}
-			if (ImGui::Button("Rotate by -90° on X axis")){}
-			if (ImGui::Button("Rotate by  90° on Y axis")){}
-			if (ImGui::Button("Rotate by -90° on Y axis")){}
-			if (ImGui::Button("Rotate by  90° on Z axis")){}
-			if (ImGui::Button("Rotate by -90° on Z axis")){}
-			if (ImGui::Button("Close"))
-				show_cordSet_window = false;
-			ImGui::End();
-		}
 
-
+		ShowCordDialog(&show_cordSet_window, &AxisRot, &rotDegre);
 
 		// displaying text or some variable for debugging for noow its disabled
 		#if false
@@ -237,32 +306,47 @@ int main(int argc, char** argv){
 		#endif
 		ImGui::End();
 
-		// 3. Show another simple window.
-		if (show_another_window){
-			ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-			ImGui::Text("Hello from another window!");
-			if (ImGui::Button("Close Me"))
-				show_another_window = false;
-			ImGui::End();
-		}
-
 		ShowOverlay(&showOverlay);
 
-		//enable shader before setting uniforms
-		ourShader.use();
-		ourShader.setBool("animated", animated);
-
+		
+		
 		// view/projection transformations
 		projection = glm::perspective(glm::radians(camera.Zoom), (float)WIN_WIDTH / (float)WIN_HEIGHT, 0.1f, 100.0f);
 		view = camera.GetViewMatrix();
-		ourShader.setMat4("projection", projection);
-		ourShader.setMat4("view", view);
-
 		// render the loaded model by setting the model transformation
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));	// it's a bit too big for our scene, so scale it down
-		ourShader.setMat4("model", model);
+		model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));  // it's a bit too big for our scene, so scale it down
+		if(rotDegre != 0.0f){
+			model = glm::rotate(model, rotDegre, AxisRot);
+		}
+
+		skyboxShader.use();
+		skyboxShader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix())));
+		skyboxShader.setMat4("projection", projection);
+
+		// draw skybox as last
+		glDepthFunc(GL_LEQUAL);
+		// skybox cube
+		glBindVertexArray(skyboxVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glDrawElements(GL_TRIANGLES, (sizeof(skyboxIndices) / sizeof(skyboxIndices[0])), GL_UNSIGNED_INT, skyboxIndices);
+		glBindVertexArray(0);
+
+		glDepthFunc(GL_LESS); // set depth function back to default
+		
+		//enable shader before setting uniforms
+		ourShader.use();
+		ourShader.setBool("animated", animated);
+		ourShader.setMat4("projection", projection);
+		ourShader.setMat4("view"      , view);
+		ourShader.setMat4("model"     , model);
+		if (animated){
+			animator->UpdateAnimation(deltaTime);
+			for (unsigned int i = 0; i != 100; i++)
+				ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + ']', animator->m_FinalBoneMatrices[i]);
+		}
 
 		// write to stencil buffer
 		glStencilFunc(GL_ALWAYS, true, 0xFF);
@@ -271,25 +355,34 @@ int main(int argc, char** argv){
 		// draw our model
 		ourModel.Draw(ourShader);
 
-		glStencilFunc(GL_NOTEQUAL, true, 0xFF);
-		glStencilMask(0x00);
-		glDisable(GL_DEPTH_TEST);
-		outLiner.use();
-		outLiner.setFloat("scale", scale);
-		outLiner.setMat4("projection", projection);
-		outLiner.setMat4("view", view);
-		outLiner.setMat4("model", model);
-		
-		ourModel.Draw(outLiner);
+		if(outlined){
+			glDisable(GL_DEPTH_TEST);
+			glStencilFunc(GL_NOTEQUAL, true, 0xFF);
+			glStencilMask(0x00);
+			outLiner.use();
+			outLiner.setFloat("scale", scale);
+			outLiner.setMat4 ("projection", projection);
+			outLiner.setMat4 ("view", view);
+			outLiner.setMat4 ("model", model);
+			outLiner.setBool ("animated", animated);
+			ourModel.Draw(outLiner);
+			if (animated)
+				for (unsigned int i = 0; i != 100; i++)
+					outLiner.setMat4("finalBonesMatrices[" + std::to_string(i) + ']', animator->m_FinalBoneMatrices[i]);
+			glStencilMask(0xFF);
+			glStencilFunc(GL_ALWAYS, false, 0xFF);
+			glEnable(GL_DEPTH_TEST);
+		}
 
-		glStencilMask(0xFF);
-		glStencilFunc(GL_ALWAYS, false, 0xFF);
-		glEnable(GL_DEPTH_TEST);
+		//view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+
+
+		//framebuffer.secondPass();
 
 		// tell ImGui to render the windows
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		
+
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -308,6 +401,7 @@ int main(int argc, char** argv){
 
 	// terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------
+	//framebuffer.clear();
 	glfwTerminate();
 	return false;
 }
@@ -378,7 +472,6 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
 	}
 }
 
-
 static void ShowOverlay(bool* p_open){
 	static unsigned char corner = 0;
 	ImGuiIO& io = ImGui::GetIO();
@@ -416,4 +509,45 @@ static void ShowOverlay(bool* p_open){
 		}
 	}
 	ImGui::End();
+}
+
+static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre){
+	// corect cordinates if loaded incorrectly
+	// ---------------------------------------
+	ImGui::Checkbox("cordinate System incorrect ?", p_open);
+
+	if (*p_open){
+		ImGui::Begin("correct cordinate system", p_open);
+		ImGui::Text("how we can correct your model's cordinates ?");
+		if (ImGui::Button("Rotate by  90° on X axis")){
+			*AxisRot = glm::vec3(1.0f, 0.0f, 0.0f);
+			*rotDegre = glm::radians(90.0f);
+		}
+		else if (ImGui::Button("Rotate by -90° on X axis")){
+			*AxisRot = glm::vec3(1.0f, 0.0f, 0.0f);
+			*rotDegre = glm::radians(-90.0f);
+		}
+		else if (ImGui::Button("Rotate by  90° on Y axis")){
+			*AxisRot = glm::vec3(0.0f, 1.0f, 0.0f);
+			*rotDegre = glm::radians(90.0f);
+		}
+		else if (ImGui::Button("Rotate by -90° on Y axis")){
+			*AxisRot = glm::vec3(0.0f, 1.0f, 0.0f);
+			*rotDegre = glm::radians(-90.0f);
+		}
+		else if (ImGui::Button("Rotate by  90° on Z axis")){
+			*AxisRot = glm::vec3(0.0f, 0.0f, 1.0f);
+			*rotDegre = glm::radians(90.0f);
+		}
+		else if (ImGui::Button("Rotate by -90° on Z axis")){
+			*AxisRot = glm::vec3(0.0f, 0.0f, 1.0f);
+			*rotDegre = glm::radians(-90.0f);
+		}
+		else if (ImGui::Button("Reset")){
+			*rotDegre = 0.0f;
+		}
+		else if (ImGui::SameLine(); ImGui::Button("Close"))
+			*p_open = false;
+		ImGui::End();
+	}
 }

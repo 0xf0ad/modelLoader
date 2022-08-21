@@ -20,7 +20,7 @@ struct Vertex {
 	glm::vec3 Bitangent;
 	//bone id
 	int m_BoneIDs[MAX_BONE_INFLUENCE];
-	int BoneIDs;
+	//int BoneIDs;
 	//bone weight
 	float m_Weights[MAX_BONE_INFLUENCE];
 };

@@ -24,7 +24,7 @@ enum cameraCmd {
 #define SPEED         07.5f
 #define nSPEED        02.5f
 #define SENSITIVITY   0.15f
-#define ZOOM          45.0f
+#define ZOOM          60.0f
 
 
 // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
@@ -51,8 +51,8 @@ public:
 		Yaw = yaw;
 		Pitch = pitch;
 		updateCameraVectors();
-    }
-    // constructor with scalar values
+	}
+	// constructor with scalar values
 	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM){
 		Position = glm::vec3(posX, posY, posZ);
 		WorldUp = glm::vec3(upX, upY, upZ);

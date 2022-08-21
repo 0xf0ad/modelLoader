@@ -25,6 +25,8 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 			format = GL_RGB;
 		else if (nrComponents == 4)
 			format = GL_RGBA;
+		else
+			printf("failed to load channels on texture: %s\n", filename.c_str());
 
 		glBindTexture(GL_TEXTURE_2D, textureID);
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
@@ -48,6 +50,8 @@ std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, c
 	for(unsigned int i = 0; i < mat->GetTextureCount(type); i++){
 		aiString str;
 		mat->GetTexture(type, i, &str);
+			// tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
+			stbi_set_flip_vertically_on_load(true);
 		// check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
 		bool skip = false;
 		for(unsigned int j = 0; j < textures_loaded.size(); j++){
@@ -140,7 +144,7 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 						break;
 					}
 				}
-				vertices[vertexId].BoneIDs = *(int*)vertices[vertexId].m_BoneIDs;
+				//vertices[vertexId].BoneIDs = *(int*)vertices[vertexId].m_BoneIDs;
 			}
 		}
 	}

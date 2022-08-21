@@ -1,4 +1,4 @@
-#version 330 core
+#version 450 core
 
 layout (location = 0) in vec3 pos;
 layout (location = 1) in vec3 norm;
@@ -16,9 +16,9 @@ uniform mat4 model;
 
 uniform bool animated;
 
-const int MAX_BONES = 100;
 const int MAX_BONE_INFLUENCE = 4;
-uniform mat4 finalBonesMatrices[MAX_BONES];
+uniform mat4 finalBonesMatrices[100];
+mat4 BoneTransform;
 
 out vec2 TexCoords;
 
@@ -26,10 +26,7 @@ void main(){
 	if (!animated) {
 		gl_Position = projection * view * model * vec4(pos, 1.0);
 	}else{
-		//if(boneIds[0] == 0)
-		//gl_Position =  projection * view * model * BoneTransform;
-
-		mat4 BoneTransform = finalBonesMatrices[boneIds[0]] * weights[0];
+		BoneTransform  = finalBonesMatrices[boneIds[0]] * weights[0];
 		BoneTransform += finalBonesMatrices[boneIds[1]] * weights[1];
 		BoneTransform += finalBonesMatrices[boneIds[2]] * weights[2];
 		BoneTransform += finalBonesMatrices[boneIds[3]] * weights[3];

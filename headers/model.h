@@ -18,7 +18,6 @@ struct BoneInfo{
 
 class Model {
 public:
-
 	// constructor, expects a filepath to a 3D model.
 	Model(const char* path);
 
@@ -27,5 +26,4 @@ public:
 
 	std::unordered_map<std::string, BoneInfo>& GetBoneInfoMap();
 	unsigned char* GetBoneCount();
-
 };

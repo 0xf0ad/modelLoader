@@ -1,7 +1,9 @@
-#version 330 core
+#version 450 core
 
 layout (location = 0) in vec3 aPosition;
 layout (location = 1) in vec3 aNormals;
+layout (location = 5) in ivec4 boneIds;
+layout (location = 6) in vec4 weights;
 
 
 uniform mat4 model;
@@ -9,6 +11,23 @@ uniform mat4 view;
 uniform mat4 projection;
 uniform float scale;
 
+uniform bool animated;
+const int MAX_BONE_INFLUENCE = 4;
+uniform mat4 finalBonesMatrices[100];
+mat4 BoneTransform;
+
 void main(){
-    gl_Position = projection * view * model * vec4((aPosition + (aNormals * scale)), 1.0f);
+    if(!animated){
+        gl_Position = projection * view * model * vec4((aPosition + (aNormals * scale)), 1.0f);
+    }else{
+        BoneTransform  = finalBonesMatrices[boneIds[0]] * weights[0];
+        BoneTransform += finalBonesMatrices[boneIds[1]] * weights[1];
+		BoneTransform += finalBonesMatrices[boneIds[2]] * weights[2];
+		BoneTransform += finalBonesMatrices[boneIds[3]] * weights[3];
+
+        vec4 NormalL = BoneTransform * vec4(aNormals, 0.0);
+		vec4 PosL = BoneTransform * vec4((aPosition + (NormalL.xyz * scale)), 1.0f);
+		gl_Position = projection * view * model * PosL;
+        //vec4 NormalL = BoneTransform * vec4(Normal, 0.0);
+    }
 }

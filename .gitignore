@@ -35,6 +35,7 @@
 .vscode/
 bin/
 models/
+modelLoader
 
 # custom files i dont want to share
 run.sh
