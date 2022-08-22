@@ -40,26 +40,17 @@ void processInput(GLFWwindow *window);
 static void ShowOverlay(bool* p_open);
 static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre);
 
-float quadVertices[] = {
-	// positions   // texCoords
-	-1.0f,  1.0f,  0.0f, 1.0f,
-	-1.0f, -1.0f,  0.0f, 0.0f,
-	 1.0f, -1.0f,  1.0f, 0.0f,
-
-	-1.0f,  1.0f,  0.0f, 1.0f,
-	 1.0f, -1.0f,  1.0f, 0.0f,
-	 1.0f,  1.0f,  1.0f, 1.0f
-};
 
 int main(int argc, char** argv){
 
 	//check for number of arguments
 	if(argc == 1){
 		printf("please insert a path to the model you want to view\n");
-		return true;
+		return -1;
 	}else if(argc == 2){
 		animated = false;
 	}
+
 
 	// glfw: initialize and configure
 	// ------------------------------
@@ -118,68 +109,12 @@ int main(int argc, char** argv){
 	// -------------------------
 	Shader ourShader("shaders/vertexShader", "shaders/fragmentShader");
 	Shader outLiner ("shaders/outlinervs"  , "shaders/outlinerfs"    );
+	Shader skyBoxShader("shaders/skyboxvs","shaders/skyboxfs");
 
 	// define a framebuffer object
 	//FrameBuffer framebuffer(WIN_WIDTH, WIN_HEIGHT);
 
-	unsigned int skyboxVAO, skyboxVBO;
-	unsigned int cubemapTexture;
-
-		float skyboxVertices[] = {
-		//   Coordinates
-		-1.0f, -1.0f,  1.0f,//        7--------6
-		 1.0f, -1.0f,  1.0f,//       /|       /|
-		 1.0f, -1.0f, -1.0f,//      4--------5 |
-		-1.0f, -1.0f, -1.0f,//      | |      | |
-		-1.0f,  1.0f,  1.0f,//      | 3------|-2
-		 1.0f,  1.0f,  1.0f,//      |/       |/
-		 1.0f,  1.0f, -1.0f,//      0--------1
-		-1.0f,  1.0f, -1.0f
-	};
-
-	unsigned int skyboxIndices[] = {
-		// Right
-		1, 6, 2,
-		6, 1, 5,
-		// Left
-		0, 7, 4,
-		7, 0, 3,
-		// Top
-		4, 6, 5,
-		6, 4, 7,
-		// Bottom
-		0, 2, 3,
-		2, 0, 1,
-		// Back
-		0, 5, 1,
-		5, 0, 4,
-		// Front
-		3, 6, 7,
-		6, 3, 2
-	};
-
-
-		std::vector<std::string> faces = { 
-			"./textures/skybox/right.jpg",
-			"./textures/skybox/left.jpg",
-			"./textures/skybox/top.jpg",
-			"./textures/skybox/bottom.jpg",
-			"./textures/skybox/front.jpg",
-			"./textures/skybox/back.jpg"
-		};
-
-		Shader skyboxShader("shaders/skyboxvs","shaders/skyboxfs");
-
-		// skybox VAO
-		glGenVertexArrays(1, &skyboxVAO);
-		glGenBuffers(1, &skyboxVBO);
-		glBindVertexArray(skyboxVAO);
-		glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-
-		cubemapTexture = loadCubemap(faces);
+	initCubeMap();
 
 	// load models
 	// -----------
@@ -217,7 +152,7 @@ int main(int argc, char** argv){
 	glm::vec3 AxisRot = glm::vec3(0.0f);
 	float rotDegre = 0.0f;
 
-	
+
 	// render loop
 	// -----------
 	while (!glfwWindowShouldClose(window)){
@@ -321,21 +256,12 @@ int main(int argc, char** argv){
 			model = glm::rotate(model, rotDegre, AxisRot);
 		}
 
-		skyboxShader.use();
-		skyboxShader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix())));
-		skyboxShader.setMat4("projection", projection);
+		skyBoxShader.use();
+		skyBoxShader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix())));
+		skyBoxShader.setMat4("projection", projection);
 
-		// draw skybox as last
-		glDepthFunc(GL_LEQUAL);
-		// skybox cube
-		glBindVertexArray(skyboxVAO);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-		glDrawElements(GL_TRIANGLES, (sizeof(skyboxIndices) / sizeof(skyboxIndices[0])), GL_UNSIGNED_INT, skyboxIndices);
-		glBindVertexArray(0);
+		drawCubeMap();
 
-		glDepthFunc(GL_LESS); // set depth function back to default
-		
 		//enable shader before setting uniforms
 		ourShader.use();
 		ourShader.setBool("animated", animated);
@@ -393,6 +319,8 @@ int main(int argc, char** argv){
 		delete animation;
 		delete animator;
 	}
+
+	//skyBox.Clean();
 
 	//terminate ImGui processs after quitting the loop
 	ImGui_ImplOpenGL3_Shutdown();

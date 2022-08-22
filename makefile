@@ -13,7 +13,7 @@ clean:
 	rm -d $(BUILDDIR) || echo "the bin directory is alredy deleted"
 	rm ./load         || echo "the binary is deleted already"
 
-all:$(BUILDDIR)/stbi.o $(BUILDDIR)/glad.o imgui $(BUILDDIR)/shader.o $(BUILDDIR)/mesh.o $(BUILDDIR)/model.o $(BUILDDIR)/bone.o $(BUILDDIR)/main.o
+all:$(BUILDDIR)/stbi.o $(BUILDDIR)/glad.o imgui $(BUILDDIR)/shader.o $(BUILDDIR)/mesh.o $(BUILDDIR)/model.o $(BUILDDIR)/bone.o $(BUILDDIR)/cubemap.o $(BUILDDIR)/main.o
 
 link: $(BUILDDIR)/*.o
 	$(CXX) $(BUILDDIR)/*.o $(LDFLAGS) -o load
@@ -38,6 +38,9 @@ $(BUILDDIR)/mesh.o:src/mesh.cpp headers/mesh.h $(BUILDDIR)
 
 $(BUILDDIR)/bone.o:src/bone.cpp headers/bone.h $(BUILDDIR)
 	$(CXX) src/bone.cpp $(CFLAGS) -o $(BUILDDIR)/bone.o
+
+$(BUILDDIR)/cubemap.o:src/cubemap.cpp headers/cubemap.h $(BUILDDIR)
+	$(CXX) src/cubemap.cpp $(CFLAGS) -o $(BUILDDIR)/cubemap.o
 
 imgui:$(IMGUIDIR)/*.cpp $(IMGUIDIR)/*.h $(IMGUIDIR)/backends/*.cpp $(IMGUIDIR)/backends/*.h $(BUILDDIR)
 	$(CXX) $(IMGUIDIR)/imgui.cpp $(CFLAGS) -o $(BUILDDIR)/imgui.o
