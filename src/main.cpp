@@ -268,6 +268,8 @@ int main(int argc, char** argv){
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view"      , view);
 		ourShader.setMat4("model"     , model);
+		ourShader.setVec3("cameraPos" , camera.Position);
+
 		if (animated){
 			animator->UpdateAnimation(deltaTime);
 			for (unsigned int i = 0; i != 100; i++)

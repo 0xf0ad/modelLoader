@@ -8,6 +8,46 @@ std::vector<Mesh>    meshes;
 unsigned char        m_BoneCounter = 1;
 std::unordered_map<std::string, BoneInfo> m_BoneInfoMap;
 
+unsigned int loadCubemap1(std::vector<std::string> faces){
+
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	stbi_set_flip_vertically_on_load(false);
+
+	int width, height, nrChannels;
+	for (unsigned char i = 0; i < 6; i++){
+		unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+
+		if (data)
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		else
+			printf("Cubemap texture failed to load at path: %s\n", faces[i].c_str());
+
+		stbi_image_free(data);
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	//glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+	return textureID;
+}
+
+std::vector<std::string> faces = { 
+		"textures/skybox/right.jpg",
+		"textures/skybox/left.jpg",
+		"textures/skybox/top.jpg",
+		"textures/skybox/bottom.jpg",
+		"textures/skybox/front.jpg",
+		"textures/skybox/back.jpg"
+	};
+
+
 unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma = false){
 
 	std::string filename = directory + '/' + path;
@@ -28,7 +68,8 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 		else
 			printf("failed to load channels on texture: %s\n", filename.c_str());
 
-		glBindTexture(GL_TEXTURE_2D, textureID);
+		unsigned int skyboxTexture = loadCubemap1(faces);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
