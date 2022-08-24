@@ -1,14 +1,17 @@
 #version 450 core
-/*
+
 layout (location = 0) in vec3 pos;
 layout (location = 1) in vec3 norm;
 layout (location = 2) in vec2 tex;
 layout (location = 3) in vec3 aTangent;
 layout (location = 4) in vec3 aBitangent;
-layout (location = 5) in ivec4 boneIds;
+layout (location = 5) in uint bones;
 layout (location = 6) in vec4 weights;
 
-//ivec4 bones[4] = ivec4((boneIds / (0xFFFFFF)), (boneIds / (0xFFFF)), (boneIds / (0xFF)), (boneIds));
+ivec4 boneIds = ivec4((int( bones         & 255u)),
+                      (int((bones >>  8u) & 255u)),
+                      (int((bones >> 16u) & 255u)),
+                      (int((bones >> 24u) & 255u)));
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -16,11 +19,12 @@ uniform mat4 model;
 
 uniform bool animated;
 
-const int MAX_BONE_INFLUENCE = 4;
 uniform mat4 finalBonesMatrices[100];
 mat4 BoneTransform;
 
-out vec2 TexCoords;
+out VS_OUT{
+	vec2 TexCoords;
+} vs_out;
 
 void main(){
 	if (!animated) {
@@ -37,21 +41,5 @@ void main(){
 		//Normal0 = (gWorld * NormalL).xyz;
 		//WorldPos0 = (gWorld * PosL).xyz;
 	}
-	TexCoords = tex;
-}*/
-
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aNormal;
-
-out vec3 Normal;
-out vec3 Position;
-
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-
-void main(){
-	Normal = mat3(transpose(inverse(model))) * aNormal;
-	Position = vec3(model * vec4(aPos, 1.0));
-	gl_Position = projection * view * vec4(Position, 1.0);
+	vs_out.TexCoords = tex;
 }

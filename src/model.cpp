@@ -8,46 +8,6 @@ std::vector<Mesh>    meshes;
 unsigned char        m_BoneCounter = 1;
 std::unordered_map<std::string, BoneInfo> m_BoneInfoMap;
 
-unsigned int loadCubemap1(std::vector<std::string> faces){
-
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-
-	stbi_set_flip_vertically_on_load(false);
-
-	int width, height, nrChannels;
-	for (unsigned char i = 0; i < 6; i++){
-		unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-
-		if (data)
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		else
-			printf("Cubemap texture failed to load at path: %s\n", faces[i].c_str());
-
-		stbi_image_free(data);
-	}
-
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	//glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-
-	return textureID;
-}
-
-std::vector<std::string> faces = { 
-		"textures/skybox/right.jpg",
-		"textures/skybox/left.jpg",
-		"textures/skybox/top.jpg",
-		"textures/skybox/bottom.jpg",
-		"textures/skybox/front.jpg",
-		"textures/skybox/back.jpg"
-	};
-
-
 unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma = false){
 
 	std::string filename = directory + '/' + path;
@@ -68,8 +28,7 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 		else
 			printf("failed to load channels on texture: %s\n", filename.c_str());
 
-		unsigned int skyboxTexture = loadCubemap1(faces);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexture);
+		glBindTexture(GL_TEXTURE_2D, textureID);
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -88,14 +47,16 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 // the required info is returned as a Texture struct.
 std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, const char* typeName, const char* dir){
 	std::vector<Texture> textures;
-	for(unsigned int i = 0; i < mat->GetTextureCount(type); i++){
+	for(unsigned int i = 0; i != mat->GetTextureCount(type); i++){
 		aiString str;
 		mat->GetTexture(type, i, &str);
-			// tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
-			stbi_set_flip_vertically_on_load(true);
+		
+		// tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
+		stbi_set_flip_vertically_on_load(true);
+
 		// check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
 		bool skip = false;
-		for(unsigned int j = 0; j < textures_loaded.size(); j++){
+		for(unsigned int j = 0; j != textures_loaded.size(); j++){
 			if(std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0){
 				textures.push_back(textures_loaded[j]);
 				skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
@@ -121,11 +82,11 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 
 	// process meshes
 	// --------------
-	for (unsigned int i = 0; i < mesh->mNumVertices; i++){
+	for (unsigned int i = 0; i != mesh->mNumVertices; i++){
 		Vertex vertex;
-		for (int i = 0; i < MAX_BONE_INFLUENCE; i++){
-			vertex.m_BoneIDs[i] = 0;
-			vertex.m_Weights[i] = 0.0f;
+		for (int i = 0; i != MAX_BONE_INFLUENCE; i++){
+			vertex.boneIDs[i] = 0;
+			vertex.weights[i] = 0.0f;
 		}
 
 		//process mesh positions if it has any
@@ -150,7 +111,7 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 
 	// process faces
 	// -------------
-	for (unsigned int i = 0; i < mesh->mNumFaces; i++){
+	for (unsigned int i = 0; i != mesh->mNumFaces; i++){
 		aiFace face = mesh->mFaces[i];
 		for (unsigned int j = 0; j < face.mNumIndices; j++)
 			indices.push_back(face.mIndices[j]);
@@ -179,13 +140,12 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 				assert(vertexId <= (int)vertices.size());
 			
 				for (unsigned char i = 0; i != MAX_BONE_INFLUENCE; i++){
-					if (!vertices[vertexId].m_BoneIDs[i]){
-						vertices[vertexId].m_Weights[i] = mesh->mBones[boneIndex]->mWeights[weightIndex].mWeight;
-						vertices[vertexId].m_BoneIDs[i] = boneID;
+					if(!vertices[vertexId].boneIDs[i]){
+						vertices[vertexId].weights[i] = mesh->mBones[boneIndex]->mWeights[weightIndex].mWeight;
+						vertices[vertexId].boneIDs[i] = boneID;
 						break;
 					}
 				}
-				//vertices[vertexId].BoneIDs = *(int*)vertices[vertexId].m_BoneIDs;
 			}
 		}
 	}
@@ -210,9 +170,9 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
 void processNode(aiNode *node, const aiScene *scene, const char *dir){
 	// process all the node's meshes (if any)
-	for(unsigned int i = 0; i < node->mNumMeshes; i++)
+	for(unsigned int i = 0; i != node->mNumMeshes; i++)
 		meshes.push_back(processMesh(scene->mMeshes[node->mMeshes[i]], scene, dir));
-	for(unsigned int i = 0; i < node->mNumChildren; i++)	// then do the same for each of its children
+	for(unsigned int i = 0; i != node->mNumChildren; i++)	// then do the same for each of its children
 		processNode(node->mChildren[i], scene, dir);
 }
 
@@ -236,7 +196,7 @@ Model::Model(const char* path){
 
 // draws the model, and thus all its meshes
 void Model::Draw(Shader &shader){
-	for(unsigned int i = 0; i < meshes.size(); i++)
+	for(unsigned int i = 0; i != meshes.size(); i++)
 		meshes[i].Draw(shader);
 }
 

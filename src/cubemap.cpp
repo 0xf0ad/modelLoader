@@ -2,7 +2,7 @@
 
 unsigned int cubeMapVAO, cubeMapVBO, cubemapTexture;
 
-unsigned int loadCubemap(std::vector<std::string> faces){
+unsigned int loadCubemap(const char** faces){
 
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -11,13 +11,13 @@ unsigned int loadCubemap(std::vector<std::string> faces){
 	stbi_set_flip_vertically_on_load(false);
 
 	int width, height, nrChannels;
-	for (unsigned char i = 0; i < 6; i++){
-		unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+	for (unsigned char i = 0; i != 6; i++){
+		unsigned char *data = stbi_load(faces[i], &width, &height, &nrChannels, 0);
 
 		if (data)
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		else
-			printf("Cubemap texture failed to load at path: %s\n", faces[i].c_str());
+			printf("Cubemap texture failed to load at path: %s\n", faces[i]);
 
 		stbi_image_free(data);
 	}
@@ -45,7 +45,7 @@ void initCubeMap(){
 		-1.0f,  1.0f, -1.0f
 	};
 
-	std::vector<std::string> faces = { 
+	const char* faces[] = { 
 		"textures/skybox/right.jpg",
 		"textures/skybox/left.jpg",
 		"textures/skybox/top.jpg",
