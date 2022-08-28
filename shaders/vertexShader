@@ -3,10 +3,11 @@
 layout (location = 0) in vec3 pos;
 layout (location = 1) in vec3 norm;
 layout (location = 2) in vec2 tex;
-layout (location = 3) in vec3 aTangent;
-layout (location = 4) in vec3 aBitangent;
-layout (location = 5) in uint bones;
-layout (location = 6) in vec4 weights;
+//layout (location = 3) in vec3 aTangent;
+//layout (location = 4) in vec3 aBitangent;
+layout (location = 3) in unsigned char textureID;
+layout (location = 4) in uint bones;
+layout (location = 5) in vec4 weights;
 
 ivec4 boneIds = ivec4((int( bones         & 255u)),
                       (int((bones >>  8u) & 255u)),
@@ -24,6 +25,7 @@ mat4 BoneTransform;
 
 out VS_OUT{
 	vec2 TexCoords;
+	flat unsigned char TextureID;
 } vs_out;
 
 void main(){
@@ -42,4 +44,5 @@ void main(){
 		//WorldPos0 = (gWorld * PosL).xyz;
 	}
 	vs_out.TexCoords = tex;
+	vs_out.TextureID = textureID;// + unsigned char (3);
 }

@@ -14,10 +14,12 @@ struct Vertex {
 	glm::vec3 Normal;
 	// texture cordinates
 	glm::vec2 TexCoords;
+	// texture ID to batch textures
+	unsigned char textureIndex;
 	// tangent
-	glm::vec3 Tangent;
+	//glm::vec3 Tangent;
 	// bitangent
-	glm::vec3 Bitangent;
+	//glm::vec3 Bitangent;
 	//bone id
 	unsigned char boneIDs[MAX_BONE_INFLUENCE];
 	//bone weight
@@ -40,6 +42,8 @@ public:
 	Mesh(const std::vector<Vertex>&  vertices,
 	     const std::vector<uint>&    indices,
 	     const std::vector<Texture>& textures);
+	
+	Mesh() = default;
 
 	void Draw(Shader &shader);
 
