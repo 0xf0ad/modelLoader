@@ -24,6 +24,6 @@ public:
 	// draws the model, and thus all its meshes
 	void Draw(Shader &shader);
 
-	std::unordered_map<std::string, BoneInfo>& GetBoneInfoMap();
-	unsigned char* GetBoneCount();
+	std::unordered_map<std::string, BoneInfo>& GetBoneInfoMap() const;
+	unsigned char* GetBoneCount() const;
 };

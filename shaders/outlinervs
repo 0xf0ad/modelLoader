@@ -30,8 +30,15 @@ void main(){
 		BoneTransform += finalBonesMatrices[boneIds[2]] * weights[2];
 		BoneTransform += finalBonesMatrices[boneIds[3]] * weights[3];
 
-        vec4 NormalL = BoneTransform * vec4(aNormals, 0.0);
-		vec4 PosL = BoneTransform * vec4((aPosition + (NormalL.xyz * scale)), 1.0f);
+        //vec4 NormalL = BoneTransform * vec4(aNormals, 0.0);
+        
+        //calculate the normals
+        mat3 normalMatrix = transpose(inverse(mat3(BoneTransform)));
+        //vec3 T = normalize(normalMatrix * aTangent);
+        //vec3 B = normalize(normalMatrix * aBitangent);
+        vec3 N = normalize(normalMatrix * aNormals);
+		
+        vec4 PosL = BoneTransform * vec4((aPosition + (N.xyz * scale)), 1.0f);
 		gl_Position = projection * view * model * PosL;
         //vec4 NormalL = BoneTransform * vec4(Normal, 0.0);
     }

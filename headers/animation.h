@@ -1,13 +1,15 @@
 #pragma once
 
 #include <functional>
+#include <string>
+#include <unordered_map>
 
 #include "bone.h"
+#include "model.h"
 
 struct AssimpNodeData{
 	glm::mat4 transformation;
 	std::string name;
-	int childrenCount;
 	std::vector<AssimpNodeData> children;
 };
 
@@ -23,14 +25,14 @@ public:
 
 	Animation(const char* animationPath, Model* model){
 		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile(animationPath, aiProcess_Triangulate);
+		m_Bones.reserve(100);
+		m_BoneInfoMap.reserve(100);
+		const aiScene* scene = importer.ReadFile(animationPath, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
 		assert(scene && scene->mRootNode);
 		m_Duration = scene->mAnimations[0]->mDuration;
 		m_TicksPerSecond = scene->mAnimations[0]->mTicksPerSecond;
-		aiMatrix4x4 globalTransformation = scene->mRootNode->mTransformation;
-		globalTransformation = globalTransformation.Inverse();
-		ReadHeirarchyData(m_RootNode, scene->mRootNode);
-		ReadMissingBones(scene->mAnimations[0], *model);
+		ReadHeirarchyData(&m_RootNode, scene->mRootNode);
+		ReadMissingBones(scene->mAnimations[0], model);
 	}
 
 	~Animation() { }
@@ -45,34 +47,39 @@ public:
 	}
 
 private:
-	void ReadMissingBones(const aiAnimation* animation, Model& model){
-		auto& boneInfoMap = model.GetBoneInfoMap();//getting m_BoneInfoMap from Model class
-		unsigned char* boneCount = model.GetBoneCount(); //getting the m_BoneCounter from Model class
+	void ReadMissingBones(const aiAnimation* animation, Model* model){
+		//getting m_BoneInfoMap and boneCount from Model class
+		std::unordered_map<std::string, BoneInfo>& boneInfoMap = model->GetBoneInfoMap();
+		unsigned char* boneCount = model->GetBoneCount();
 
 		//reading channels(bones engaged in an animation and their keyframes)
 		for (unsigned int i = 0; i < animation->mNumChannels; i++){
-			if (boneInfoMap.find(animation->mChannels[i]->mNodeName.data) == boneInfoMap.end()){
-				boneInfoMap[animation->mChannels[i]->mNodeName.data].id = *(boneCount);
-				*(boneCount)++;
-			}
-			m_Bones.push_back(Bone(animation->mChannels[i]->mNodeName.data,
+
+			if (boneInfoMap.find(animation->mChannels[i]->mNodeName.data) == boneInfoMap.end())
+				boneInfoMap[animation->mChannels[i]->mNodeName.data].id = *(boneCount)++;
+
+			m_Bones.emplace_back(Bone(animation->mChannels[i]->mNodeName.data,
 			                       boneInfoMap[animation->mChannels[i]->mNodeName.data].id,
-			                       animation->mChannels[i]));
+			                  animation->mChannels[i]));
 		}
 		m_BoneInfoMap = boneInfoMap;
 	}
 
-	void ReadHeirarchyData(AssimpNodeData& dest, const aiNode* src){
+	void ReadHeirarchyData(AssimpNodeData* dest, const aiNode* src){
 		assert(src);
 
-		dest.name = src->mName.data;
-		dest.transformation = AssimpGLMHelpers::ConvertMatrixToGLMFormat(src->mTransformation);
-		dest.childrenCount = src->mNumChildren;
+		dest->name = src->mName.data;
+		dest->transformation = AssimpGLMHelpers::ConvertMatrixToGLMFormat(src->mTransformation);
+
+		//static inline glm::mat4 mat4_cast(const aiMatrix4x4& src->mTransformation) { 
+			//return glm::transpose(glm::make_mat4(&m.a1));}
+
+		dest->children.reserve(src->mNumChildren);
 
 		for (unsigned int i = 0; i < src->mNumChildren; i++){
 			AssimpNodeData newData;
-			ReadHeirarchyData(newData, src->mChildren[i]);
-			dest.children.push_back(newData);
+			ReadHeirarchyData(&newData, src->mChildren[i]);
+			dest->children.emplace_back(newData);
 		}
 	}
 };

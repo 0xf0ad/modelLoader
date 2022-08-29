@@ -1,6 +1,7 @@
 #pragma once
 
 #include <assimp/Importer.hpp>
+#include <glm/fwd.hpp>
 #include "animation.h"
 
 class Animator{
@@ -17,7 +18,8 @@ public:
 		if (m_CurrentAnimation){
 			m_CurrentTime += m_CurrentAnimation->m_TicksPerSecond * dt;
 			m_CurrentTime = fmod(m_CurrentTime, m_CurrentAnimation->m_Duration);
-			CalculateBoneTransform(&m_CurrentAnimation->m_RootNode, glm::mat4(1.0f));
+			glm::mat4 rootNode = glm::mat4(1.0f);
+			CalculateBoneTransform(&m_CurrentAnimation->m_RootNode, &rootNode);
 		}
 	}
 
@@ -26,23 +28,24 @@ public:
 		m_CurrentTime = 0.0f;
 	}
 
-	void CalculateBoneTransform(const AssimpNodeData* node, glm::mat4 parentTransform){
-		glm::mat4 nodeTransform = node->transformation;
+	void CalculateBoneTransform(const AssimpNodeData* node, glm::mat4* parentTransform){
+		glm::mat4 nodeTransform;
 		Bone* bone = m_CurrentAnimation->FindBone(node->name);
 
 		if (bone){
 			bone->Update(m_CurrentTime);
 			nodeTransform = *(bone->GetLocalTransform());
+		}else{
+			nodeTransform = node->transformation;
 		}
 
-		std::unordered_map<std::string, BoneInfo> boneInfoMap = m_CurrentAnimation->m_BoneInfoMap;
-		if (boneInfoMap.find(node->name) != boneInfoMap.end()){
-			m_FinalBoneMatrices[boneInfoMap[node->name].id] = parentTransform *
-			                                                  nodeTransform *
-			                                                  boneInfoMap[node->name].offset;
-		}
+		std::unordered_map<std::string, BoneInfo>& boneInfoMap = m_CurrentAnimation->m_BoneInfoMap;
+		glm::mat4 ParentTimesNode = *parentTransform * nodeTransform;
+		
+		if (boneInfoMap.find(node->name) != boneInfoMap.end())
+			m_FinalBoneMatrices[boneInfoMap[node->name].id] = ParentTimesNode * boneInfoMap[node->name].offset;
 
-		for (int i = 0; i < node->childrenCount; i++)
-			CalculateBoneTransform(&node->children[i], parentTransform * nodeTransform);
+		for (unsigned int i = 0; i < node->children.size(); i++)
+			CalculateBoneTransform(&node->children[i], &ParentTimesNode);
 	}
 };

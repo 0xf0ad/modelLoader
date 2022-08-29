@@ -39,6 +39,13 @@ void main(){
 
 		vec4 PosL = BoneTransform * vec4(pos, 1.0);
 		gl_Position = projection * view * model * PosL;
+		
+		// calculate normals
+		mat3 normalMatrix = transpose(inverse(mat3(BoneTransform)));
+		//vec3 T = normalize(normalMatrix * aTangent);
+		//vec3 B = normalize(normalMatrix * aBitangent);
+		vec3 N = normalize(normalMatrix * norm);
+		
 		//vec4 NormalL = BoneTransform * vec4(Normal, 0.0);
 		//Normal0 = (gWorld * NormalL).xyz;
 		//WorldPos0 = (gWorld * PosL).xyz;

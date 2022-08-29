@@ -5,7 +5,6 @@
 
 // model data
 std::vector<Texture> textures_loaded;
-std::vector<Mesh>    meshes;
 Mesh                 BIGMesh;
 unsigned char        m_BoneCounter = 1;
 unsigned int prevMeshNumVertices = 0;
@@ -175,16 +174,17 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 }
 
 // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
-void processNode(aiNode *node, const aiScene *scene, const char* dir){
+void processNode(aiNode *node, const aiScene *scene,std::vector<Mesh>& meshes, const char* dir){
 	// process all the node's meshes (if any)
 	for(unsigned int i = 0; i != node->mNumMeshes; i++)
 		meshes.push_back(processMesh(scene->mMeshes[node->mMeshes[i]], scene, dir));
 	for(unsigned int i = 0; i != node->mNumChildren; i++)	// then do the same for each of its children
-		processNode(node->mChildren[i], scene, dir);
+		processNode(node->mChildren[i], scene, meshes, dir);
 }
 
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
 void loadModel(const std::string& path){
+	std::vector<Mesh>    meshes;
 	// read file via ASSIMP
 	Assimp::Importer import;
 	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
@@ -195,7 +195,7 @@ void loadModel(const std::string& path){
 	}
 	//const char* directory = path.substr(0, path.find_last_of('/')).c_str();
 	std::string directory = path.substr(0, path.find_last_of('/'));
-	processNode(scene->mRootNode, scene, directory.c_str());
+	processNode(scene->mRootNode, scene, meshes, directory.c_str());
 
 	for (unsigned int i = 0; i!= meshes.size(); i++){
 		for (unsigned int j = 0; j != meshes[i].vertices.size(); j++)
@@ -246,10 +246,8 @@ Model::Model(const char* path){
 
 // draws the model, and thus all its meshes
 void Model::Draw(Shader &shader){
-	//for(unsigned int i = 0; i != meshes.size(); i++)
-	//	meshes[i].Draw(shader);
 	BIGMesh.Draw(shader);
 }
 
-std::unordered_map<std::string, BoneInfo>& Model::GetBoneInfoMap() { return m_BoneInfoMap; }
-unsigned char* Model::GetBoneCount() { return &m_BoneCounter; }
+std::unordered_map<std::string, BoneInfo>& Model::GetBoneInfoMap() const { return m_BoneInfoMap; }
+unsigned char* Model::GetBoneCount() const { return &m_BoneCounter; }
