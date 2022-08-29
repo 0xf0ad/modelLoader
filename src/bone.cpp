@@ -40,6 +40,12 @@ float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float animationTi
 	return (animationTime - lastTimeStamp) / (nextTimeStamp - lastTimeStamp);
 }
 
+glm::vec3 mix(glm::vec3 a, glm::vec3 b, float t){
+	//return (a * (1-t)) + (b * t);
+	//return a + ( t * ( b - a ));
+	return ( a * ( ( 2 * t * t * t ) - ( 3 * t *t ) + 1 ) ) + ( b * ( ( 3 * t * t ) - ( 2 * t * t * t)));
+}
+
 // Gets the current index on mKeyPositions to interpolate to based on
 // the current animation time
 int GetPositionIndex(float animationTime, const std::vector<KeyPosition>& m_Positions){
@@ -79,10 +85,9 @@ glm::mat4 InterpolatePosition(float animationTime, const std::vector<KeyPosition
 	if (m_NumPositions == 1){
 		return glm::translate(glm::mat4(1.0f), m_Positions[0].position);
 	}
-
 	int index = GetPositionIndex(animationTime, m_Positions);
 	return glm::translate(glm::mat4(1.0f),
-	                      glm::mix(m_Positions[index].position,
+	                      mix(m_Positions[index].position,
 	                               m_Positions[index + 1].position,
 	                               GetScaleFactor(m_Positions[index].timeStamp,
 	                                              m_Positions[index + 1].timeStamp,
@@ -109,10 +114,9 @@ glm::mat4 InterpolateScaling(float animationTime, const std::vector<KeyScale>& m
 	if (m_NumScalings == 1){
 		return glm::scale(glm::mat4(1.0f), m_Scales[0].scale);
 	}
-
 	int index = GetScaleIndex(animationTime, m_Scales);
 	return glm::scale(glm::mat4(1.0f),
-	                  glm::mix(m_Scales[index].scale,
+	                  mix(m_Scales[index].scale,
 	                           m_Scales[index + 1].scale,
 	                           GetScaleFactor(m_Scales[index].timeStamp,
 	                                          m_Scales[index + 1].timeStamp,
