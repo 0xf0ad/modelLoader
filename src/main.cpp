@@ -1,9 +1,6 @@
-/*#include <imgui.h>
+#include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_opengl3.h>*/
-#include "../gui/imgui.h"
-#include "../gui/backends/imgui_impl_glfw.h"
-#include "../gui/backends/imgui_impl_opengl3.h"
+#include <backends/imgui_impl_opengl3.h>
 #include "../headers/shader.h"
 #include "../headers/model.h"
 #include "../headers/frambuffer.h"
@@ -301,9 +298,6 @@ int main(int argc, char** argv){
 			glStencilFunc(GL_ALWAYS, false, 0xFF);
 			glEnable(GL_DEPTH_TEST);
 		}
-
-		//view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
-
 
 		//framebuffer.secondPass();
 

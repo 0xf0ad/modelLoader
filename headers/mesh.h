@@ -33,6 +33,13 @@ struct Texture {
 };
 
 class Mesh{
+
+	//GLint defuseTexturesIDs[16] = { 0 };
+	std::vector<GLint> defuseTexturesIDs;
+	std::vector<GLint> normalTexturesIDs;
+	std::vector<GLint> heightTexturesIDs;
+	std::vector<GLint> specularTexturesIDs;
+
 public:
 	std::vector<Vertex>  vertices;
 	std::vector<uint>    indices;

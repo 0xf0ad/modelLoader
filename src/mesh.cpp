@@ -14,41 +14,11 @@ Mesh::Mesh(const std::vector<Vertex>&  vertices,
 
 void Mesh::Draw(Shader &shader){
 
-	unsigned char diffuseNr  = 0;
-	unsigned char specularNr = 0;
-	unsigned char normalNr   = 0;
-	unsigned char heightNr   = 0;
-	const char* Name;
-	
-	//GLint defuseTexturesIDs[16] = { 0 };
-	std::vector<GLint> defuseTexturesIDs;
-	std::vector<GLint> normalTexturesIDs;
-	std::vector<GLint> heightTexturesIDs;
-	std::vector<GLint> specularTexturesIDs;
-
-	for(unsigned int i = 0; i != textures.size(); i++){
-
-		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
-		
-		std::string name = textures[i].type;
-
-		if     (name == "texture_diffuse"){
-			defuseTexturesIDs.push_back(textures[i].id);
-			glBindTextureUnit(textures[i].id , textures[i].id);
-			diffuseNr++;
-		}
-		else if(name == "texture_specular")
-			specularTexturesIDs[specularNr++] = textures[i].id;
-		else if(name == "texture_normal")
-			normalTexturesIDs[normalNr++] = textures[i].id;
-		else if(name == "texture_height")
-			heightTexturesIDs[heightNr++] = textures[i].id;
-	}
-
-	// now set the sampler to the correct texture unit
+	//batch the textures and upload them the GPU
 	GLint location = glGetUniformLocation(shader.ID, "texture_diffuse");
 	glUniform1iv(location, defuseTexturesIDs.size() , defuseTexturesIDs.data());
 	
+	//upload the inddeces to the GPU
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
@@ -104,4 +74,23 @@ void Mesh::setupMesh(){
 	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeofVertex, (void*)offsetof(Vertex, weights));
 
 	glBindVertexArray(0);
+
+	for(unsigned int i = 0; i != textures.size(); i++){
+
+		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
+		
+		std::string name = textures[i].type;
+		unsigned char textureID = textures[i].id;
+
+		if     (name == "texture_diffuse"){
+			defuseTexturesIDs.push_back(textureID);
+			glBindTextureUnit(textureID , textureID);
+		}
+		else if(name == "texture_specular")
+			specularTexturesIDs.push_back(textureID);
+		else if(name == "texture_normal")
+			normalTexturesIDs.push_back(textureID);
+		else if(name == "texture_height")
+			heightTexturesIDs.push_back(textureID);
+	}
 }
