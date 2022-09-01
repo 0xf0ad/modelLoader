@@ -1,4 +1,7 @@
 #include "../headers/bone.h"
+#include <glm/ext/quaternion_common.hpp>
+#include <glm/fwd.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 int m_NumPositions, m_NumRotations, m_NumScalings;
 
@@ -40,10 +43,20 @@ float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float animationTi
 	return (animationTime - lastTimeStamp) / (nextTimeStamp - lastTimeStamp);
 }
 
-glm::vec3 mix(glm::vec3 a, glm::vec3 b, float t){
+glm::vec3 mix(const glm::vec3& a, const glm::vec3& b, const float& t){
 	//return (a * (1-t)) + (b * t);
 	//return a + ( t * ( b - a ));
-	return ( a * ( ( 2 * t * t * t ) - ( 3 * t *t ) + 1 ) ) + ( b * ( ( 3 * t * t ) - ( 2 * t * t * t)));
+	float Tsquare      = t * t;
+	float threeTsquare = 3 * Tsquare;
+	float twoTcube     = 2 * t * Tsquare;
+	return ( a * ( twoTcube - threeTsquare + 1.0f ) ) + ( b * ( threeTsquare - twoTcube ));
+}
+
+glm::quat qmix(const glm::quat& a, const glm::quat& b, const float& t){
+	float Tsquare      = t * t;
+	float threeTsquare = 3 * Tsquare;
+	float twoTcube     = 2 * t * Tsquare;
+	return ( a * ( twoTcube - threeTsquare + 1.0f ) ) + ( b * ( threeTsquare - twoTcube ));
 }
 
 // Gets the current index on mKeyPositions to interpolate to based on
@@ -85,13 +98,12 @@ glm::mat4 InterpolatePosition(float animationTime, const std::vector<KeyPosition
 	if (m_NumPositions == 1){
 		return glm::translate(glm::mat4(1.0f), m_Positions[0].position);
 	}
+
 	int index = GetPositionIndex(animationTime, m_Positions);
+
 	return glm::translate(glm::mat4(1.0f),
-	                      mix(m_Positions[index].position,
-	                               m_Positions[index + 1].position,
-	                               GetScaleFactor(m_Positions[index].timeStamp,
-	                                              m_Positions[index + 1].timeStamp,
-	                                              animationTime)));
+		mix(m_Positions[index].position, m_Positions[index + 1].position,
+			GetScaleFactor(m_Positions[index].timeStamp, m_Positions[index + 1].timeStamp, animationTime)));
 }
 
 // figures out which rotations keys to interpolate b/w and performs the interpolation 
@@ -100,13 +112,13 @@ glm::mat4 InterpolateRotation(float animationTime, const std::vector<KeyRotation
 	if (m_NumRotations == 1){
 		return glm::toMat4(glm::normalize(m_Rotations[0].orientation));
 	}
+
 	int index = GetRotationIndex(animationTime, m_Rotations);
-	return glm::toMat4(glm::normalize(glm::slerp(m_Rotations[index].orientation,
-	                                             m_Rotations[index + 1].orientation,
-	                                             GetScaleFactor(m_Rotations[index].timeStamp,
-	                                                            m_Rotations[index + 1].timeStamp,
-	                                                            animationTime))));
-}
+
+	return glm::toMat4(glm::normalize(
+		mix(m_Rotations[index].orientation, m_Rotations[index + 1].orientation,
+			GetScaleFactor(m_Rotations[index].timeStamp, m_Rotations[index+1].timeStamp, animationTime))));
+} 
 
 // figures out which scaling keys to interpolate b/w and performs the interpolation 
 // and returns the scale matrix
@@ -114,13 +126,12 @@ glm::mat4 InterpolateScaling(float animationTime, const std::vector<KeyScale>& m
 	if (m_NumScalings == 1){
 		return glm::scale(glm::mat4(1.0f), m_Scales[0].scale);
 	}
+	
 	int index = GetScaleIndex(animationTime, m_Scales);
+
 	return glm::scale(glm::mat4(1.0f),
-	                  mix(m_Scales[index].scale,
-	                           m_Scales[index + 1].scale,
-	                           GetScaleFactor(m_Scales[index].timeStamp,
-	                                          m_Scales[index + 1].timeStamp,
-	                                          animationTime)));
+		mix(m_Scales[index].scale, m_Scales[index + 1].scale,
+			GetScaleFactor(m_Scales[index].timeStamp, m_Scales[index + 1].timeStamp, animationTime)));
 }
 
 // interpolates  b/w positions,rotations & scaling keys based on the curren time of

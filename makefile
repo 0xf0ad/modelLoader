@@ -1,5 +1,5 @@
-CFLAGS = -c -Wall -g
-LDFLAGS = -lglfw -lGL -lrt -lm -lX11 -lpthread -lXrandr -lXi -ldl -lxcb -lXau -lXdmcp -lassimp -g
+CFLAGS = -c -Wall -ggdb
+LDFLAGS = -lglfw -lGL -lrt -lm -lX11 -lpthread -lXrandr -lXi -ldl -lxcb -lXau -lXdmcp -lassimp -ggdb
 IMGUIDIR = ./gui
 BUILDDIR = ./bin
 

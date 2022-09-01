@@ -71,9 +71,6 @@ private:
 		dest->name = src->mName.data;
 		dest->transformation = AssimpGLMHelpers::ConvertMatrixToGLMFormat(src->mTransformation);
 
-		//static inline glm::mat4 mat4_cast(const aiMatrix4x4& src->mTransformation) { 
-			//return glm::transpose(glm::make_mat4(&m.a1));}
-
 		dest->children.reserve(src->mNumChildren);
 
 		for (unsigned int i = 0; i < src->mNumChildren; i++){

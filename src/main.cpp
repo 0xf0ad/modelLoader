@@ -108,6 +108,12 @@ int main(int argc, char** argv){
 	Shader outLiner ("shaders/outlinervs"  , "shaders/outlinerfs"    );
 	Shader skyBoxShader("shaders/skyboxvs","shaders/skyboxfs");
 
+	unsigned int uniformBufferBlock;
+	glGenBuffers(1, &uniformBufferBlock);
+	glBindBuffer(GL_UNIFORM_BUFFER, uniformBufferBlock);
+	glBufferData(GL_UNIFORM_BUFFER, 152, NULL, GL_STATIC_DRAW); // 152 bytes
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 	// define a framebuffer object
 	//FrameBuffer framebuffer(WIN_WIDTH, WIN_HEIGHT);
 
