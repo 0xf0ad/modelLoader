@@ -1,6 +1,9 @@
 #include <assert.h>
+#include <cstddef>
+#include <glm/ext/vector_float3.hpp>
 #include <glm/fwd.hpp>
 #include <stdio.h>
+#include <vector>
 #include "../headers/model.h"
 
 // model data
@@ -206,38 +209,83 @@ void loadModel(const std::string& path){
 			BIGMesh.textures.push_back(meshes[i].textures[j]);
 	}
 
-	BIGMesh.setupMesh();
+	//BIGMesh.setupMesh();
 
-	/*unsigned int VAO, VBO, EBO;
-	
-	glGenVertexArrays(true, &VAO);
-	glGenBuffers(true, &VBO);
-	glGenBuffers(true, &EBO);
+	glGenVertexArrays(true, &BIGMesh.VAO);
+	glGenBuffers(true, &BIGMesh.VBO);
+	glGenBuffers(true, &BIGMesh.EBO);
 
-	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindVertexArray(BIGMesh.VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, BIGMesh.VBO);
 
-	glBufferData(GL_ARRAY_BUFFER, BIGMesh.vertices.size() * sizeof(BIGMesh.vertices[0]), &BIGMesh.vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, BIGMesh.vertices.size() * sizeof(BIGMesh.vertices[0]), 0, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BIGMesh.EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, BIGMesh.indices.size() * sizeof(BIGMesh.indices[0]), &BIGMesh.indices[0], GL_STATIC_DRAW);
 
-	unsigned int offset = 0;
+
+	for (unsigned int i = 0; i != BIGMesh.vertices.size(); i++){
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, Position)     /* sizeof(Vertex)*/, sizeof(BIGMesh.vertices[i].Position), &BIGMesh.vertices[i].Position);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, Normal)       /* sizeof(Vertex)*/, sizeof(BIGMesh.vertices[i].Normal) , &BIGMesh.vertices[i].Normal);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, TexCoords)    /* sizeof(Vertex)*/, sizeof(BIGMesh.vertices[i].TexCoords) , &BIGMesh.vertices[i].TexCoords);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, textureIndex) /* sizeof(Vertex)*/, sizeof(BIGMesh.vertices[i].textureIndex) , &BIGMesh.vertices[i].textureIndex);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, boneIDs)      /* sizeof(Vertex)*/, sizeof(BIGMesh.vertices[i].boneIDs) , &BIGMesh.vertices[i].boneIDs);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, weights)      /* sizeof(Vertex)*/, sizeof(BIGMesh.vertices[i].weights) , &BIGMesh.vertices[i].weights);
+	}
+
+	// vertex positions
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+
+	// vertex normals
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, Normal)));
 	
-	glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(BIGMesh.vertices), &BIGMesh.vertices);
-	offset += sizeof(BIGMesh.vertices);
-	glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(BIGMesh.indices),  &BIGMesh.indices);
-	offset += sizeof(BIGMesh.indices);
-	glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(BIGMesh.textures), &BIGMesh.textures);
-	offset = 0;
+	// vertex texture coords
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, TexCoords)));
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)offset);
-	offset += sizeof(BIGMesh.vertices);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)offset);
-	offset += sizeof(BIGMesh.indices);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)offset);
+	// vertex tangent
+	//glEnableVertexAttribArray(3);
+	//glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeofVertex, (void*)offsetof(Vertex, Tangent));
 
-	glBindVertexArray(0);*/
+	// vertex bitangent
+	//glEnableVertexAttribArray(4);
+	//glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeofVertex, (void*)offsetof(Vertex, Bitangent));
+
+	// material id used by the vertx
+	glEnableVertexAttribArray(3);
+	glVertexAttribIPointer(3, 1, GL_UNSIGNED_BYTE , sizeof(Vertex), (void*)(offsetof(Vertex, textureIndex))); // * BIGMesh.vertices.size()));
+
+	// bone ids
+	glEnableVertexAttribArray(4);
+	glVertexAttribIPointer(4, 1, GL_UNSIGNED_INT  , sizeof(Vertex), (void*)(offsetof(Vertex, boneIDs)));// * BIGMesh.vertices.size()));
+
+	// weights
+	glEnableVertexAttribArray(5);
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, weights))); // * BIGMesh.vertices.size()));
+
+	glBindVertexArray(0);
+
+	for(unsigned int i = 0; i != BIGMesh.textures.size(); i++){
+
+		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
+		
+		std::string name = BIGMesh.textures[i].type;
+		unsigned char textureID = BIGMesh.textures[i].id;
+
+		if     (name == "texture_diffuse"){
+			BIGMesh.defuseTexturesIDs.push_back(textureID);
+			glBindTextureUnit(textureID , textureID);
+		}
+		else if(name == "texture_specular")
+			BIGMesh.specularTexturesIDs.push_back(textureID);
+		else if(name == "texture_normal")
+			BIGMesh.normalTexturesIDs.push_back(textureID);
+		else if(name == "texture_height")
+			BIGMesh.heightTexturesIDs.push_back(textureID);
+	}
+
 }
 
 Model::Model(const char* path){
@@ -246,7 +294,19 @@ Model::Model(const char* path){
 
 // draws the model, and thus all its meshes
 void Model::Draw(Shader &shader){
-	BIGMesh.Draw(shader);
+	//BIGMesh.Draw(shader);
+
+	//batch the textures and upload them the GPU
+	GLint location = glGetUniformLocation(shader.ID, "texture_diffuse");
+	glUniform1iv(location, BIGMesh.defuseTexturesIDs.size() , BIGMesh.defuseTexturesIDs.data());
+	
+	//upload the inddeces to the GPU
+	glBindVertexArray(BIGMesh.VAO);
+	glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(BIGMesh.indices.size()), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+
+	glActiveTexture(GL_TEXTURE0);
+
 }
 
 std::unordered_map<std::string, BoneInfo>& Model::GetBoneInfoMap() const { return m_BoneInfoMap; }
