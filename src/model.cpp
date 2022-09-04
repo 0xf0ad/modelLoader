@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <assimp/scene.h>
 #include <cstddef>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/fwd.hpp>
@@ -114,6 +115,7 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 			vertex.TexCoords = glm::vec2(0.0f, 0.0f);
 		}
 		vertices.push_back(vertex);
+		//glBufferSubData(GL_ARRAY_BUFFER, i * sizeof(Vertex), sizeof(Vertex), &vertex);
 	}
 
 	// process faces
@@ -185,6 +187,15 @@ void processNode(aiNode *node, const aiScene *scene,std::vector<Mesh>& meshes, c
 		processNode(node->mChildren[i], scene, meshes, dir);
 }
 
+unsigned int getNumVertices(aiNode *node, const aiScene *scene){
+	unsigned int NumVertices = 0;
+	for(unsigned int i = 0; i != node->mNumMeshes; i++)
+		NumVertices += scene->mMeshes[node->mMeshes[i]]->mNumVertices;
+	for(unsigned int i = 0; i != node->mNumChildren; i++)
+		NumVertices += getNumVertices(node->mChildren[i], scene);
+	return NumVertices;	
+}
+
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
 void loadModel(const std::string& path){
 	std::vector<Mesh>    meshes;
@@ -196,7 +207,18 @@ void loadModel(const std::string& path){
 		printf("ERROR::ASSIMP::%s\n", import.GetErrorString());
 		return;
 	}
-	//const char* directory = path.substr(0, path.find_last_of('/')).c_str();
+
+	unsigned int sizeofthebuffer = getNumVertices(scene->mRootNode, scene);
+
+	glGenVertexArrays(true, &BIGMesh.VAO);
+	glGenBuffers(true, &BIGMesh.VBO);
+	glGenBuffers(true, &BIGMesh.EBO);
+
+	glBindVertexArray(BIGMesh.VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, BIGMesh.VBO);
+
+	glBufferData(GL_ARRAY_BUFFER, ( sizeofthebuffer * sizeof(BIGMesh.vertices[0])), 0, GL_STATIC_DRAW);
+
 	std::string directory = path.substr(0, path.find_last_of('/'));
 	processNode(scene->mRootNode, scene, meshes, directory.c_str());
 
@@ -211,26 +233,17 @@ void loadModel(const std::string& path){
 
 	//BIGMesh.setupMesh();
 
-	glGenVertexArrays(true, &BIGMesh.VAO);
-	glGenBuffers(true, &BIGMesh.VBO);
-	glGenBuffers(true, &BIGMesh.EBO);
-
-	glBindVertexArray(BIGMesh.VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, BIGMesh.VBO);
-
-	glBufferData(GL_ARRAY_BUFFER, BIGMesh.vertices.size() * sizeof(BIGMesh.vertices[0]), 0, GL_STATIC_DRAW);
-
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BIGMesh.EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, BIGMesh.indices.size() * sizeof(BIGMesh.indices[0]), &BIGMesh.indices[0], GL_STATIC_DRAW);
 
 
 	for (unsigned int i = 0; i != BIGMesh.vertices.size(); i++){
-		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, Position)     /* sizeof(Vertex)*/, sizeof(BIGMesh.vertices[i].Position), &BIGMesh.vertices[i].Position);
-		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, Normal)       /* sizeof(Vertex)*/, sizeof(BIGMesh.vertices[i].Normal) , &BIGMesh.vertices[i].Normal);
-		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, TexCoords)    /* sizeof(Vertex)*/, sizeof(BIGMesh.vertices[i].TexCoords) , &BIGMesh.vertices[i].TexCoords);
-		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, textureIndex) /* sizeof(Vertex)*/, sizeof(BIGMesh.vertices[i].textureIndex) , &BIGMesh.vertices[i].textureIndex);
-		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, boneIDs)      /* sizeof(Vertex)*/, sizeof(BIGMesh.vertices[i].boneIDs) , &BIGMesh.vertices[i].boneIDs);
-		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, weights)      /* sizeof(Vertex)*/, sizeof(BIGMesh.vertices[i].weights) , &BIGMesh.vertices[i].weights);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, Position)     , sizeof(BIGMesh.vertices[i].Position), &BIGMesh.vertices[i].Position);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, Normal)       , sizeof(BIGMesh.vertices[i].Normal) , &BIGMesh.vertices[i].Normal);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, TexCoords)    , sizeof(BIGMesh.vertices[i].TexCoords) , &BIGMesh.vertices[i].TexCoords);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, textureIndex) , sizeof(BIGMesh.vertices[i].textureIndex) , &BIGMesh.vertices[i].textureIndex);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, boneIDs)      , sizeof(BIGMesh.vertices[i].boneIDs) , &BIGMesh.vertices[i].boneIDs);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, weights)      , sizeof(BIGMesh.vertices[i].weights) , &BIGMesh.vertices[i].weights);
 	}
 
 	// vertex positions
