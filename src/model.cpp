@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <cstddef>
 #include <glm/ext/vector_float3.hpp>
@@ -99,10 +100,12 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 		//process mesh positions if it has any
 		if(mesh->HasPositions()){
 			vertex.Position = AssimpGLMHelpers::GetGLMVec(mesh->mVertices[i]);
+			glBufferSubData(GL_ARRAY_BUFFER, (i + prevMeshNumVertices) * sizeof(Vertex), sizeof(vertex.Position), &vertex.Position);	
 		}
 		// process normals if it has any
 		if(mesh->HasNormals()){
 			vertex.Normal = AssimpGLMHelpers::GetGLMVec(mesh->mNormals[i]);
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * sizeof(Vertex)) + offsetof(Vertex, Normal), sizeof(vertex.Normal), &vertex.Normal);
 		}
 		// load textures if it has any
 		if(mesh->mTextureCoords[0]){
@@ -111,8 +114,11 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 			vec.y = mesh->mTextureCoords[0][i].y;
 			vertex.TexCoords = vec;
 			vertex.textureIndex = materialIndex;
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * sizeof(Vertex)) + offsetof(Vertex, TexCoords)   , sizeof(vertex.TexCoords), &vertex.TexCoords);
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * sizeof(Vertex)) + offsetof(Vertex, textureIndex), sizeof(vertex.textureIndex), &vertex.textureIndex);
 		}else{
 			vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * sizeof(Vertex)) + offsetof(Vertex, TexCoords)   , sizeof(vertex.TexCoords), &vertex.TexCoords);
 		}
 		vertices.push_back(vertex);
 		//glBufferSubData(GL_ARRAY_BUFFER, i * sizeof(Vertex), sizeof(Vertex), &vertex);
@@ -125,8 +131,6 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 		for(unsigned int j = 0; j != face.mNumIndices; j++)
 			indices.push_back(face.mIndices[j] + prevMeshNumVertices);
 	}
-
-	prevMeshNumVertices += mesh->mNumVertices;
 
 	// process bones
 	// -------------
@@ -164,7 +168,6 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 	// assigne textures
 	// ----------------
 	aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
 	std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", dir);
 	textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 	std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular", dir);
@@ -174,7 +177,7 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 	std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height", dir);
 	textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
-
+	prevMeshNumVertices += mesh->mNumVertices;
 	return Mesh(vertices, indices, textures);
 }
 
@@ -201,7 +204,7 @@ void loadModel(const std::string& path){
 	std::vector<Mesh>    meshes;
 	// read file via ASSIMP
 	Assimp::Importer import;
-	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
+	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_OptimizeGraph);
 	//check for importing errors
 	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode){
 		printf("ERROR::ASSIMP::%s\n", import.GetErrorString());
@@ -217,7 +220,7 @@ void loadModel(const std::string& path){
 	glBindVertexArray(BIGMesh.VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, BIGMesh.VBO);
 
-	glBufferData(GL_ARRAY_BUFFER, ( sizeofthebuffer * sizeof(BIGMesh.vertices[0])), 0, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, (sizeofthebuffer * sizeof(BIGMesh.vertices[0])), 0, GL_STATIC_DRAW);
 
 	std::string directory = path.substr(0, path.find_last_of('/'));
 	processNode(scene->mRootNode, scene, meshes, directory.c_str());
@@ -238,12 +241,12 @@ void loadModel(const std::string& path){
 
 
 	for (unsigned int i = 0; i != BIGMesh.vertices.size(); i++){
-		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, Position)     , sizeof(BIGMesh.vertices[i].Position), &BIGMesh.vertices[i].Position);
-		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, Normal)       , sizeof(BIGMesh.vertices[i].Normal) , &BIGMesh.vertices[i].Normal);
-		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, TexCoords)    , sizeof(BIGMesh.vertices[i].TexCoords) , &BIGMesh.vertices[i].TexCoords);
-		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, textureIndex) , sizeof(BIGMesh.vertices[i].textureIndex) , &BIGMesh.vertices[i].textureIndex);
-		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, boneIDs)      , sizeof(BIGMesh.vertices[i].boneIDs) , &BIGMesh.vertices[i].boneIDs);
-		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, weights)      , sizeof(BIGMesh.vertices[i].weights) , &BIGMesh.vertices[i].weights);
+		//glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, Position)     , sizeof(BIGMesh.vertices[i].Position), &BIGMesh.vertices[i].Position);
+		//glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, Normal)       , sizeof(BIGMesh.vertices[i].Normal)       , &BIGMesh.vertices[i].Normal);
+		//glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, TexCoords)    , sizeof(BIGMesh.vertices[i].TexCoords)    , &BIGMesh.vertices[i].TexCoords);
+		//glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, textureIndex) , sizeof(BIGMesh.vertices[i].textureIndex) , &BIGMesh.vertices[i].textureIndex);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, boneIDs)      , sizeof(BIGMesh.vertices[i].boneIDs)      , &BIGMesh.vertices[i].boneIDs);
+		glBufferSubData(GL_ARRAY_BUFFER, (i * sizeof(Vertex)) + offsetof(Vertex, weights)      , sizeof(BIGMesh.vertices[i].weights)      , &BIGMesh.vertices[i].weights);
 	}
 
 	// vertex positions
