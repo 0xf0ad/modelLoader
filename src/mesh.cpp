@@ -1,11 +1,11 @@
 #include "../headers/bone.h"
 #include <glm/ext/vector_float3.hpp>
 
-Mesh::Mesh(const std::vector<Vertex>&  vertices,
+Mesh::Mesh(//const std::vector<Vertex>&  vertices,
            const std::vector<uint>&    indices,
            const std::vector<Texture>& textures){
 
-	this->vertices = vertices;
+	//this->vertices = vertices;
 	this->indices  = indices;
 	this->textures = textures;
 

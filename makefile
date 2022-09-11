@@ -3,7 +3,7 @@ LDFLAGS = -lglfw -lGL -lrt -lm -lX11 -lpthread -lXrandr -lXi -ldl -lxcb -lXau -l
 IMGUIDIR = ./gui
 BUILDDIR = ./bin
 
-default : all link
+default : link
 
 $(BUILDDIR):
 	find bin -quit || mkdir bin

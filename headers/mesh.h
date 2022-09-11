@@ -46,7 +46,7 @@ public:
 	std::vector<Texture> textures;
 	unsigned int VAO, VBO, EBO;
 
-	Mesh(const std::vector<Vertex>&  vertices,
+	Mesh(//const std::vector<Vertex>&  vertices,
 	     const std::vector<uint>&    indices,
 	     const std::vector<Texture>& textures);
 	
