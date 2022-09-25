@@ -6,6 +6,7 @@
 #include <glm/ext/vector_float3.hpp>
 #include <glm/fwd.hpp>
 #include <stdio.h>
+#include <sys/types.h>
 #include <vector>
 #include "../headers/model.h"
 
@@ -13,8 +14,10 @@
 std::vector<Texture> textures_loaded;
 Mesh                 BIGMesh;
 unsigned char        m_BoneCounter = 1;
-unsigned int prevMeshNumVertices = 0;
+unsigned int         prevMeshNumVertices = 0;
+unsigned int         prevMeshNumIndices = 0;
 std::unordered_map<std::string, BoneInfo> m_BoneInfoMap;
+unsigned char        size_of_vertex = sizeof(Vertex);
 
 unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma = false){
 
@@ -33,8 +36,10 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 			format = GL_RGB;
 		else if (nrComponents == 4)
 			format = GL_RGBA;
-		else
+		else{
 			printf("failed to load channels on texture: %s\n", filename.c_str());
+			format = 0;
+		}
 
 		glBindTexture(GL_TEXTURE_2D, textureID);
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
@@ -71,7 +76,7 @@ std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, c
 				break;
 			}
 		}
-		if(!skip){   // if texture hasn't been loaded already, load it
+		if(!skip){	// if texture hasn't been loaded already, load it
 			Texture texture;
 			texture.id = TextureFromFile(str.C_Str(), dir);
 			texture.type = typeName;
@@ -83,58 +88,68 @@ std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, c
 	return textures;
 }
 
-Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
-	//std::vector<Vertex>  vertices;
-	std::vector<uint>    indices;
-	std::vector<Texture> textures;
+struct vertexBoneData{
+	unsigned char boneIDs[4];
+	float weights[4];
+};
 
-	//unsigned int materialIndex = mesh->mMaterialIndex;
+Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
+	std::vector<vertexBoneData> tmpVerticesBoneData;
+	std::vector<Texture>        textures;
+
 	// process meshes
 	// --------------
 	for(unsigned int i = 0; i != mesh->mNumVertices; i++){
-		//Vertex vertex;
-		//for(int i = 0; i != MAX_BONE_INFLUENCE; i++){
-		//	vertex.boneIDs[i] = 0;
-		//	vertex.weights[i] = 0.0f;
-		//}
+		vertexBoneData tmpVertexBoneData;
+		
+		if (tmpVerticesBoneData.size() == prevMeshNumVertices)
+			tmpVerticesBoneData.reserve(mesh->mNumVertices);
+		
+		//vertices.reserve(mesh->mNumVertices);
+		for(int i = 0; i != MAX_BONE_INFLUENCE; i++){
+			tmpVertexBoneData.boneIDs[i] = 0;
+			tmpVertexBoneData.weights[i] = 0.0f;
+		}
 
 		//process mesh positions if it has any
-		if(mesh->HasPositions()){
-			glBufferSubData(GL_ARRAY_BUFFER, (i + prevMeshNumVertices) * sizeof(Vertex), sizeof(mesh->mVertices[i]), &mesh->mVertices[i]);	
-		}
+		if(mesh->HasPositions())
+			glBufferSubData(GL_ARRAY_BUFFER, (i + prevMeshNumVertices) * size_of_vertex, sizeof(mesh->mVertices[i]), &mesh->mVertices[i]);	
+	
 		// process normals if it has any
-		if(mesh->HasNormals()){
-			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * sizeof(Vertex)) + offsetof(Vertex, Normal), sizeof(mesh->mNormals[i]), &mesh->mNormals[i]);
-		}
+		if(mesh->HasNormals())
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, Normal), sizeof(mesh->mNormals[i]), &mesh->mNormals[i]);
+	
 		// load textures if it has any
 		if(mesh->mTextureCoords[0]){
 			glm::vec2 vec;
 			vec.x = mesh->mTextureCoords[0][i].x;
 			vec.y = mesh->mTextureCoords[0][i].y;
-			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * sizeof(Vertex)) + offsetof(Vertex, TexCoords)   , sizeof(vec), &vec);
-			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * sizeof(Vertex)) + offsetof(Vertex, textureIndex), sizeof(mesh->mMaterialIndex), &mesh->mMaterialIndex);
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, TexCoords)   , sizeof(vec), &vec);
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, textureIndex), sizeof(mesh->mMaterialIndex), &mesh->mMaterialIndex);
 		}else{
-			glm::vec2 vec = glm::vec2(0.0f);
-			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * sizeof(Vertex)) + offsetof(Vertex, TexCoords)   , sizeof(glm::vec2), &vec);
+			glm::vec2 nullvec = glm::vec2(0.0f);
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, TexCoords)   , sizeof(nullvec), &nullvec);
 		}
-		//vertices.push_back(vertex);
+		tmpVerticesBoneData.emplace_back(tmpVertexBoneData);
 	}
 
-	// process faces
+	// process indices
 	// -------------
 	for(unsigned int i = 0; i != mesh->mNumFaces; i++){
 		aiFace face = mesh->mFaces[i];
-		for(unsigned int j = 0; j != face.mNumIndices; j++)
-			indices.push_back(face.mIndices[j] + prevMeshNumVertices);
+		for(unsigned int j = 0; j != face.mNumIndices; j++){
+			unsigned int tmpCuzPtrs = face.mIndices[j] + prevMeshNumVertices;
+			glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, (((i * face.mNumIndices) + j + prevMeshNumIndices) * sizeof(uint)), sizeof(uint), &tmpCuzPtrs);
+		}
 	}
-
+	
 	// process bones
 	// -------------
 	if(mesh->HasBones()){
 		for(uint boneIndex = 0; boneIndex != mesh->mNumBones; boneIndex++){
 			unsigned char boneID = 0;
 			aiBone* bone = mesh->mBones[boneIndex];
-			std::string boneName = bone->mName.C_Str();
+			const char* boneName = bone->mName.C_Str();
 			if(m_BoneInfoMap.find(boneName) == m_BoneInfoMap.end()){
 				BoneInfo newBoneInfo;
 				newBoneInfo.id = m_BoneCounter;
@@ -147,23 +162,19 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 			}
 			assert(boneID);
 
-			float         weights[MAX_BONE_INFLUENCE] = { 0.0f };
-			unsigned char boneIDs[MAX_BONE_INFLUENCE] = { 0 };
-			
 			for(uint weightIndex = 0; weightIndex != mesh->mBones[boneIndex]->mNumWeights; weightIndex++){
-				unsigned int vertexId = bone->mWeights[weightIndex].mVertexId + prevMeshNumVertices;
-				assert(vertexId <= (mesh->mNumVertices + prevMeshNumVertices));
+				unsigned int vertexId = bone->mWeights[weightIndex].mVertexId;
+				assert(vertexId <= (mesh->mNumVertices));
 				
 				for(unsigned char boneIndex = 0; boneIndex != MAX_BONE_INFLUENCE; boneIndex++){
-					if(!boneIDs[boneIndex]){
-						weights[boneIndex] = bone->mWeights[weightIndex].mWeight;
-						boneIDs[boneIndex] = boneID;
+					if(!tmpVerticesBoneData[vertexId].boneIDs[boneIndex]){
+						tmpVerticesBoneData[vertexId].weights[boneIndex] = bone->mWeights->mWeight;
+						tmpVerticesBoneData[vertexId].boneIDs[boneIndex] = boneID;
 						break;
 					}
 				}
-				glBufferSubData(GL_ARRAY_BUFFER, (vertexId * sizeof(Vertex)) + offsetof(Vertex, boneIDs), sizeof(boneIDs), &boneIDs);
-				glBufferSubData(GL_ARRAY_BUFFER, (vertexId * sizeof(Vertex)) + offsetof(Vertex, weights), sizeof(weights), &weights);
-				printf("boneIDs %u\t%u\t%u\t%u\n", boneIDs[0], boneIDs[1], boneIDs[2], boneIDs[3]);
+				glBufferSubData(GL_ARRAY_BUFFER, ((vertexId + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, boneIDs), sizeof(tmpVerticesBoneData.begin()->boneIDs), &tmpVerticesBoneData[vertexId].boneIDs);
+				glBufferSubData(GL_ARRAY_BUFFER, ((vertexId + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, weights), sizeof(tmpVerticesBoneData.begin()->weights), &tmpVerticesBoneData[vertexId].weights);
 			}
 		}
 	}
@@ -181,7 +192,8 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 	textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
 	prevMeshNumVertices += mesh->mNumVertices;
-	return Mesh(indices, textures);
+	prevMeshNumIndices  += mesh->mNumFaces * mesh->mFaces->mNumIndices;
+	return Mesh(textures);
 }
 
 // processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
@@ -202,57 +214,68 @@ unsigned int getNumVertices(aiNode *node, const aiScene *scene){
 	return NumVertices;	
 }
 
+unsigned int getNumIndices(aiNode *node, const aiScene *scene){
+	unsigned int NumIndices = 0;
+	for(unsigned int i = 0; i != node->mNumMeshes; i++){
+		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		for(unsigned int j = 0; j != mesh->mNumFaces; j++)
+			NumIndices += mesh->mFaces[j].mNumIndices;
+	}
+	for(unsigned int i = 0; i != node->mNumChildren; i++)
+		NumIndices += getNumIndices(node->mChildren[i], scene);
+	return NumIndices;
+}
+
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
 void loadModel(const std::string& path){
 	std::vector<Mesh>    meshes;
+	
 	// read file via ASSIMP
 	Assimp::Importer import;
-	const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_OptimizeGraph);
+	const aiScene *scene = import.ReadFile(path, 
+		aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace |aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph);
+	
 	//check for importing errors
 	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode){
 		printf("ERROR::ASSIMP::%s\n", import.GetErrorString());
 		return;
 	}
 
-	unsigned int sizeofthebuffer = getNumVertices(scene->mRootNode, scene);
+	unsigned int size_of_the_array_buffer_in_bytes   = getNumVertices(scene->mRootNode, scene) * size_of_vertex;
+	unsigned int size_of_the_element_buffer_in_bytes = getNumIndices(scene->mRootNode, scene) * size_of_vertex;
 
 	glGenVertexArrays(true, &BIGMesh.VAO);
 	glGenBuffers(true, &BIGMesh.VBO);
 	glGenBuffers(true, &BIGMesh.EBO);
 
 	glBindVertexArray(BIGMesh.VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, BIGMesh.VBO);
 
-	glBufferData(GL_ARRAY_BUFFER, (sizeofthebuffer * sizeof(Vertex)), 0, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, BIGMesh.VBO);
+	glBufferData(GL_ARRAY_BUFFER, size_of_the_array_buffer_in_bytes, nullptr, GL_STATIC_DRAW);
+	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BIGMesh.EBO);
+	
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size_of_the_element_buffer_in_bytes, nullptr, GL_STATIC_DRAW);
 
 	std::string directory = path.substr(0, path.find_last_of('/'));
 	processNode(scene->mRootNode, scene, meshes, directory.c_str());
 
 	for (unsigned int i = 0; i!= meshes.size(); i++){
-		//for (unsigned int j = 0; j != meshes[i].vertices.size(); j++)
-		//	BIGMesh.vertices.push_back(meshes[i].vertices[j]);
-		for (unsigned int j = 0; j != meshes[i].indices.size(); j++)
-			BIGMesh.indices.push_back(meshes[i].indices[j]);
 		for (unsigned int j = 0; j != meshes[i].textures.size(); j++)
 			BIGMesh.textures.push_back(meshes[i].textures[j]);
 	}
 
-	//BIGMesh.setupMesh();
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BIGMesh.EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, BIGMesh.indices.size() * sizeof(BIGMesh.indices[0]), &BIGMesh.indices[0], GL_STATIC_DRAW);
-
 	// vertex positions
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, size_of_vertex, (void*)0);
 
 	// vertex normals
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, Normal)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, size_of_vertex, (void*)(offsetof(Vertex, Normal)));
 	
 	// vertex texture coords
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, TexCoords)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, size_of_vertex, (void*)(offsetof(Vertex, TexCoords)));
 
 	// vertex tangent
 	//glEnableVertexAttribArray(3);
@@ -264,15 +287,16 @@ void loadModel(const std::string& path){
 
 	// material id used by the vertx
 	glEnableVertexAttribArray(3);
-	glVertexAttribIPointer(3, 1, GL_UNSIGNED_BYTE , sizeof(Vertex), (void*)(offsetof(Vertex, textureIndex))); // * BIGMesh.vertices.size()));
+	glVertexAttribIPointer(3, 1, GL_UNSIGNED_BYTE , size_of_vertex, (void*)(offsetof(Vertex, textureIndex)));
 
 	// bone ids
+	// it a char[4] but for sort of comprissing we pack it to one int
 	glEnableVertexAttribArray(4);
-	glVertexAttribIPointer(4, 1, GL_UNSIGNED_INT  , sizeof(Vertex), (void*)(offsetof(Vertex, boneIDs)));// * BIGMesh.vertices.size()));
+	glVertexAttribIPointer(4, 1, GL_UNSIGNED_INT  , size_of_vertex, (void*)(offsetof(Vertex, boneIDs)));
 
 	// weights
 	glEnableVertexAttribArray(5);
-	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, weights))); // * BIGMesh.vertices.size()));
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, size_of_vertex, (void*)(offsetof(Vertex, weights)));
 
 	glBindVertexArray(0);
 
@@ -294,7 +318,6 @@ void loadModel(const std::string& path){
 		else if(name == "texture_height")
 			BIGMesh.heightTexturesIDs.push_back(textureID);
 	}
-
 }
 
 Model::Model(const char* path){
@@ -303,19 +326,16 @@ Model::Model(const char* path){
 
 // draws the model, and thus all its meshes
 void Model::Draw(Shader &shader){
-	//BIGMesh.Draw(shader);
-
 	//batch the textures and upload them the GPU
 	GLint location = glGetUniformLocation(shader.ID, "texture_diffuse");
 	glUniform1iv(location, BIGMesh.defuseTexturesIDs.size() , BIGMesh.defuseTexturesIDs.data());
 	
 	//upload the inddeces to the GPU
 	glBindVertexArray(BIGMesh.VAO);
-	glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(BIGMesh.indices.size()), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(prevMeshNumIndices), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 
 	glActiveTexture(GL_TEXTURE0);
-
 }
 
 std::unordered_map<std::string, BoneInfo>& Model::GetBoneInfoMap() const { return m_BoneInfoMap; }

@@ -21,9 +21,9 @@ struct Vertex {
 	// bitangent
 	//glm::vec3 Bitangent;
 	//bone id
-	unsigned char boneIDs[MAX_BONE_INFLUENCE];
+	unsigned char boneIDs[MAX_BONE_INFLUENCE] = {0};
 	//bone weight
-	float weights[MAX_BONE_INFLUENCE];
+	float weights[MAX_BONE_INFLUENCE] = {0.0f};
 };
 
 struct Texture {
@@ -46,10 +46,18 @@ public:
 	std::vector<Texture> textures;
 	unsigned int VAO, VBO, EBO;
 
+	Mesh(const std::vector<Vertex>&  vertices,
+	     const std::vector<uint>&    indices,
+	     const std::vector<Texture>& textures);
+	
 	Mesh(//const std::vector<Vertex>&  vertices,
 	     const std::vector<uint>&    indices,
 	     const std::vector<Texture>& textures);
 	
+	Mesh(//const std::vector<Vertex>&  vertices,
+	     //const std::vector<uint>&    indices,
+	     const std::vector<Texture>& textures);
+
 	Mesh() = default;
 
 	void Draw(Shader &shader);

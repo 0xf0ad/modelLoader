@@ -106,13 +106,16 @@ int main(int argc, char** argv){
 	// -------------------------
 	Shader ourShader("shaders/vertexShader", "shaders/fragmentShader");
 	Shader outLiner ("shaders/outlinervs"  , "shaders/outlinerfs"    );
-	Shader skyBoxShader("shaders/skyboxvs","shaders/skyboxfs");
+	Shader skyBoxShader("shaders/skyboxvs" ,"shaders/skyboxfs"       );
 
 	unsigned int uniformBufferBlock;
 	glGenBuffers(1, &uniformBufferBlock);
 	glBindBuffer(GL_UNIFORM_BUFFER, uniformBufferBlock);
 	glBufferData(GL_UNIFORM_BUFFER, 152, NULL, GL_STATIC_DRAW); // 152 bytes
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+	ourShader.use();
+	ourShader.setBool("animated", animated);
 
 	// define a framebuffer object
 	//FrameBuffer framebuffer(WIN_WIDTH, WIN_HEIGHT);
@@ -267,7 +270,6 @@ int main(int argc, char** argv){
 
 		//enable shader before setting uniforms
 		ourShader.use();
-		ourShader.setBool("animated", animated);
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view"      , view);
 		ourShader.setMat4("model"     , model);
@@ -344,8 +346,8 @@ void processInput(GLFWwindow *window){
 	//and transform the camera with WASD keys
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
-	if(glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) { }
-	if(glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) { }
+	//if(glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS){}
+	//if(glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS){}
 	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		camera.ProcessKeyboard(FORWARD, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
@@ -362,9 +364,9 @@ void processInput(GLFWwindow *window){
 		camera.ProcessKeyboard(GO_UP, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 		camera.ProcessKeyboard(GO_DOWN, deltaTime);
-	if(glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS)
-	if(glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
-	if(glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){}
+	//if(glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){}
+	//if(glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){}
+	//if(glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){}
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

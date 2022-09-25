@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assimp/postprocess.h>
 #include <functional>
 #include <string>
 #include <unordered_map>
@@ -27,7 +28,8 @@ public:
 		Assimp::Importer importer;
 		m_Bones.reserve(100);
 		m_BoneInfoMap.reserve(100);
-		const aiScene* scene = importer.ReadFile(animationPath, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+		const aiScene* scene = importer.ReadFile(animationPath,
+			aiProcess_Triangulate | aiProcess_OptimizeGraph | aiProcess_OptimizeMeshes | aiProcess_JoinIdenticalVertices);
 		assert(scene && scene->mRootNode);
 		m_Duration = scene->mAnimations[0]->mDuration;
 		m_TicksPerSecond = scene->mAnimations[0]->mTicksPerSecond;
@@ -35,7 +37,7 @@ public:
 		ReadMissingBones(scene->mAnimations[0], model);
 	}
 
-	~Animation() { }
+	//~Animation() { }
 
 	Bone* FindBone(const std::string& name){
 		auto iter = std::find_if(m_Bones.begin(), m_Bones.end(), [&](const Bone& Bone){
