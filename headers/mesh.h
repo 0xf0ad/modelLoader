@@ -28,7 +28,7 @@ struct Vertex {
 
 struct Texture {
 	unsigned int id;
-	std::string type;
+	char type[14];
 	std::string path;
 };
 
@@ -36,13 +36,13 @@ class Mesh{
 public:
 
 	//GLint defuseTexturesIDs[16] = { 0 };
-	std::vector<GLint> defuseTexturesIDs;
-	std::vector<GLint> normalTexturesIDs;
-	std::vector<GLint> heightTexturesIDs;
-	std::vector<GLint> specularTexturesIDs;
+	std::vector<GLint>  defuseTexturesIDs;
+	std::vector<GLint>  normalTexturesIDs;
+	std::vector<GLint>  heightTexturesIDs;
+	std::vector<GLint>  specularTexturesIDs;
 
 	std::vector<Vertex>  vertices;
-	std::vector<uint>    indices;
+	std::vector<GLuint>  indices;
 	std::vector<Texture> textures;
 	unsigned int VAO, VBO, EBO;
 
@@ -58,7 +58,18 @@ public:
 	     //const std::vector<uint>&    indices,
 	     const std::vector<Texture>& textures);
 
-	Mesh() = default;
+	Mesh(){
+			//printf("OMG i just allocated %zu bytes\n", sizeof(*this));
+
+	};
+
+	/*Mesh(Mesh& other);{
+		printf("noooo i just coppied the mesh %zu bytes\n", sizeof(Mesh));
+	}*/
+
+	~Mesh(){
+		//printf("mesh go brrrr %zu \n", textures.size() * sizeof(Texture));
+	}
 
 	void Draw(Shader &shader);
 

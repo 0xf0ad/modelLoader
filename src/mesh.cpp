@@ -9,6 +9,9 @@ Mesh::Mesh(const std::vector<Vertex>&  vertices,
 	this->indices  = indices;
 	this->textures = textures;
 
+		//printf("OMG i just allocated %zu bytes\n", sizeof(*this));
+
+
 	//setupMesh();
 }
 
@@ -18,12 +21,17 @@ Mesh::Mesh(const std::vector<uint>&    indices,
 	this->indices  = indices;
 	this->textures = textures;
 
+		//printf("OMG i just allocated %zu bytes\n", sizeof(*this));
+
+
 	//setupMesh();
 }
 
 Mesh::Mesh(const std::vector<Texture>& textures){
 
 	this->textures = textures;
+
+	//printf("OMG i just allocated %zu bytes\n", sizeof(*this));
 
 	//setupMesh();
 }
@@ -99,15 +107,15 @@ void Mesh::setupMesh(){
 		std::string name = textures[i].type;
 		unsigned char textureID = textures[i].id;
 
-		if     (name == "texture_diffuse"){
+		if     (name == "textureDiffus"){
 			defuseTexturesIDs.push_back(textureID);
 			glBindTextureUnit(textureID , textureID);
 		}
-		else if(name == "texture_specular")
+		else if(name == "textureSpecul")
 			specularTexturesIDs.push_back(textureID);
-		else if(name == "texture_normal")
+		else if(name == "textureNormal")
 			normalTexturesIDs.push_back(textureID);
-		else if(name == "texture_height")
+		else if(name == "textureHeight")
 			heightTexturesIDs.push_back(textureID);
 	}
 }
