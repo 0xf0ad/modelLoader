@@ -26,7 +26,7 @@ bool firstMouse = true;
 bool showOverlay = true;
 bool animated = true;
 bool outlined = false;
-
+//extern bool Q_squad;
 // timing
 float deltaTime, lastFrame;
 
@@ -146,6 +146,7 @@ int main(int argc, char** argv){
 	bool cullFace            = true;
 	bool wireFrame           = false;
 	bool V_Sync              = false;
+	
 	//float f                = 0.0f;
 	float scale              = 0.0f;
 	ImVec4 clear_color = ImVec4(0.2f, 0.3f, 0.3f, 1.0f);
@@ -213,6 +214,7 @@ int main(int argc, char** argv){
 		// ----------------------------------------------------------------------
 		ImGui::Checkbox("mapping uniforms", &ourShader.mapped);
 		ImGui::Checkbox("render front and back faces", &cullFace);
+		//ImGui::Checkbox("squad", &Q_squad);
 		ImGui::SameLine();
 		if (ImGui::Button("apply face culling")){
 			if (cullFace)

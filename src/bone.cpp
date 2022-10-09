@@ -1,9 +1,11 @@
 #include "../headers/bone.h"
 #include <glm/ext/quaternion_common.hpp>
+#include <glm/ext/quaternion_exponential.hpp>
 #include <glm/fwd.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 int m_NumPositions, m_NumRotations, m_NumScalings;
+//extern bool Q_squad = 0;
 
 glm::mat4 m_LocalTransform;
 
@@ -114,11 +116,42 @@ glm::mat4 InterpolateRotation(float animationTime, const std::vector<KeyRotation
 	}
 
 	int index = GetRotationIndex(animationTime, m_Rotations);
+	//glm::quat q = glm::quat( -m_Rotations[index].orientation.x, -m_Rotations[index].orientation.y, -m_Rotations[index].orientation.z, m_Rotations[index].orientation.w );
 
-	return glm::toMat4(glm::normalize(
-		mix(m_Rotations[index].orientation, m_Rotations[index + 1].orientation,
-			GetScaleFactor(m_Rotations[index].timeStamp, m_Rotations[index+1].timeStamp, animationTime))));
-} 
+	float scalarFactor = GetScaleFactor(m_Rotations[index].timeStamp, m_Rotations[index+1].timeStamp, animationTime);
+
+	//glm::quat O_returned;
+	glm::quat N_returned;
+
+	/*
+	 * WHY DOES CUBIC INTERPOLATION SEEMS LIKE THE LINEAR ONE IT SHOULD NT BE THAT WAY
+	 */
+	
+	//if(Q_squad){
+		/*O_returned = glm::squad(m_Rotations[index].orientation, m_Rotations[index+1].orientation,
+			    //   m_Rotations[index].orientation * glm::exp((glm::log(q * m_Rotations[index+1].orientation) + glm::log(q * m_Rotations[index-1].orientation)) * -0.25f),
+				//   m_Rotations[index+1].orientation * glm::exp((glm::log(q * m_Rotations[index].orientation) + glm::log(q * m_Rotations[index+2].orientation)) * -0.25f),
+			       glm::intermediate(m_Rotations[index-1].orientation, m_Rotations[index].orientation, m_Rotations[index+1].orientation),
+				   glm::intermediate(m_Rotations[index].orientation, m_Rotations[index+1].orientation, m_Rotations[index+2].orientation),
+				   scalarFactor);*/
+		N_returned = qmix(m_Rotations[index].orientation, m_Rotations[index+1].orientation, scalarFactor);
+		/*O_returned = qmix(N_returned , qmix(glm::intermediate(m_Rotations[index-1].orientation, m_Rotations[index].orientation, m_Rotations[index+1].orientation)
+		                                   ,glm::intermediate(m_Rotations[index].orientation, m_Rotations[index+1].orientation, m_Rotations[index+2].orientation), scalarFactor)
+						 ,2*scalarFactor*(1-scalarFactor));*/
+	//}else{
+		
+	//}
+
+		//printf("looool : %f\n", (N_returned.x));
+		//printf("%f\t%f\t%f\t%f\n", N_returned.x, N_returned.y, N_returned.z, N_returned.w);
+	
+	//if(Q_squad){
+		return glm::toMat4(glm::normalize(N_returned));
+	/*}else{
+		return glm::toMat4(glm::normalize(O_returned));
+	}*/
+}
+
 
 // figures out which scaling keys to interpolate b/w and performs the interpolation 
 // and returns the scale matrix

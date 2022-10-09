@@ -63,9 +63,9 @@ public:
 
 	};
 
-	/*Mesh(Mesh& other);{
-		printf("noooo i just coppied the mesh %zu bytes\n", sizeof(Mesh));
-	}*/
+	Mesh(const Mesh& other){
+		//printf("noooo i just coppied the mesh %zu bytes\n", sizeof(Mesh));
+	}
 
 	~Mesh(){
 		//printf("mesh go brrrr %zu \n", textures.size() * sizeof(Texture));
