@@ -26,12 +26,12 @@ public:
 	// constructor, expects a filepath to a 3D model.
 	Model(const char* path);
 	
-	Model(Model& other){
-		printf("bro you coppied the model class\n");
+	Model(const Model& other){
+		//printf("bro you coppied the model class\n");
 	}
 
 	~Model(){
-		printf("model destructed\n");
+		//printf("model destructed\n");
 	}
 
 	// draws the model, and thus all its meshes

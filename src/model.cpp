@@ -19,12 +19,12 @@ std::vector<GLint>   diffuseTexturesIDs;
 std::vector<GLint>   specularTexturesIDs;
 std::vector<GLint>   normalTexturesIDs;
 std::vector<GLint>   heightTexturesIDs;
-Mesh                 BIGMesh;
+static Mesh          BIGMesh;
 static unsigned char m_BoneCounter = 1;
 static unsigned int  prevMeshNumVertices = 0;
 static unsigned int  prevMeshNumIndices = 0;
-std::unordered_map<std::string, BoneInfo> m_BoneInfoMap;
-unsigned char        size_of_vertex = sizeof(Vertex);
+static std::unordered_map<std::string, BoneInfo> m_BoneInfoMap;
+static unsigned char size_of_vertex = sizeof(Vertex);
 
 
 unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma = false){

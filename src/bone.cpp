@@ -4,10 +4,10 @@
 #include <glm/fwd.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-int m_NumPositions, m_NumRotations, m_NumScalings;
+static int m_NumPositions, m_NumRotations, m_NumScalings;
 //extern bool Q_squad = false;
 
-glm::mat4 m_LocalTransform;
+static glm::mat4 m_LocalTransform;
 
 // reads keyframes from aiNodeAnim
 Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){

@@ -1,6 +1,6 @@
 #include "../headers/cubemap.h"
 
-unsigned int cubeMapVAO, cubeMapVBO, cubemapTexture;
+static unsigned int cubeMapVAO, cubeMapVBO, cubemapTexture;
 
 unsigned int loadCubemap(const char** faces){
 
