@@ -16,6 +16,7 @@
 #define WIN_WIDTH                  1280
 #define WIN_HEIGHT                  720
 #define glslVersion "#version 450 core"
+#define MSAA_LVL                      4
 
 // camera
 Camera camera(glm::vec3(0.0f, 3.0f, 9.0f));
@@ -55,6 +56,7 @@ int main(int argc, char** argv){
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_SAMPLES, MSAA_LVL);
 
 #ifdef __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -101,6 +103,8 @@ int main(int argc, char** argv){
 	glEnable(GL_STENCIL_TEST);
 	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	// enable multisampling anti-aliasing
+	glEnable(GL_MULTISAMPLE);
 
 	// build and compile shaders
 	// -------------------------

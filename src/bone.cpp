@@ -5,7 +5,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 int m_NumPositions, m_NumRotations, m_NumScalings;
-//extern bool Q_squad = 0;
+//extern bool Q_squad = false;
 
 glm::mat4 m_LocalTransform;
 
