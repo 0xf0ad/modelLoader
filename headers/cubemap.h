@@ -21,7 +21,7 @@ public:
 
 };*/
 
-unsigned int loadCubemap(std::vector<std::string> faces);
+unsigned int loadCubemap(const char** faces);
 
 void initCubeMap();
 
