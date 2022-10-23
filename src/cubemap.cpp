@@ -5,6 +5,7 @@ static unsigned int cubeMapVAO, cubeMapVBO, cubemapTexture;
 unsigned int loadCubemap(const char** faces){
 
 	unsigned int textureID;
+	
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 

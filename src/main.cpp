@@ -10,6 +10,7 @@
 #include "../headers/animator.h"
 #include <GLFW/glfw3.h>
 #include <stdio.h>
+#include <x86intrin.h>
 #include <string>
 
 // settings
@@ -27,7 +28,7 @@ bool firstMouse = true;
 bool showOverlay = true;
 bool animated = true;
 bool outlined = false;
-//extern bool Q_squad;
+extern bool Q_squad;
 // timing
 float deltaTime, lastFrame;
 
@@ -49,6 +50,9 @@ int main(int argc, char** argv){
 		animated = false;
 	}
 
+
+
+	unsigned long long initCycleID, finishCylceID, cyclesDiffrence;
 
 	// glfw: initialize and configure
 	// ------------------------------
@@ -108,10 +112,27 @@ int main(int argc, char** argv){
 
 	// build and compile shaders
 	// -------------------------
+	initCycleID = __rdtsc();
 	Shader ourShader("shaders/vertexShader", "shaders/fragmentShader");
-	Shader outLiner ("shaders/outlinervs"  , "shaders/outlinerfs"    );
-	Shader skyBoxShader("shaders/skyboxvs" ,"shaders/skyboxfs"       );
+	finishCylceID = __rdtsc();
+	cyclesDiffrence = finishCylceID - initCycleID;
 
+	printf("%llu\t ticks on shader 1\n", cyclesDiffrence);
+	
+	initCycleID = __rdtsc();
+	Shader outLiner ("shaders/outlinervs"  , "shaders/outlinerfs"    );
+	finishCylceID = __rdtsc();
+	cyclesDiffrence = finishCylceID - initCycleID;
+	
+	printf("%llu\t ticks on shader 2\n", cyclesDiffrence);
+	
+	initCycleID = __rdtsc();
+	Shader skyBoxShader("shaders/skyboxvs" ,"shaders/skyboxfs"       );
+	finishCylceID = __rdtsc();
+	cyclesDiffrence = finishCylceID - initCycleID;
+
+	printf("%llu\t ticks on shader 3\n", cyclesDiffrence);
+	
 	unsigned int uniformBufferBlock;
 	glGenBuffers(1, &uniformBufferBlock);
 	glBindBuffer(GL_UNIFORM_BUFFER, uniformBufferBlock);
@@ -128,7 +149,14 @@ int main(int argc, char** argv){
 
 	// load models
 	// -----------
+	
+
+	initCycleID = __rdtsc();
 	Model ourModel(argv[1]);
+	finishCylceID = __rdtsc();
+	cyclesDiffrence = finishCylceID - initCycleID;
+
+	printf("%llu\t ticks on loading model\n", cyclesDiffrence);
 
 	Animation *animation;
 	Animator  *animator;
@@ -218,7 +246,7 @@ int main(int argc, char** argv){
 		// ----------------------------------------------------------------------
 		ImGui::Checkbox("mapping uniforms", &ourShader.mapped);
 		ImGui::Checkbox("render front and back faces", &cullFace);
-		//ImGui::Checkbox("squad", &Q_squad);
+		ImGui::Checkbox("squad", &Q_squad);
 		ImGui::SameLine();
 		if (ImGui::Button("apply face culling")){
 			if (cullFace)

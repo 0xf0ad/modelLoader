@@ -7,6 +7,9 @@
 
 #define MAX_BONE_INFLUENCE 4
 
+#define TANGENT   false
+#define BITANGENT false
+
 struct Vertex {
 	// position
 	glm::vec3 Position;
@@ -16,26 +19,38 @@ struct Vertex {
 	glm::vec2 TexCoords;
 	// texture ID to batch textures
 	unsigned char textureIndex;
+
+#if TANGENT 
 	// tangent
-	//glm::vec3 Tangent;
+	glm::vec3 Tangent;
+#endif /* TANGENT */
+#if BITANGENT
 	// bitangent
-	//glm::vec3 Bitangent;
+	glm::vec3 Bitangent;
+#endif /* BITANGENT */
+
 	//bone id
 	unsigned char boneIDs[MAX_BONE_INFLUENCE] = {0};
 	//bone weight
 	float weights[MAX_BONE_INFLUENCE] = {0.0f};
 };
 
+enum textureType{
+	diffuse_texture,
+	specular_texture,
+	normal_texture,
+	height_texture
+};
+
 struct Texture {
 	unsigned int id;
-	char type[14];
+	textureType type;
 	std::string path;
 };
 
 class Mesh{
 public:
 
-	//GLint defuseTexturesIDs[16] = { 0 };
 	std::vector<GLint>  defuseTexturesIDs;
 	std::vector<GLint>  normalTexturesIDs;
 	std::vector<GLint>  heightTexturesIDs;

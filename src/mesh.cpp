@@ -104,18 +104,18 @@ void Mesh::setupMesh(){
 
 		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
 		
-		std::string name = textures[i].type;
+		textureType typeName = textures[i].type;
 		unsigned char textureID = textures[i].id;
 
-		if     (name == "textureDiffus"){
+		if     (typeName == diffuse_texture){
 			defuseTexturesIDs.push_back(textureID);
 			glBindTextureUnit(textureID , textureID);
 		}
-		else if(name == "textureSpecul")
+		else if(typeName == specular_texture)
 			specularTexturesIDs.push_back(textureID);
-		else if(name == "textureNormal")
+		else if(typeName == normal_texture)
 			normalTexturesIDs.push_back(textureID);
-		else if(name == "textureHeight")
+		else if(typeName == height_texture)
 			heightTexturesIDs.push_back(textureID);
 	}
 }

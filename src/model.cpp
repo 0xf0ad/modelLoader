@@ -7,6 +7,7 @@
 #include <glm/ext/vector_float3.hpp>
 #include <glm/fwd.hpp>
 #include <stdio.h>
+#include <string>
 #include <strings.h>
 #include <sys/types.h>
 #include <vector>
@@ -68,7 +69,7 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.
-std::vector<Texture> loadMaterialTextures(const aiMaterial *mat, aiTextureType type, const char* typeName, const char* dir){
+std::vector<Texture> loadMaterialTextures(const aiMaterial *mat, aiTextureType type, textureType texType, const char* dir){
 	
 	std::vector<Texture> textures;
 	
@@ -92,13 +93,7 @@ std::vector<Texture> loadMaterialTextures(const aiMaterial *mat, aiTextureType t
 			Texture texture;
 			texture.id = TextureFromFile(str.C_Str(), dir);
 			texture.path = str.C_Str();
-			
-			for(unsigned char i=0; i!=(strlen(typeName) + 1); i++)
-				texture.type[i] = typeName[i];
-
-			//printf("strlen1 : %zu\n", strlen(typeName));
-			//printf("strlen2 : %zu\n", strlen(texture.type));
-
+			texture.type = texType;
 			textures.push_back(texture);
 			textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
 		}
@@ -197,13 +192,13 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 	// assigne textures
 	// ----------------
 	aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-	std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "textureDiffus", dir);
+	std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, diffuse_texture, dir);
 	textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-	std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, "textureSpecul", dir);
+	std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, specular_texture, dir);
 	textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-	std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "textureNormal", dir);
+	std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, normal_texture, dir);
 	textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-	std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "textureHeight", dir);
+	std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, height_texture, dir);
 	textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 	
 	gTextures.insert(gTextures.begin(), textures.begin(), textures.end());
@@ -313,7 +308,8 @@ void loadModel(const std::string& path){
 	
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size_of_the_element_buffer_in_bytes, nullptr, GL_STATIC_DRAW);
 
-	std::string directory = path.substr(0, path.find_last_of('/'));
+	//std::string directory = path.substr(0, path.find_last_of('/'));
+	std::string directory(path.c_str(), path.find_last_of('/'));
 	processNode(scene->mRootNode, scene, meshes, directory.c_str());
 
 	for (unsigned int i = 0; i!= meshes.size(); i++){
@@ -359,23 +355,19 @@ void loadModel(const std::string& path){
 	for(int i=(gTextures.size()-1); i!=-1; i--){
 
 		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
-		//printf("***************************\n");
-		//printf("non-batched i = %d\n", i);
 		
-		std::string name = gTextures[i].type;
+		textureType typeName = gTextures[i].type;
 		unsigned char textureID = gTextures[i].id;
-		//printf("non-batched textureID = %d\n", textureID);
-		//printf("non-batched name : %s\n", name.c_str());
 		
-		if     (name == "textureDiffus"){
+		if     (typeName == diffuse_texture){
 			diffuseTexturesIDs.push_back(textureID);
 			glBindTextureUnit(textureID , textureID);
 		}
-		else if(name == "texture_specular")
+		else if(typeName == specular_texture)
 			specularTexturesIDs.push_back(textureID);
-		else if(name == "texture_normal")
+		else if(typeName == normal_texture)
 			normalTexturesIDs.push_back(textureID);
-		else if(name == "texture_height")
+		else if(typeName == height_texture)
 			heightTexturesIDs.push_back(textureID);
 	}
 }
