@@ -6,9 +6,11 @@
 #include <math.h>
 
 static int m_NumPositions, m_NumRotations, m_NumScalings;
-extern bool Q_squad = false;
+extern bool Q_squad;
 
 static glm::mat4 m_LocalTransform;
+
+#define BICUBIC_INTERPOLATION true
 
 // reads keyframes from aiNodeAnim
 Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){
@@ -47,22 +49,26 @@ float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float animationTi
 }
 // math shit
 const glm::vec3 mix(const glm::vec3& a, const glm::vec3& b, const float t){
-	//return (a * (1-t)) + (b * t);
-	//return a + ( t * ( b - a ));
+#if LINEAR_INTERPOLATION	
+	return (a * (1-t)) + (b * t);
+#elif OPTIMIZED_LINEAR_INTERPOLATION
+	return a + ( t * ( b - a ));
+#elif BICUBIC_INTERPOLATION
 	const float Tsquare      = t * t;
 	const float threeTsquare = 3 * Tsquare;
 	const float twoTcube     = 2 * t * Tsquare;
 	const glm::vec3 result   = ( a * ( twoTcube - threeTsquare + 1.0f ) ) + ( b * ( threeTsquare - twoTcube ));
 	return result;
+#endif
 }
 
 const glm::quat mix(const glm::quat& a, const glm::quat& b, const float t){
 	const float Tsquare      = t * t;
 	const float threeTsquare = 3 * Tsquare;
-	const float twoTminus3   = 2 * t - 3; 
-	//const float twoTcube     = 2 * t * Tsquare;
-	//const glm::quat result   = ( a * ( twoTcube - threeTsquare + 1.0f ) ) + ( b * ( threeTsquare - twoTcube ));
-	const glm::quat result   = ((a * (Tsquare * twoTminus3 + 1.0f)) - (b * Tsquare * twoTminus3));
+	//const float twoTminus3   = 2 * t - 3; 
+	const float twoTcube     = 2 * t * Tsquare;
+	const glm::quat result   = ( a * ( twoTcube - threeTsquare + 1.0f ) ) + ( b * ( threeTsquare - twoTcube ));
+	//const glm::quat result   = ((a * (Tsquare * twoTminus3 + 1.0f)) - (b * Tsquare * twoTminus3));
 	return result;
 }
 
@@ -205,14 +211,14 @@ glm::mat4 InterpolateRotation(float animationTime, const std::vector<KeyRotation
 	 */
 	
 	if(Q_squad){
-		N_returned = mix(m_Rotations[index].orientation, m_Rotations[index+1].orientation, scalarFactor);
+		N_returned = glm::slerp(m_Rotations[index].orientation, m_Rotations[index+1].orientation, scalarFactor);
 		/*O_returned = mix(N_returned , mix(glm::intermediate(m_Rotations[index-1].orientation, m_Rotations[index].orientation, m_Rotations[index+1].orientation)
 		                                   ,glm::intermediate(m_Rotations[index].orientation, m_Rotations[index+1].orientation, m_Rotations[index+2].orientation), scalarFactor)
 						 ,2*scalarFactor*(1-scalarFactor));*/
 		
 		//O_returned = squad_from_data(m_Rotations, index, scalarFactor);
 	}else{
-		O_returned = squad(m_Rotations[index].orientation, m_Rotations[index+1].orientation,
+		O_returned = glm::squad(m_Rotations[index].orientation, m_Rotations[index+1].orientation,
 			    //   m_Rotations[index].orientation * glm::exp((glm::log(q * m_Rotations[index+1].orientation) + glm::log(q * m_Rotations[index-1].orientation)) * -0.25f),
 				//   m_Rotations[index+1].orientation * glm::exp((glm::log(q * m_Rotations[index].orientation) + glm::log(q * m_Rotations[index+2].orientation)) * -0.25f),
 			       intermediate(m_Rotations[index-1].orientation, m_Rotations[index].orientation, m_Rotations[index+1].orientation),

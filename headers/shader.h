@@ -23,7 +23,7 @@ public:
 
 	//store the uniform location
 	mutable std::unordered_map<std::string, GLint> uniformLocationCache;
-	GLint const getUniformLocation(const std::string& name);
+	const GLint getUniformLocation(const std::string& name);
 
 	// utility uniform functions
 	const void setBool (const std::string &name, bool  value);

@@ -2,6 +2,7 @@
 #include <assimp/mesh.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <assimp/types.h>
 #include <cstddef>
 #include <cstring>
 #include <glm/ext/vector_float3.hpp>
@@ -12,6 +13,7 @@
 #include <sys/types.h>
 #include <vector>
 #include "../headers/model.h"
+#include "../headers/animation.h"
 
 // model data
 std::vector<Texture> textures_loaded;
@@ -121,22 +123,20 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 
 		//process mesh positions if it has any
 		if(mesh->HasPositions())
-			glBufferSubData(GL_ARRAY_BUFFER, (i + prevMeshNumVertices) * size_of_vertex, sizeof(mesh->mVertices[i]), &mesh->mVertices[i]);	
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, Position)    , sizeof(mesh->mVertices[i])  , &mesh->mVertices[i]);	
 	
 		// process normals if it has any
 		if(mesh->HasNormals())
-			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, Normal), sizeof(mesh->mNormals[i]), &mesh->mNormals[i]);
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, Normal)      , sizeof(mesh->mNormals[i])   , &mesh->mNormals[i]);
 	
-		// load textures if it has any
+		// load textures if it has any if not load null coords insted
 		if(mesh->HasTextureCoords(0)){
-			glm::vec2 vec;
-			vec.x = mesh->mTextureCoords[0][i].x;
-			vec.y = mesh->mTextureCoords[0][i].y;
-			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, TexCoords)   , sizeof(vec), &vec);
+			// insert the txture coordinates to the VAO directly from ASSIMP
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, TexCoords)   , sizeof(float[2])            , &mesh->mTextureCoords[0][i]);
 			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, textureIndex), sizeof(mesh->mMaterialIndex), &mesh->mMaterialIndex);
 		}else{
-			glm::vec2 nullvec = glm::vec2(0.0f);
-			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, TexCoords)   , sizeof(nullvec), &nullvec);
+			glm::vec2 nullvec(0.0f);	/* I should define a variable to use a pointer with in the next function */
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, TexCoords)   , sizeof(nullvec)             , &nullvec);
 		}
 		tmpVerticesBoneData.emplace_back(tmpVertexBoneData);
 	}
@@ -203,7 +203,9 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 	
 	gTextures.insert(gTextures.begin(), textures.begin(), textures.end());
 
-	/*for(unsigned int i = 0; i != diffuseMaps.size(); i++){
+	
+	#if false     /* to make this works you should #define false as 1 (you should not(as you should not run that garbage)) */
+	for(unsigned int i = 0; i != diffuseMaps.size(); i++){
 
 		glActiveTexture(GL_TEXTURE0 + mesh->mMaterialIndex + i); // activate proper texture unit before binding
 
@@ -229,11 +231,11 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 		}else if(name == "textureHeight"){
 			BIGMesh.heightTexturesIDs.push_back(textureID);
 		}
-	}*/
+	}
+	#endif /* false */
 
 	prevMeshNumVertices += mesh->mNumVertices;
 	prevMeshNumIndices  += mesh->mNumFaces * mesh->mFaces->mNumIndices;
-	//glBindTextureUnit(3 , 3);
 	return Mesh(textures);
 }
 
@@ -281,8 +283,9 @@ void loadModel(const std::string& path){
 	
 	// read file via ASSIMP
 	Assimp::Importer import;
-	const aiScene *scene = import.ReadFile(path, 
-		aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace |aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph);
+	const aiScene *scene = import.ReadFile(path.c_str(),
+		aiProcess_Triangulate   | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace |
+		aiProcess_OptimizeMeshes| aiProcess_OptimizeGraph);
 	
 	//check for importing errors
 	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode){
@@ -308,8 +311,7 @@ void loadModel(const std::string& path){
 	
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size_of_the_element_buffer_in_bytes, nullptr, GL_STATIC_DRAW);
 
-	//std::string directory = path.substr(0, path.find_last_of('/'));
-	std::string directory(path.c_str(), path.find_last_of('/'));
+	const std::string directory(path.c_str(), path.find_last_of('/'));
 	processNode(scene->mRootNode, scene, meshes, directory.c_str());
 
 	for (unsigned int i = 0; i!= meshes.size(); i++){
@@ -370,6 +372,13 @@ void loadModel(const std::string& path){
 		else if(typeName == height_texture)
 			heightTexturesIDs.push_back(textureID);
 	}
+
+	aiMemoryInfo in;
+	import.GetMemoryRequirements(in);
+	printf("allocated : %i bytes\n", in.total);
+	printf("%i of them are animations\n", in.animations);
+
+
 }
 
 Model::Model(const char* path){

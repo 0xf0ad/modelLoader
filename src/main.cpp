@@ -1,6 +1,7 @@
-#include <imgui.h>
-#include <backends/imgui_impl_glfw.h>
-#include <backends/imgui_impl_opengl3.h>
+#include <cstdlib>
+#include "../gui/imgui.h"
+#include "../gui/backends/imgui_impl_glfw.h"
+#include "../gui/backends/imgui_impl_opengl3.h"
 #include "../headers/shader.h"
 #include "../headers/model.h"
 #include "../headers/frambuffer.h"
@@ -28,7 +29,8 @@ bool firstMouse = true;
 bool showOverlay = true;
 bool animated = true;
 bool outlined = false;
-extern bool Q_squad;
+extern bool Q_squad = true;
+
 // timing
 float deltaTime, lastFrame;
 
@@ -190,6 +192,7 @@ int main(int argc, char** argv){
 	glm::mat4 view;
 	glm::vec3 AxisRot = glm::vec3(0.0f);
 	float rotDegre = 0.0f;
+	//int animIndex = 0;
 
 
 	// render loop
@@ -205,6 +208,14 @@ int main(int argc, char** argv){
 		// input
 		// -----
 		processInput(window);
+
+		if(glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){
+			delete animation;
+			//delete animator;
+			animation = new Animation(argv[2], &ourModel, 0);
+			animator->PlayAnimation(animation);
+			//animator  = new Animator(animation);
+		}
 		
 		// render
 		// ------
@@ -272,6 +283,14 @@ int main(int argc, char** argv){
 		if (ImGui::Button("apply V-Sync"))
 			glfwSwapInterval(V_Sync);
 
+        
+		
+		const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIIIIII", "JJJJ", "KKKKKKK" };
+        static int item_current;
+        //ImGui::Combo("animations", &item_current, animation->m_Animations[0].mName.C_Str(), animation->m_Animations.size());
+
+
+
 
 		ShowCordDialog(&show_cordSet_window, &AxisRot, &rotDegre);
 
@@ -302,7 +321,7 @@ int main(int argc, char** argv){
 
 		drawCubeMap();
 
-		//enable shader before setting uniforms
+		// enable shader before setting uniforms
 		ourShader.use();
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view"      , view);
@@ -355,8 +374,10 @@ int main(int argc, char** argv){
 	if (animated){
 		// free animation data from memory
 		delete animation;
+	printf("loool\n");
 		delete animator;
 	}
+
 
 	//skyBox.Clean();
 
@@ -369,7 +390,7 @@ int main(int argc, char** argv){
 	// ------------------------------------------------------------
 	//framebuffer.clear();
 	glfwTerminate();
-	return false;
+	return EXIT_SUCCESS;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
@@ -480,7 +501,9 @@ static void ShowOverlay(bool* p_open){
 static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre){
 	// corect cordinates if loaded incorrectly
 	// ---------------------------------------
-	ImGui::Checkbox("cordinate System incorrect ?", p_open);
+	//ImGui::Checkbox("cordinate System incorrect ?", p_open);
+	if(ImGui::Button("cordinates System incorrect ?"))
+		*p_open = true;
 
 	if (*p_open){
 		ImGui::Begin("correct cordinate system", p_open);
@@ -512,7 +535,7 @@ static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre){
 		else if (ImGui::Button("Reset")){
 			*rotDegre = 0.0f;
 		}
-		else if (ImGui::SameLine(); ImGui::Button("Close"))
+		else if (/*ImGui::SameLine();*/ ImGui::Button("Close"))
 			*p_open = false;
 		ImGui::End();
 	}

@@ -95,7 +95,7 @@ const void Shader::setBool(const std::string &name, bool value){
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-		location =glGetUniformLocation(ID, name.c_str());
+		location = glGetUniformLocation(ID, name.c_str());
 	glUniform1i(location, (int)value);
 }
 // ------------------------------------------------------------------------
@@ -104,7 +104,7 @@ const void Shader::setInt(const std::string &name, int value){
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-		location =glGetUniformLocation(ID, name.c_str());
+		location = glGetUniformLocation(ID, name.c_str());
 	glUniform1i(location, value);
 }
 // ------------------------------------------------------------------------
@@ -113,7 +113,7 @@ const void Shader::setFloat(const std::string &name, float value){
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-		location =glGetUniformLocation(ID, name.c_str());
+		location = glGetUniformLocation(ID, name.c_str());
 	glUniform1f(location, value);
 }
 // ------------------------------------------------------------------------
@@ -122,7 +122,7 @@ const void Shader::setVec2(const std::string &name, const glm::vec2 &value){
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-		location =glGetUniformLocation(ID, name.c_str());
+		location = glGetUniformLocation(ID, name.c_str());
 	glUniform2fv(location, 1, &value[0]);
 }
 const void Shader::setVec2(const std::string &name, float x, float y){
@@ -130,7 +130,7 @@ const void Shader::setVec2(const std::string &name, float x, float y){
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-		location =glGetUniformLocation(ID, name.c_str());
+		location = glGetUniformLocation(ID, name.c_str());
 	glUniform2f(location, x, y);
 }
 // ------------------------------------------------------------------------
@@ -139,7 +139,7 @@ const void Shader::setVec3(const std::string &name, const glm::vec3 &value){
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-		location =glGetUniformLocation(ID, name.c_str());
+		location = glGetUniformLocation(ID, name.c_str());
 	glUniform3fv(location, 1, &value[0]);
 }
 const void Shader::setVec3(const std::string &name, float x, float y, float z){
@@ -147,7 +147,7 @@ const void Shader::setVec3(const std::string &name, float x, float y, float z){
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-		location =glGetUniformLocation(ID, name.c_str());
+		location = glGetUniformLocation(ID, name.c_str());
 	glUniform3f(location, x, y, z);
 }
 // ------------------------------------------------------------------------
@@ -156,7 +156,7 @@ const void Shader::setVec4(const std::string &name, const glm::vec4 &value){
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-		location =glGetUniformLocation(ID, name.c_str());
+		location = glGetUniformLocation(ID, name.c_str());
 	glUniform4fv(location, 1, &value[0]);
 }
 const void Shader::setVec4(const std::string &name, float x, float y, float z, float w){
@@ -164,7 +164,7 @@ const void Shader::setVec4(const std::string &name, float x, float y, float z, f
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-		location =glGetUniformLocation(ID, name.c_str());
+		location = glGetUniformLocation(ID, name.c_str());
 	glUniform4f(location, x, y, z, w);
 }
 // ------------------------------------------------------------------------
@@ -173,7 +173,7 @@ const void Shader::setMat2(const std::string &name, const glm::mat2 &mat){
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-		location =glGetUniformLocation(ID, name.c_str());
+		location = glGetUniformLocation(ID, name.c_str());
 	glUniformMatrix2fv(location, 1, GL_FALSE, &mat[0][0]);
 }
 // ------------------------------------------------------------------------
@@ -182,7 +182,7 @@ const void Shader::setMat3(const std::string &name, const glm::mat3 &mat){
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-		location =glGetUniformLocation(ID, name.c_str());
+		location = glGetUniformLocation(ID, name.c_str());
 	glUniformMatrix3fv(location, 1, GL_FALSE, &mat[0][0]);
 }
 //-------------------------------------------------------------------------
@@ -191,6 +191,6 @@ const void Shader::setMat4(const std::string &name, const glm::mat4 &mat){
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-		location =glGetUniformLocation(ID, name.c_str());
+		location = glGetUniformLocation(ID, name.c_str());
 	glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
 }

@@ -1,4 +1,4 @@
-CFLAGS = -c -Wall -g
+CFLAGS = -c -static -Wall -g
 LDFLAGS = -lglfw -lGL -lrt -lm -lX11 -lpthread -lXrandr -lXi -ldl -lxcb -lXau -lXdmcp -lassimp -g
 IMGUIDIR = ./gui
 BUILDDIR = ./bin
