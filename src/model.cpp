@@ -3,15 +3,10 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <assimp/types.h>
-#include <cstddef>
-#include <cstring>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/fwd.hpp>
 #include <stdio.h>
-#include <string>
-#include <strings.h>
 #include <sys/types.h>
-#include <vector>
 #include "../headers/model.h"
 #include "../headers/animation.h"
 
@@ -28,6 +23,10 @@ static unsigned int  prevMeshNumVertices = 0;
 static unsigned int  prevMeshNumIndices = 0;
 static std::unordered_map<std::string, BoneInfo> m_BoneInfoMap;
 static unsigned char size_of_vertex = sizeof(Vertex);
+//static bool          modelHasAnimations;
+
+//#define AI_CONFIG_PP_RVC_FLAGS 
+
 
 
 unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma = false){
@@ -40,7 +39,7 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 
 	int width, height, nrComponents;
 	unsigned char* data = stbi_load(c_filename, &width, &height, &nrComponents, 0);
-	
+
 	if (data){
 		GLenum format;
 		if (nrComponents == 1)
@@ -64,7 +63,7 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 	}else{
 		fprintf(stderr, "Texture failed to load at path: %s\n", c_filename);
 	}
-	
+
 	stbi_image_free(data);
 	return textureID;
 }
@@ -74,11 +73,11 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 std::vector<Texture> loadMaterialTextures(const aiMaterial *mat, aiTextureType type, textureType texType, const char* dir){
 	
 	std::vector<Texture> textures;
-	
+
 	for(unsigned int i = 0; i != mat->GetTextureCount(type); i++){
 		aiString str;
 		mat->GetTexture(type, i, &str);
-		
+
 		// tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
 		stbi_set_flip_vertically_on_load(true);
 
@@ -111,10 +110,10 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 	// --------------
 	for(unsigned int i = 0; i != mesh->mNumVertices; i++){
 		vertexBoneData tmpVertexBoneData;
-		
+
 		if (tmpVerticesBoneData.size() == prevMeshNumVertices)
 			tmpVerticesBoneData.reserve(mesh->mNumVertices);
-		
+
 		//vertices.reserve(mesh->mNumVertices);
 		for(int i = 0; i != MAX_BONE_INFLUENCE; i++){
 			tmpVertexBoneData.boneIDs[i] = 0;
@@ -124,11 +123,11 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 		//process mesh positions if it has any
 		if(mesh->HasPositions())
 			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, Position)    , sizeof(mesh->mVertices[i])  , &mesh->mVertices[i]);	
-	
+
 		// process normals if it has any
 		if(mesh->HasNormals())
 			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, Normal)      , sizeof(mesh->mNormals[i])   , &mesh->mNormals[i]);
-	
+
 		// load textures if it has any if not load null coords insted
 		if(mesh->HasTextureCoords(0)){
 			// insert the txture coordinates to the VAO directly from ASSIMP
@@ -173,7 +172,7 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 			for(uint weightIndex = 0; weightIndex != mesh->mBones[boneIndex]->mNumWeights; weightIndex++){
 				unsigned int vertexId = bone->mWeights[weightIndex].mVertexId;
 				assert(vertexId <= (mesh->mNumVertices));
-				
+
 				for(unsigned char boneIndex = 0; boneIndex != MAX_BONE_INFLUENCE; boneIndex++){
 					if(!tmpVerticesBoneData[vertexId].boneIDs[boneIndex]){
 						tmpVerticesBoneData[vertexId].weights[boneIndex] = bone->mWeights->mWeight;
@@ -200,10 +199,10 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 	textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 	std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, height_texture, dir);
 	textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
-	
+
 	gTextures.insert(gTextures.begin(), textures.begin(), textures.end());
 
-	
+
 	#if false     /* to make this works you should #define false as 1 (you should not(as you should not run that garbage)) */
 	for(unsigned int i = 0; i != diffuseMaps.size(); i++){
 
@@ -280,18 +279,30 @@ unsigned int getNumMeshs(aiNode *node, const aiScene *scene){
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
 void loadModel(const std::string& path){
 	std::vector<Mesh>    meshes;
-	
+
 	// read file via ASSIMP
 	Assimp::Importer import;
 	const aiScene *scene = import.ReadFile(path.c_str(),
-		aiProcess_Triangulate   | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace |
-		aiProcess_OptimizeMeshes| aiProcess_OptimizeGraph);
-	
+		aiProcess_Triangulate             |\
+		aiProcess_GenSmoothNormals        |\
+		aiProcess_JoinIdenticalVertices   |\
+		aiProcess_GenUVCoords             |\
+		aiProcess_LimitBoneWeights        |\
+		aiProcess_RemoveComponent         |\
+		aiProcess_RemoveRedundantMaterials|\
+		aiProcess_OptimizeMeshes          |\
+		aiProcess_OptimizeGraph           |\
+		aiProcess_ImproveCacheLocality    |\
+		aiProcess_FindDegenerates         |\
+		aiProcess_FindInvalidData         );
+
 	//check for importing errors
 	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode){
 		fprintf(stderr, "ERROR::ASSIMP::%s\n", import.GetErrorString());
 		return;
 	}
+
+	//modelHasAnimations = scene->HasAnimations();
 
 	unsigned int size_of_the_array_buffer_in_bytes   = getNumVertices(scene->mRootNode, scene) * size_of_vertex;
 	unsigned int size_of_the_element_buffer_in_bytes = getNumIndices(scene->mRootNode, scene) * size_of_vertex;
@@ -306,9 +317,9 @@ void loadModel(const std::string& path){
 
 	glBindBuffer(GL_ARRAY_BUFFER, BIGMesh.VBO);
 	glBufferData(GL_ARRAY_BUFFER, size_of_the_array_buffer_in_bytes, nullptr, GL_STATIC_DRAW);
-	
+
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BIGMesh.EBO);
-	
+
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size_of_the_element_buffer_in_bytes, nullptr, GL_STATIC_DRAW);
 
 	const std::string directory(path.c_str(), path.find_last_of('/'));
@@ -326,7 +337,7 @@ void loadModel(const std::string& path){
 	// vertex normals
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, size_of_vertex, (void*)(offsetof(Vertex, Normal)));
-	
+
 	// vertex texture coords
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, size_of_vertex, (void*)(offsetof(Vertex, TexCoords)));
@@ -357,10 +368,10 @@ void loadModel(const std::string& path){
 	for(int i=(gTextures.size()-1); i!=-1; i--){
 
 		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
-		
+
 		textureType typeName = gTextures[i].type;
 		unsigned char textureID = gTextures[i].id;
-		
+
 		if     (typeName == diffuse_texture){
 			diffuseTexturesIDs.push_back(textureID);
 			glBindTextureUnit(textureID , textureID);
@@ -378,8 +389,16 @@ void loadModel(const std::string& path){
 	printf("allocated : %i bytes\n", in.total);
 	printf("%i of them are animations\n", in.animations);
 
-
 }
+
+/*void* Model::loadAnim(){
+	if(modelHasAnimations){
+		Animation* animation = new Animation(l_scene, this);
+		return (void*)(&animation);
+	}else{
+		return nullptr;
+	}
+}*/
 
 Model::Model(const char* path){
 	loadModel(path);
@@ -387,11 +406,11 @@ Model::Model(const char* path){
 
 // draws the model, and thus all its meshes
 void Model::Draw(Shader &shader){
-	//batch the textures and upload them the GPU
+	// batch the textures and upload them the GPU
 	GLint location = glGetUniformLocation(shader.ID, "texture_diffuse");
 	glUniform1iv(location, diffuseTexturesIDs.size(), diffuseTexturesIDs.data());
 	
-	//upload the inddeces to the GPU
+	// upload the inddeces to the GPU
 	glBindVertexArray(BIGMesh.VAO);
 	glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(prevMeshNumIndices), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);

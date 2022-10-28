@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include "../gui/imgui.h"
 #include "../gui/backends/imgui_impl_glfw.h"
 #include "../gui/backends/imgui_impl_opengl3.h"
@@ -12,13 +11,23 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 #include <x86intrin.h>
-#include <string>
 
-// settings
-#define WIN_WIDTH                  1280
-#define WIN_HEIGHT                  720
-#define glslVersion "#version 450 core"
-#define MSAA_LVL                      4
+/* -======settings======- */
+#define WIN_WIDTH                  1280		// window width
+#define WIN_HEIGHT                  720		// window height
+#define glslVersion "#version 450 core"		// glsl version used by ImGui
+#define IWANNASAMPLE               true		// do i want multi sampling anti-aliasing ?
+#define MSAA_LVL                      4		// anti-aliassing leve
+#define IWANNAADPTHBUFFER          true		// di i want a depth buffer ?
+#define IWANNACULLFACES            true		// do i want a face culler ?
+#define IWANNABLENDER              true		// do i want to enable blending alpha-values (transparency) ?
+#define IWANNATRACKMOUSEPOS       false		// do i want to display mouse positions ?
+#define IWANNAUSEAFRAMEBUFFER     false		// do i want to use a frame buffer ?
+#define IWANNASTENCILBUFFER        true		// do i want to enable the stancil buffer ?
+#define IWANNAGEOMETRYSHADER      false		// do i want a geometry shader ? obviously NO
+#define IWANNAASKYBOX              true		// do i want a skybox or a cubemap ?
+
+#define LOG(s)        printf("%s\n", s)		// print any loged "thing" into the stdout (the console)
 
 // camera
 Camera camera(glm::vec3(0.0f, 3.0f, 9.0f));
@@ -28,7 +37,10 @@ float lastY = WIN_HEIGHT >> 1;	// insted we will shift the width by 1 witch save
 bool firstMouse = true;
 bool showOverlay = true;
 bool animated = true;
-bool outlined = false;
+
+// some useless global variables
+// how do I shut those warnnings about initialisation
+extern bool outlined = false;
 extern bool Q_squad = true;
 
 // timing
@@ -44,14 +56,13 @@ static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre);
 
 int main(int argc, char** argv){
 
-	//check for number of arguments
+	// check for number of arguments
 	if(argc == 1){
-		printf("please insert a path to the model you want to view\n");
+		fprintf(stderr, "please insert a path to the model you want to view\n");
 		return -1;
 	}else if(argc == 2){
 		animated = false;
 	}
-
 
 
 	unsigned long long initCycleID, finishCylceID, cyclesDiffrence;
@@ -71,7 +82,7 @@ int main(int argc, char** argv){
 	//check for GLFW loading errors
 	//-----------------------------
 	if (!glfwInit()){
-		printf("could not initialize glfw\n");
+		fprintf(stderr, "could not initialize glfw\n");
 		return -1;
 	}
 
@@ -79,7 +90,7 @@ int main(int argc, char** argv){
 	// --------------------
 	GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "wa7d_rajl_l9ito_f_QUAKE", NULL, NULL);
 	if (!window){
-		printf("Failed to create GLFW window\n");
+		fprintf(stderr, "Failed to create GLFW window\n");
 		glfwTerminate();
 		return -1;
 	}
@@ -92,25 +103,41 @@ int main(int argc, char** argv){
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
-		printf("Failed to initialize GLAD\n");
+		fprintf(stderr, "Failed to initialize GLAD\n");
 		return -1;
 	}
 
 	// configure global opengl state
 	// -----------------------------
-	// enable depth buffer 
-	glEnable(GL_DEPTH_TEST);
-	// enable face culling 
-	glEnable(GL_CULL_FACE);
-	// enable blending
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//enable stencil buffer
-	glEnable(GL_STENCIL_TEST);
-	glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-	// enable multisampling anti-aliasing
-	glEnable(GL_MULTISAMPLE);
+
+	#if IWANNAADPTHBUFFER
+		// enable depth buffer 
+		glEnable(GL_DEPTH_TEST);
+	#endif
+
+	#if IWANNACULLFACES
+		// enable face culling 
+		glEnable(GL_CULL_FACE);
+	#endif
+
+	#if IWANNABLENDER
+		// enable blending
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	#endif
+
+	#if IWANNASTENCILBUFFER
+		//enable stencil buffer
+		glEnable(GL_STENCIL_TEST);
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	#endif
+
+	#if IWANNASAMPLE
+		// enable multisampling anti-aliasing
+		glEnable(GL_MULTISAMPLE);
+	#endif
+
 
 	// build and compile shaders
 	// -------------------------
@@ -120,42 +147,47 @@ int main(int argc, char** argv){
 	cyclesDiffrence = finishCylceID - initCycleID;
 
 	printf("%llu\t ticks on shader 1\n", cyclesDiffrence);
-	
+
 	initCycleID = __rdtsc();
 	Shader outLiner ("shaders/outlinervs"  , "shaders/outlinerfs"    );
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
-	
+
 	printf("%llu\t ticks on shader 2\n", cyclesDiffrence);
-	
+
 	initCycleID = __rdtsc();
-	Shader skyBoxShader("shaders/skyboxvs" ,"shaders/skyboxfs"       );
+	#if IWANNAASKYBOX
+		Shader skyBoxShader("shaders/skyboxvs" ,"shaders/skyboxfs"       );
+	#endif
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
 
 	printf("%llu\t ticks on shader 3\n", cyclesDiffrence);
-	
+
 	unsigned int uniformBufferBlock;
 	glGenBuffers(1, &uniformBufferBlock);
 	glBindBuffer(GL_UNIFORM_BUFFER, uniformBufferBlock);
 	glBufferData(GL_UNIFORM_BUFFER, 152, NULL, GL_STATIC_DRAW); // 152 bytes
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-	ourShader.use();
-	ourShader.setBool("animated", animated);
+	#if IWANNAUSEAFRAMEBUFFER
+		// define a framebuffer object
+		FrameBuffer framebuffer(WIN_WIDTH, WIN_HEIGHT);
+	#endif
 
-	// define a framebuffer object
-	//FrameBuffer framebuffer(WIN_WIDTH, WIN_HEIGHT);
-
-	initCubeMap();
+	#if IWANNAASKYBOX
+		initCubeMap();
+	#endif
 
 	// load models
 	// -----------
-	
 
 	initCycleID = __rdtsc();
+
 	Model ourModel(argv[1]);
+	
 	finishCylceID = __rdtsc();
+	LOG("model got loaded");
 	cyclesDiffrence = finishCylceID - initCycleID;
 
 	printf("%llu\t ticks on loading model\n", cyclesDiffrence);
@@ -163,10 +195,20 @@ int main(int argc, char** argv){
 	Animation *animation;
 	Animator  *animator;
 
-	if (animated){
-		animation = new Animation(argv[2], &ourModel);
+	/*if(ourModel.loadAnim()){
+		animation = (Animation*) ourModel.loadAnim();
+		LOG("animation got loaded from model");
 		animator  = new Animator(animation);
+		LOG("animator got created from model");
+	}else*/ if (animated){
+		animation = new Animation(argv[2], &ourModel);
+		LOG("animation got loaded");
+		animator  = new Animator(animation);
+		LOG("animator got created");
 	}
+
+	ourShader.use();
+	ourShader.setBool("animated", animated);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -180,7 +222,6 @@ int main(int argc, char** argv){
 	bool cullFace            = true;
 	bool wireFrame           = false;
 	bool V_Sync              = false;
-	
 	//float f                = 0.0f;
 	float scale              = 0.0f;
 	ImVec4 clear_color = ImVec4(0.2f, 0.3f, 0.3f, 1.0f);
@@ -192,7 +233,7 @@ int main(int argc, char** argv){
 	glm::mat4 view;
 	glm::vec3 AxisRot = glm::vec3(0.0f);
 	float rotDegre = 0.0f;
-	//int animIndex = 0;
+	int animIndex = 0;
 
 
 	// render loop
@@ -209,26 +250,19 @@ int main(int argc, char** argv){
 		// -----
 		processInput(window);
 
-		if(glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){
-			delete animation;
-			//delete animator;
-			animation = new Animation(argv[2], &ourModel, 0);
-			animator->PlayAnimation(animation);
-			//animator  = new Animator(animation);
-		}
-		
 		// render
 		// ------
-		//framebuffer.firstPass();
+		#if IWANNAUSEAFRAMEBUFFER
+			framebuffer.firstPass();
+		#endif
 		glEnable(GL_DEPTH_TEST);
 		float *clrColorPtr = (float*)&clear_color;
 		glClearColor(*clrColorPtr, *(clrColorPtr+1), *(clrColorPtr+2), *(clrColorPtr+3));
-		//those commented implementation do the same think
+		// those commented implementation do the same think
 		//glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		//glClearColor(*(float*)&clear_color, *((float*)&clear_color+1), *((float*)&clear_color+2), *((float*)&clear_color+3));
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-		//view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
 		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
@@ -239,32 +273,33 @@ int main(int argc, char** argv){
 			ImGui::ShowDemoWindow(&show_demo_window);
 
 		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+		ImGui::Begin("some settings");                              // Create a window called "some settings" and append into it.
 
-		ImGui::Begin("some settings");                          // Create a window called "Hello, world!" and append into it.
-
-		ImGui::Text("This is a text.");                         // Display some text (you can use a format strings too)
 		ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-		ImGui::Checkbox("outlining", &outlined);
+		ImGui::Checkbox("outlining", &outlined);                // check box for outlinig a model
 
-		if(outlined) ImGui::SliderFloat("outline scale", &scale, 0.0f, 2.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-		//ImGui::SliderFloat("field of view", &FOV, 0.0f, 200.0f);
-		ImGui::ColorEdit3("clear color", clrColorPtr);          // Edit 3 floats representing a color
+		if(outlined) ImGui::SliderFloat("outline scale", &scale, 0.0f, 2.0f);
+		ImGui::ColorEdit3("clear color", clrColorPtr);        // Edit 3 floats representing a the background color
 
 		ImGui::SliderFloat("field of view", &camera.Zoom, 0.0f, 180.0f);
-		//if (ImGui::Button("Botton")) { }                      // Buttons return true when clicked (most widgets return true when edited/activated)
+		//if (ImGui::Button("Botton")) { }                                 // Buttons return true when clicked
 
 		// controlling face rendering (render only front faces or only back ones)
-		// ----------------------------------------------------------------------
 		ImGui::Checkbox("mapping uniforms", &ourShader.mapped);
 		ImGui::Checkbox("render front and back faces", &cullFace);
+
+		#if IWANNACULLFACES
+			ImGui::SameLine();
+			if (ImGui::Button("apply face culling")){
+				if (cullFace)
+					glEnable(GL_CULL_FACE);
+				else
+					glDisable(GL_CULL_FACE);
+			}
+		#endif
+
 		ImGui::Checkbox("squad", &Q_squad);
-		ImGui::SameLine();
-		if (ImGui::Button("apply face culling")){
-			if (cullFace)
-				glEnable(GL_CULL_FACE);
-			else
-				glDisable(GL_CULL_FACE);
-		}
+
 		// controlling wireframe mode
 		// --------------------------
 		ImGui::Checkbox("Render on wireframe", &wireFrame);
@@ -283,12 +318,17 @@ int main(int argc, char** argv){
 		if (ImGui::Button("apply V-Sync"))
 			glfwSwapInterval(V_Sync);
 
-        
-		
-		const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIIIIII", "JJJJ", "KKKKKKK" };
-        static int item_current;
-        //ImGui::Combo("animations", &item_current, animation->m_Animations[0].mName.C_Str(), animation->m_Animations.size());
 
+		if(animated){
+			if(ImGui::Combo("animations", &animIndex, animation->m_AnimationsNames.data(), animation->m_AnimationsNames.size())){
+				delete animation;
+				LOG("animation got deleted");
+				animation = new Animation(argv[2], &ourModel, animIndex);
+				LOG("new animation got allocated");
+				animator->PlayAnimation(animation);
+				LOG("animator got updated to the new animation");
+			}
+		}
 
 
 
@@ -302,8 +342,8 @@ int main(int argc, char** argv){
 
 		ShowOverlay(&showOverlay);
 
-		
-		
+
+
 		// view/projection transformations
 		projection = glm::perspective(glm::radians(camera.Zoom), (float)WIN_WIDTH / (float)WIN_HEIGHT, 0.1f, 100.0f);
 		view = camera.GetViewMatrix();
@@ -315,14 +355,18 @@ int main(int argc, char** argv){
 			model = glm::rotate(model, rotDegre, AxisRot);
 		}
 
-		skyBoxShader.use();
-		skyBoxShader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix())));
-		skyBoxShader.setMat4("projection", projection);
+		#if IWANNAASKYBOX
+			skyBoxShader.use();
+			skyBoxShader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix())));
+			skyBoxShader.setMat4("projection", projection);
+			drawCubeMap();
+		#endif
 
-		drawCubeMap();
+
 
 		// enable shader before setting uniforms
 		ourShader.use();
+		// seting uniforms
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view"      , view);
 		ourShader.setMat4("model"     , model);
@@ -330,13 +374,15 @@ int main(int argc, char** argv){
 
 		if (animated){
 			animator->UpdateAnimation(deltaTime);
-			for (unsigned int i = 0; i != 100; i++)
+			for (unsigned int i = 0; i != 256; i++)
 				ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + ']', animator->m_FinalBoneMatrices[i]);
 		}
 
-		// write to stencil buffer
-		glStencilFunc(GL_ALWAYS, true, 0xFF);
-		glStencilMask(0xFF);
+		#if IWANNASTENCILBUFFER
+			// write to stencil buffer
+			glStencilFunc(GL_ALWAYS, true, 0xFF);
+			glStencilMask(0xFF);
+		#endif
 
 		// draw our model
 		ourModel.Draw(ourShader);
@@ -360,7 +406,9 @@ int main(int argc, char** argv){
 			glEnable(GL_DEPTH_TEST);
 		}
 
-		//framebuffer.secondPass();
+		#if IWANNAUSEAFRAMEBUFFER
+			framebuffer.secondPass();
+		#endif
 
 		// tell ImGui to render the windows
 		ImGui::Render();
@@ -374,21 +422,22 @@ int main(int argc, char** argv){
 	if (animated){
 		// free animation data from memory
 		delete animation;
-	printf("loool\n");
+		LOG("animation got deleted");
 		delete animator;
+		LOG("animator got deleted");
 	}
-
-
-	//skyBox.Clean();
 
 	//terminate ImGui processs after quitting the loop
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+	LOG("ImGui frees resources");
 
 	// terminate, clearing all previously allocated GLFW resources.
 	// ------------------------------------------------------------
-	//framebuffer.clear();
+	#if IWANNAUSEAFRAMEBUFFER
+		framebuffer.clear();
+	#endif
 	glfwTerminate();
 	return EXIT_SUCCESS;
 }
@@ -396,9 +445,10 @@ int main(int argc, char** argv){
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow *window){
-	//terminate the process when pressing ESCAPE on the keyboard
-	//and switch to wireframe mode when pressing Z key an switch back by pressing X
-	//and transform the camera with WASD keys
+	// terminate the process when pressing ESCAPE on the keyboard
+	// and move the camera around with WASD keys
+	// and speed up or slow down the camera using left shift
+	// for now space and controll are buggy
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 	//if(glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS){}
@@ -450,7 +500,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
 
 	lastX = xpos;
 	lastY = ypos;
-	
+
 	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS){
 		camera.ProcessMouseMovement(xoffset, yoffset);
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -479,12 +529,14 @@ static void ShowOverlay(bool* p_open){
 	if (ImGui::Begin("Simple Overlay", p_open, window_flags)){
 		ImGui::Text("debugging overlay\n" "in the corner of the screen.\n" "(right-click to change position)");
 		ImGui::Separator();
+		#if IWANNATRACKMOUSEPOS
 
 		if (ImGui::IsMousePosValid()){
 			ImGui::Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
 		}else{
 			ImGui::Text("Mouse Position: <invalid>");}
 
+		#endif /* IWANNATRACKMOUSEPOS */
 		ImGui::Text("App average %.3f ms/frame\n framerate : (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 		if (ImGui::BeginPopupContextWindow()){

@@ -34,6 +34,10 @@ public:
 		//printf("model destructed\n");
 	}
 
+	// load animation if already loaded from the model class
+	// @note this is a hacky way to do that
+	void* loadAnim();
+
 	// draws the model, and thus all its meshes
 	void Draw(Shader &shader);
 
