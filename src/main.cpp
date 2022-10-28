@@ -331,6 +331,19 @@ int main(int argc, char** argv){
 		}
 
 
+		//float line_vertex[]={ 10,10,10, 20,20,20 };
+
+		//glVertexPointer(2, GL_FLOAT, 0, line_vertex);
+		//glDrawArrays(GL_LINES, 0, 2);
+
+		/*glBegin(GL_LINES);
+			glColor3f (0.0f, 0.0f, 0.0f);
+			glVertex3f(10, 10, 10);
+			glVertex3f(20, 20, 20);
+		glEnd();*/
+
+
+
 
 		ShowCordDialog(&show_cordSet_window, &AxisRot, &rotDegre);
 

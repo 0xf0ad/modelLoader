@@ -45,11 +45,15 @@ public:
 			aiProcess_FindDegenerates       /*|\
 			aiProcess_FindInvalidData*/       );
 
-		if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode){
+		
+		// error handlling
+		if(!(scene && scene->mRootNode)){
 			fprintf(stderr, "ERROR::ASSIMP::%s\n", importer.GetErrorString());
 			return;
 		}
-
+		if(scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE){
+			fprintf(stderr, "pre-processor did not complet\n");
+		}
 		if(!scene->HasAnimations()){
 			fprintf(stderr, "that path doesn't have animations\n");
 			return;
