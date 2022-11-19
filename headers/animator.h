@@ -42,7 +42,7 @@ public:
 		}
 
 		std::unordered_map<std::string, BoneInfo>& boneInfoMap = m_CurrentAnimation->m_BoneInfoMap;
-		glm::mat4 ParentTimesNode = (*parentTransform)*(*nodeTransform);
+		glm::mat4 ParentTimesNode = (*parentTransform) * (*nodeTransform);
 		
 		if (boneInfoMap.find(*index) != boneInfoMap.end()){
 			BoneInfo* thaBone = &boneInfoMap[*index];
