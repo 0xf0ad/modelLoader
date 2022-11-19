@@ -148,7 +148,10 @@ const glm::quat squad_from_data(const std::vector<KeyRotation>& rotations, const
 // Gets the current index on mKeyPositions to interpolate to based on
 // the current animation time
 int GetPositionIndex(float animationTime, const std::vector<KeyPosition>& m_Positions){
-	for (int i = 0; i < (m_NumPositions - 1); i++){
+	//while (animationTime > m_Positions.back().timeStamp)
+	//	animationTime -= m_Positions.back().timeStamp;
+
+	for (int i = 0; i != (m_NumPositions - 1); i++){
 		if (animationTime < m_Positions[i+1].timeStamp){
 			return i;
 		}
@@ -159,7 +162,10 @@ int GetPositionIndex(float animationTime, const std::vector<KeyPosition>& m_Posi
 // Gets the current index on mKeyRotations to interpolate to based on the
 // current animation time
 int GetRotationIndex(float animationTime, const std::vector<KeyRotation>& m_Rotations){
-	for (int i = 0; i < (m_NumRotations - 1); i++){
+	//while (animationTime > m_Rotations.back().timeStamp)
+	//	animationTime -= m_Rotations.back().timeStamp;
+
+	for (int i = 0; i != (m_NumRotations - 1); i++){
 		if (animationTime < m_Rotations[i+1].timeStamp){
 			return i;
 		}
@@ -170,7 +176,10 @@ int GetRotationIndex(float animationTime, const std::vector<KeyRotation>& m_Rota
 // Gets the current index on mKeyScalings to interpolate to based on the
 // current animation time
 int GetScaleIndex(float animationTime, const std::vector<KeyScale>& m_Scales){
-	for (int i = 0; i < (m_NumScalings - 1); i++){
+	//while (animationTime > m_Scales.back().timeStamp)
+	//	animationTime -= m_Scales.back().timeStamp;
+
+	for (int i = 0; i != (m_NumScalings - 1); i++){
 		if (animationTime < m_Scales[i+1].timeStamp){
 			return i;
 		}
@@ -251,8 +260,8 @@ glm::mat4 InterpolateScaling(float animationTime, const std::vector<KeyScale>& m
 // interpolates  b/w positions,rotations & scaling keys based on the curren time of
 // the animation and prepares the local transformation matrix by combining all keys tranformations
 void Bone::Update(float animationTime){
-	m_LocalTransform = InterpolatePosition(animationTime, Bone::m_Positions)*
-	                   InterpolateRotation(animationTime, Bone::m_Rotations)*
+	m_LocalTransform = InterpolatePosition(animationTime, Bone::m_Positions) *
+	                   InterpolateRotation(animationTime, Bone::m_Rotations) *
 	                   InterpolateScaling (animationTime, Bone::m_Scales);
 }
 

@@ -44,7 +44,7 @@ extern bool outlined = false;
 extern bool Q_squad = true;
 
 // timing
-float deltaTime, lastFrame;
+float deltaTime = 0.0f, lastFrame = 0.0f;
 
 // define functions
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -241,7 +241,7 @@ int main(int argc, char** argv){
 	while (!glfwWindowShouldClose(window)){
 		// per-frame time logic
 		// --------------------
-		float currentFrame = static_cast<float>(glfwGetTime());
+		float currentFrame = glfwGetTime();
 		//deltaTime = 1.0f / ImGui::GetIO().Framerate;
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;

@@ -19,7 +19,7 @@ public:
 		if (m_CurrentAnimation){
 			m_CurrentTime += m_CurrentAnimation->m_TicksPerSecond * dt;
 			m_CurrentTime = fmod(m_CurrentTime, m_CurrentAnimation->m_Duration);
-			glm::mat4 rootNode = glm::mat4(1.0f);
+			glm::mat4 rootNode(1.0f);
 			CalculateBoneTransform(&m_CurrentAnimation->m_RootNode, &rootNode);
 		}
 	}
