@@ -30,8 +30,8 @@ public:
 	}
 
 	void CalculateBoneTransform(const AssimpNodeData* node, const glm::mat4* parentTransform){
-		const glm::mat4* nodeTransform;
-		const std::string* index = &node->name;
+		static const glm::mat4* nodeTransform;
+		static const std::string* index = &node->name;
 		Bone* bone = m_CurrentAnimation->FindBone(*index);
 
 		if (bone){
@@ -42,7 +42,7 @@ public:
 		}
 
 		std::unordered_map<std::string, BoneInfo>& boneInfoMap = m_CurrentAnimation->m_BoneInfoMap;
-		glm::mat4 ParentTimesNode = (*parentTransform) * (*nodeTransform);
+		static glm::mat4 ParentTimesNode = (*parentTransform) * (*nodeTransform);
 		
 		if (boneInfoMap.find(*index) != boneInfoMap.end()){
 			BoneInfo* thaBone = &boneInfoMap[*index];

@@ -92,7 +92,7 @@ public:
 	~Animation() {
 		// freed heap allocated strings
 		for (unsigned int i = 0; i != m_AnimationsNames.size(); i++)
-			free((void*)m_AnimationsNames[i]);
+			free(&m_AnimationsNames[i]);
 	}
 
 	Bone* FindBone(const std::string& name){

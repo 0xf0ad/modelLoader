@@ -9,6 +9,7 @@
 #include "../headers/camera.h"
 #include "../headers/animator.h"
 #include <GLFW/glfw3.h>
+#include <cstdlib>
 #include <stdio.h>
 #include <x86intrin.h>
 
@@ -59,7 +60,7 @@ int main(int argc, char** argv){
 	// check for number of arguments
 	if(argc == 1){
 		fprintf(stderr, "please insert a path to the model you want to view\n");
-		return -1;
+		return EXIT_FAILURE;
 	}else if(argc == 2){
 		animated = false;
 	}
@@ -83,7 +84,7 @@ int main(int argc, char** argv){
 	//-----------------------------
 	if (!glfwInit()){
 		fprintf(stderr, "could not initialize glfw\n");
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	// glfw window creation
@@ -92,7 +93,7 @@ int main(int argc, char** argv){
 	if (!window){
 		fprintf(stderr, "Failed to create GLFW window\n");
 		glfwTerminate();
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	glfwMakeContextCurrent(window);
@@ -104,7 +105,7 @@ int main(int argc, char** argv){
 	// ---------------------------------------
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)){
 		fprintf(stderr, "Failed to initialize GLAD\n");
-		return -1;
+		return EXIT_FAILURE;
 	}
 
 	// configure global opengl state
