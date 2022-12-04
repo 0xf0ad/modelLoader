@@ -20,7 +20,7 @@ uniform mat4 model;
 
 uniform bool animated;
 
-uniform mat4 finalBonesMatrices[100];
+uniform mat4 finalBonesMatrices[250];
 mat4 BoneTransform;
 
 out VS_OUT{

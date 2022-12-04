@@ -3,6 +3,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <assimp/types.h>
+#include <functional>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/fwd.hpp>
 #include <stdio.h>
@@ -21,7 +22,8 @@ static Mesh          BIGMesh;
 static unsigned char m_BoneCounter = 1;
 static unsigned int  prevMeshNumVertices = 0;
 static unsigned int  prevMeshNumIndices = 0;
-static std::unordered_map<std::string, BoneInfo> m_BoneInfoMap;
+//static std::unordered_map<const char*, BoneInfo, strHash, strequal_to> boneInfoMap;
+static std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> boneInfoMap;
 static unsigned char size_of_vertex = sizeof(Vertex);
 //static bool          modelHasAnimations;
 
@@ -157,15 +159,19 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 			unsigned char boneID = 0;
 			aiBone* bone = mesh->mBones[boneIndex];
 			const char* boneName = bone->mName.C_Str();
-			if(m_BoneInfoMap.find(boneName) == m_BoneInfoMap.end()){
+			if(boneInfoMap.find(boneName) == boneInfoMap.end()){
 				BoneInfo newBoneInfo;
 				newBoneInfo.id = m_BoneCounter;
 				newBoneInfo.offset = AssimpGLMHelpers::ConvertMatrixToGLMFormat(bone->mOffsetMatrix);
-				m_BoneInfoMap[boneName] = newBoneInfo;
+				boneInfoMap[boneName] = newBoneInfo;
 				boneID = m_BoneCounter;
 				m_BoneCounter++;
+				//printf("found newBoneInfo : %d\n", boneID);
+				//printf("Bone %s\n", boneName);
 			}else{
-				boneID = m_BoneInfoMap[boneName].id;
+				boneID = boneInfoMap[boneName].id;
+				//printf("found oldBoneInfo : %d\n", boneID);
+				//printf("Bone %s\n", boneName);
 			}
 			assert(boneID);
 
@@ -305,7 +311,9 @@ void loadModel(const std::string& path){
 	//modelHasAnimations = scene->HasAnimations();
 
 	unsigned int size_of_the_array_buffer_in_bytes   = getNumVertices(scene->mRootNode, scene) * size_of_vertex;
+	printf("first vertexNumber = %d\n", (size_of_the_array_buffer_in_bytes / size_of_vertex));
 	unsigned int size_of_the_element_buffer_in_bytes = getNumIndices(scene->mRootNode, scene) * size_of_vertex;
+	printf("first indexNumber = %d\n", (size_of_the_element_buffer_in_bytes / size_of_vertex));
 
 	meshes.reserve(getNumMeshs(scene->mRootNode, scene));
 
@@ -329,6 +337,9 @@ void loadModel(const std::string& path){
 		for (unsigned int j = 0; j != meshes[i].textures.size(); j++)
 			BIGMesh.textures.push_back(meshes[i].textures[j]);
 	}
+
+	printf("second vertexNumber = %d\n", prevMeshNumVertices);
+	printf("first indexNumber = %d\n", prevMeshNumIndices);
 
 	// vertex positions
 	glEnableVertexAttribArray(0);
@@ -418,5 +429,6 @@ void Model::Draw(Shader &shader){
 	glActiveTexture(GL_TEXTURE0);
 }
 
-std::unordered_map<std::string, BoneInfo>& Model::GetBoneInfoMap() const { return m_BoneInfoMap; }
+//std::unordered_map<const char*, BoneInfo, strHash, strequal_to>& Model::GetBoneInfoMap() const { return boneInfoMap; }
+std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& Model::GetBoneInfoMap() const { return boneInfoMap; }
 unsigned char* Model::GetBoneCount() const { return &m_BoneCounter; }

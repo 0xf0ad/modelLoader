@@ -6,6 +6,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <unordered_map>
+#include <cstring>
 
 #include "mesh.h"
 
@@ -19,6 +20,43 @@ struct BoneInfo{
 struct vertexBoneData{
 	unsigned char boneIDs[4];
 	float weights[4];
+};
+
+struct strequal_to{
+	bool operator()(const char* s1, const char* s2) const{
+		return (!strcmp(s1, s2));
+	}
+};
+
+struct stdstrequal_to{
+	bool operator()(const std::string& s1, const std::string& s2) const{
+		return (!strcmp(s1.c_str(), s2.c_str()));
+	}
+};
+
+struct stdstrHash{
+	int operator()(const std::string& str) const{
+		unsigned int long value = 0;
+
+		for(unsigned int i = 0; i != str.size(); i++)
+			value = value * 37 + str[i];
+
+		return value;
+	}
+};
+
+
+struct strHash{
+	int operator()(const char* str) const{
+		unsigned int long hash = 0;
+
+		while(*str){
+			hash = (hash * hash) + *str;
+			str++;	
+		}
+
+		return hash & (0x7FFFFFFF);
+	}
 };
 
 class Model {
@@ -41,6 +79,7 @@ public:
 	// draws the model, and thus all its meshes
 	void Draw(Shader &shader);
 
-	std::unordered_map<std::string, BoneInfo>& GetBoneInfoMap() const;
+	//std::unordered_map<const char*, BoneInfo, strHash, strequal_to>& GetBoneInfoMap() const;
+	std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& GetBoneInfoMap() const;
 	unsigned char* GetBoneCount() const;
 };

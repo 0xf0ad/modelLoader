@@ -110,30 +110,25 @@ int main(int argc, char** argv){
 
 	// configure global opengl state
 	// -----------------------------
-
 	#if IWANNAADPTHBUFFER
 		// enable depth buffer 
 		glEnable(GL_DEPTH_TEST);
 	#endif
-
 	#if IWANNACULLFACES
 		// enable face culling 
 		glEnable(GL_CULL_FACE);
 	#endif
-
 	#if IWANNABLENDER
 		// enable blending
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	#endif
-
 	#if IWANNASTENCILBUFFER
 		//enable stencil buffer
 		glEnable(GL_STENCIL_TEST);
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	#endif
-
 	#if IWANNASAMPLE
 		// enable multisampling anti-aliasing
 		glEnable(GL_MULTISAMPLE);
@@ -205,6 +200,8 @@ int main(int argc, char** argv){
 		animation = new Animation(argv[2], &ourModel);
 		LOG("animation got loaded");
 		animator  = new Animator(animation);
+		animator->PlayAnimation(animation);
+		animator->m_CurrentTime=0.0f;
 		LOG("animator got created");
 	}
 
@@ -388,7 +385,7 @@ int main(int argc, char** argv){
 
 		if (animated){
 			animator->UpdateAnimation(deltaTime);
-			for (unsigned int i = 0; i != 256; i++)
+			for (unsigned int i = 0; i != 255; i++)
 				ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + ']', animator->m_FinalBoneMatrices[i]);
 		}
 
@@ -525,7 +522,6 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
 
 static void ShowOverlay(bool* p_open){
 	static unsigned char corner = 0;
-	ImGuiIO& io = ImGui::GetIO();
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 	const float PAD = 10.0f;
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();
