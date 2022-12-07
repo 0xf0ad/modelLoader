@@ -2,8 +2,11 @@
 #include <assimp/mesh.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <assimp/texture.h>
 #include <assimp/types.h>
+#include <cstddef>
 #include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/fwd.hpp>
@@ -27,22 +30,30 @@ static unsigned int VAO, VBO, EBO;
 //static std::unordered_map<const char*, BoneInfo, strHash, strequal_to> boneInfoMap;
 static std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> boneInfoMap;
 static unsigned char size_of_vertex = sizeof(Vertex);
-//static bool          modelHasAnimations;
 
 //#define AI_CONFIG_PP_RVC_FLAGS 
 
 
 
-unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma = false){
+unsigned int TextureFromFile(const char* path, const char* directory, const aiTexture* embeddedTexture/*, bool gamma = false*/){
 
-	std::string filename = directory + '/' + path;
-	const char* c_filename = filename.c_str();
+	char* filename = (char*) malloc(strlen(directory) + strlen(path) + 2);
+	filename = strncpy(filename, directory, strlen(directory));
+	filename = strncat(filename, "/", 2);
+	filename = strncat(filename, path, strlen(path));
 
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 
 	int width, height, nrComponents;
-	unsigned char* data = stbi_load(c_filename, &width, &height, &nrComponents, 0);
+	unsigned char* data;
+	
+	// check if the texture is embedded on the model file
+	if(!embeddedTexture)
+		data = stbi_load(filename, &width, &height, &nrComponents, 0);
+	else
+		data = stbi_load_from_memory((const stbi_uc *)embeddedTexture->pcData, embeddedTexture->mWidth,
+		                           &width, &height, &nrComponents, 0);
 
 	if (data){
 		GLenum format;
@@ -53,7 +64,7 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 		else if (nrComponents == 4)
 			format = GL_RGBA;
 		else{
-			fprintf(stderr, "texture: \"%s\" has %d component which is invalid\n", c_filename, nrComponents);
+			fprintf(stderr, "texture: \"%s\" has %d component which is invalid\n", filename, nrComponents);
 			format = GL_FALSE;
 		}
 
@@ -65,48 +76,53 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}else{
-		fprintf(stderr, "Texture failed to load at path: %s\n", c_filename);
+		fprintf(stderr, "Texture failed to load at path: %s\n", filename);
 	}
 
+	free(filename);
 	stbi_image_free(data);
 	return textureID;
 }
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.
-std::vector<Texture> loadMaterialTextures(const aiMaterial *mat, aiTextureType type, textureType texType, const char* dir){
+std::vector<Texture> loadMaterialTextures(const aiMaterial *mat, aiTextureType type, textureType texType, const char* dir, const aiScene* scene){
 	
 	std::vector<Texture> textures;
 
 	for(unsigned int i = 0; i != mat->GetTextureCount(type); i++){
 		aiString str;
-		mat->GetTexture(type, i, &str);
+		// get the texture
+		if(!mat->GetTexture(type, i, &str)){
 
-		// tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
-		stbi_set_flip_vertically_on_load(true);
+			// tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
+			stbi_set_flip_vertically_on_load(true);
 
-		// check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
-		bool skip = false;
-		for(unsigned int j = 0; j != textures_loaded.size(); j++){
-			if(std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0){
-				textures.push_back(textures_loaded[j]);
-				skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
-				break;
+			// check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
+			bool skip = false;
+			for(unsigned int j = 0; j != textures_loaded.size(); j++){
+				if(!strcmp(textures_loaded[j].path.c_str(), str.C_Str())){
+					textures.push_back(textures_loaded[j]);
+					skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
+					break;
+				}
 			}
-		}
-		if(!skip){	// if texture hasn't been loaded already, load it
-			Texture texture;
-			texture.id = TextureFromFile(str.C_Str(), dir);
-			texture.path = str.C_Str();
-			texture.type = texType;
-			textures.push_back(texture);
-			textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
+
+			if(!skip){	// if texture hasn't been loaded already, load it
+				Texture texture;
+				texture.id = TextureFromFile(str.C_Str(), dir, scene->GetEmbeddedTexture(str.C_Str()));
+				texture.path = str.C_Str();
+				texture.type = texType;
+				textures.push_back(texture);
+				// store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
+				textures_loaded.push_back(texture);
+			}
 		}
 	}
 	return textures;
 }
 
-Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
+Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 	std::vector<vertexBoneData> tmpVerticesBoneData;
 	std::vector<Texture>        textures;
 
@@ -198,14 +214,14 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 
 	// assigne textures
 	// ----------------
-	aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-	std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, diffuse_texture, dir);
+	const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+	std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, diffuse_texture, dir, scene);
 	textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-	std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, specular_texture, dir);
+	std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, specular_texture, dir, scene);
 	textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-	std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, normal_texture, dir);
+	std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, normal_texture, dir, scene);
 	textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-	std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, height_texture, dir);
+	std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, height_texture, dir, scene);
 	textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
 	gTextures.insert(gTextures.begin(), textures.begin(), textures.end());
@@ -246,7 +262,8 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene , const char* dir){
 	return Mesh(textures);
 }
 
-// processes a node in a recursive fashion. Processes each individual mesh located at the node and repeats this process on its children nodes (if any).
+// processes a node in a recursive fashion. Processes each individual mesh located at 
+// the node and repeats this process on its children nodes (if any).
 void processNode(aiNode *node, const aiScene *scene,std::vector<Mesh>& meshes, const char* dir){
 	// process all the node's meshes (if any)
 	for(unsigned int i = 0; i != node->mNumMeshes; i++)
@@ -275,12 +292,12 @@ void getThemAll(unsigned int* numMeshes, unsigned int* numIndices, unsigned int*
 }
 
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
-void loadModel(const std::string& path){
+void loadModel(const char* path){
 	std::vector<Mesh>    meshes;
 
 	// read file via ASSIMP
 	Assimp::Importer import;
-	const aiScene *scene = import.ReadFile(path.c_str(),
+	const aiScene *scene = import.ReadFile(path,
 		aiProcess_Triangulate             |\
 		aiProcess_GenSmoothNormals        |\
 		aiProcess_JoinIdenticalVertices   |\
@@ -323,12 +340,14 @@ void loadModel(const std::string& path){
 
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size_of_the_element_buffer_in_bytes, nullptr, GL_STATIC_DRAW);
 
-	const std::string directory(path.c_str(), path.find_last_of('/'));
-	processNode(scene->mRootNode, scene, meshes, directory.c_str());
+	unsigned int difference = strrchr(path, '/') - path;
+	char* directory = (char*) malloc(sizeof(char) * difference);
+	directory = strncpy(directory, path, difference);
 
+	processNode(scene->mRootNode, scene, meshes, directory);
 
-	printf("second vertexNumber = %d\n", prevMeshNumVertices);
-	printf("first indexNumber = %d\n", prevMeshNumIndices);
+	free(directory);
+
 
 	// vertex positions
 	glEnableVertexAttribArray(0);
