@@ -3,6 +3,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <assimp/types.h>
+#include <cstdlib>
 #include <functional>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/fwd.hpp>
@@ -253,33 +254,23 @@ void processNode(aiNode *node, const aiScene *scene,std::vector<Mesh>& meshes, c
 		processNode(node->mChildren[i], scene, meshes, dir);
 }
 
-unsigned int getNumVertices(aiNode *node, const aiScene *scene){
-	unsigned int NumVertices = 0;
-	for(unsigned int i = 0; i != node->mNumMeshes; i++)
-		NumVertices += scene->mMeshes[node->mMeshes[i]]->mNumVertices;
-	for(unsigned int i = 0; i != node->mNumChildren; i++)
-		NumVertices += getNumVertices(node->mChildren[i], scene);
-	return NumVertices;
-}
+// get the number of meshes and indices and verices from a model and stick it into 
+// 3 variables entered by ther addresses as parametres
+void getThemAll(unsigned int* numMeshes, unsigned int* numIndices, unsigned int* numVertices,
+                aiNode* node, const aiScene* scene){
 
-unsigned int getNumIndices(aiNode *node, const aiScene *scene){
-	unsigned int NumIndices = 0;
+	*numMeshes += node->mNumMeshes;
+
 	for(unsigned int i = 0; i != node->mNumMeshes; i++){
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		*numVertices += scene->mMeshes[node->mMeshes[i]]->mNumVertices;
 		for(unsigned int j = 0; j != mesh->mNumFaces; j++)
-			NumIndices += mesh->mFaces[j].mNumIndices;
+			*numIndices += mesh->mFaces[j].mNumIndices;
 	}
-	for(unsigned int i = 0; i != node->mNumChildren; i++)
-		NumIndices += getNumIndices(node->mChildren[i], scene);
-	return NumIndices;
-}
 
-unsigned int getNumMeshs(aiNode *node, const aiScene *scene){
-	unsigned int numMeshs = 0;
-	numMeshs += node->mNumMeshes;
-	for(unsigned int i = 0; i != node->mNumChildren; i++)
-		numMeshs += getNumMeshs(node->mChildren[i], scene);
-	return numMeshs;
+	for(unsigned int i = 0; i != node->mNumChildren; i++){
+		getThemAll(numMeshes, numIndices, numVertices, node->mChildren[i], scene);
+	}
 }
 
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
@@ -309,13 +300,14 @@ void loadModel(const std::string& path){
 	}
 
 	//modelHasAnimations = scene->HasAnimations();
+	unsigned int numMeshs = 0, numIndices = 0, numVertices = 0;
+	getThemAll(&numMeshs, &numIndices, &numVertices, scene->mRootNode, scene);
 
-	unsigned int size_of_the_array_buffer_in_bytes   = getNumVertices(scene->mRootNode, scene) * size_of_vertex;
-	printf("first vertexNumber = %d\n", (size_of_the_array_buffer_in_bytes / size_of_vertex));
-	unsigned int size_of_the_element_buffer_in_bytes = getNumIndices(scene->mRootNode, scene) * size_of_vertex;
-	printf("first indexNumber = %d\n", (size_of_the_element_buffer_in_bytes / size_of_vertex));
-
-	meshes.reserve(getNumMeshs(scene->mRootNode, scene));
+	unsigned int size_of_the_array_buffer_in_bytes   = numVertices * size_of_vertex;
+	unsigned int size_of_the_element_buffer_in_bytes = numIndices * size_of_vertex;
+	printf("first vertexNumber = %d\nfirst indexNumber = %d\n", numVertices, numIndices);
+	
+	meshes.reserve(numMeshs);
 
 	glGenVertexArrays(true, &BIGMesh.VAO);
 	glGenBuffers(true, &BIGMesh.VBO);

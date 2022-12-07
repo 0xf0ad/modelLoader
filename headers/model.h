@@ -64,9 +64,9 @@ public:
 	// constructor, expects a filepath to a 3D model.
 	Model(const char* path);
 	
-	Model(const Model& other){
+	/*Model(const Model& other){
 		//printf("bro you coppied the model class\n");
-	}
+	}*/
 
 	~Model(){
 		//printf("model destructed\n");

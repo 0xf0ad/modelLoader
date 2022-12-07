@@ -38,6 +38,8 @@ float lastY = WIN_HEIGHT >> 1;	// insted we will shift the width by 1 witch save
 bool firstMouse = true;
 bool showOverlay = true;
 bool animated = true;
+//unsigned char msaaLvl = 4;
+//unsigned char prevMsaaLvl = msaaLvl;
 
 // some useless global variables
 // how do I shut those warnnings about initialisation
@@ -243,6 +245,18 @@ int main(int argc, char** argv){
 		//deltaTime = 1.0f / ImGui::GetIO().Framerate;
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+
+		/*if(msaaLvl != prevMsaaLvl){
+			glfwTerminate();
+			glfwInit();
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+			glfwWindowHint(GLFW_SAMPLES, 1);
+			printf("MSAAA GO BRRRR\n");
+			
+		}
+		prevMsaaLvl = msaaLvl;*/
 
 		// input
 		// -----
@@ -480,7 +494,9 @@ void processInput(GLFWwindow *window){
 		camera.ProcessKeyboard(GO_UP, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 		camera.ProcessKeyboard(GO_DOWN, deltaTime);
-	//if(glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){}
+	if(glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){
+		//msaaLvl = 8;
+	}
 	//if(glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){}
 	//if(glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS){}
 }

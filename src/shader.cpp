@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 #define IWASNOTCOOL         false // cuz I am cool, and i use C
-#define CACHSHADERLOCATIONS false // idk why but it just give me worst results
+#define CACHSHADERLOCATIONS  true // idk why but it just give me worst results
 
 #if IWASNOTCOOL
 Shader::Shader(const char* vertexPath, const char* fragmentPath){
@@ -179,7 +179,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 #endif /* 'C'(see) I told you i was cool */
 
 #if CACHSHADERLOCATIONS
-GLint const Shader::getUniformLocation(const std::string& name){
+GLint Shader::getUniformLocation(const std::string& name){
 	// if the uniform location is already cached
 	if(Shader::uniformLocationCache.find(name) != Shader::uniformLocationCache.end()){
 		return Shader::uniformLocationCache[name];
@@ -195,14 +195,14 @@ GLint const Shader::getUniformLocation(const std::string& name){
 
 // activate the shader
 // ------------------------------------------------------------------------
-const void Shader::use(){
+void Shader::use(){
 	glUseProgram(ID);
 }
 
 
 // utility uniform functions
 // ------------------------------------------------------------------------
-const void Shader::setBool(const std::string &name, bool value){
+void Shader::setBool(const std::string &name, bool value){
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
@@ -214,7 +214,7 @@ const void Shader::setBool(const std::string &name, bool value){
 }
 
 // ------------------------------------------------------------------------
-const void Shader::setInt(const std::string &name, int value){
+void Shader::setInt(const std::string &name, int value){
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
@@ -226,7 +226,7 @@ const void Shader::setInt(const std::string &name, int value){
 }
 
 // ------------------------------------------------------------------------
-const void Shader::setFloat(const std::string &name, float value){
+void Shader::setFloat(const std::string &name, float value){
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
@@ -238,7 +238,7 @@ const void Shader::setFloat(const std::string &name, float value){
 }
 
 // ------------------------------------------------------------------------
-const void Shader::setVec2(const std::string &name, const glm::vec2 &value){
+void Shader::setVec2(const std::string &name, const glm::vec2 &value){
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
@@ -249,7 +249,7 @@ const void Shader::setVec2(const std::string &name, const glm::vec2 &value){
 	glUniform2fv(location, 1, &value[0]);
 }
 
-const void Shader::setVec2(const std::string &name, float x, float y){
+void Shader::setVec2(const std::string &name, float x, float y){
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
@@ -261,7 +261,7 @@ const void Shader::setVec2(const std::string &name, float x, float y){
 }
 
 // ------------------------------------------------------------------------
-const void Shader::setVec3(const std::string &name, const glm::vec3 &value){
+void Shader::setVec3(const std::string &name, const glm::vec3 &value){
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
@@ -272,7 +272,7 @@ const void Shader::setVec3(const std::string &name, const glm::vec3 &value){
 	glUniform3fv(location, 1, &value[0]);
 }
 
-const void Shader::setVec3(const std::string &name, float x, float y, float z){
+void Shader::setVec3(const std::string &name, float x, float y, float z){
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
@@ -284,7 +284,7 @@ const void Shader::setVec3(const std::string &name, float x, float y, float z){
 }
 
 // ------------------------------------------------------------------------
-const void Shader::setVec4(const std::string &name, const glm::vec4 &value){
+void Shader::setVec4(const std::string &name, const glm::vec4 &value){
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
@@ -295,7 +295,7 @@ const void Shader::setVec4(const std::string &name, const glm::vec4 &value){
 	glUniform4fv(location, 1, &value[0]);
 }
 
-const void Shader::setVec4(const std::string &name, float x, float y, float z, float w){
+void Shader::setVec4(const std::string &name, float x, float y, float z, float w){
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
@@ -307,7 +307,7 @@ const void Shader::setVec4(const std::string &name, float x, float y, float z, f
 }
 
 // ------------------------------------------------------------------------
-const void Shader::setMat2(const std::string &name, const glm::mat2 &mat){
+void Shader::setMat2(const std::string &name, const glm::mat2 &mat){
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
@@ -319,7 +319,7 @@ const void Shader::setMat2(const std::string &name, const glm::mat2 &mat){
 }
 
 // ------------------------------------------------------------------------
-const void Shader::setMat3(const std::string &name, const glm::mat3 &mat){
+void Shader::setMat3(const std::string &name, const glm::mat3 &mat){
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
@@ -331,7 +331,7 @@ const void Shader::setMat3(const std::string &name, const glm::mat3 &mat){
 }
 
 //-------------------------------------------------------------------------
-const void Shader::setMat4(const std::string &name, const glm::mat4 &mat){
+void Shader::setMat4(const std::string &name, const glm::mat4 &mat){
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
