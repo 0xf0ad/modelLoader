@@ -19,10 +19,11 @@ std::vector<GLint>   diffuseTexturesIDs;
 std::vector<GLint>   specularTexturesIDs;
 std::vector<GLint>   normalTexturesIDs;
 std::vector<GLint>   heightTexturesIDs;
-static Mesh          BIGMesh;
+//static Mesh          BIGMesh;
 static unsigned char m_BoneCounter = 1;
 static unsigned int  prevMeshNumVertices = 0;
 static unsigned int  prevMeshNumIndices = 0;
+static unsigned int VAO, VBO, EBO;
 //static std::unordered_map<const char*, BoneInfo, strHash, strequal_to> boneInfoMap;
 static std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> boneInfoMap;
 static unsigned char size_of_vertex = sizeof(Vertex);
@@ -304,31 +305,27 @@ void loadModel(const std::string& path){
 	getThemAll(&numMeshs, &numIndices, &numVertices, scene->mRootNode, scene);
 
 	unsigned int size_of_the_array_buffer_in_bytes   = numVertices * size_of_vertex;
-	unsigned int size_of_the_element_buffer_in_bytes = numIndices * size_of_vertex;
+	unsigned int size_of_the_element_buffer_in_bytes = numIndices  * size_of_vertex;
 	printf("first vertexNumber = %d\nfirst indexNumber = %d\n", numVertices, numIndices);
-	
+
 	meshes.reserve(numMeshs);
 
-	glGenVertexArrays(true, &BIGMesh.VAO);
-	glGenBuffers(true, &BIGMesh.VBO);
-	glGenBuffers(true, &BIGMesh.EBO);
+	glGenVertexArrays(true, &VAO);
+	glGenBuffers(true, &VBO);
+	glGenBuffers(true, &EBO);
 
-	glBindVertexArray(BIGMesh.VAO);
+	glBindVertexArray(VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, BIGMesh.VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, size_of_the_array_buffer_in_bytes, nullptr, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, BIGMesh.EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size_of_the_element_buffer_in_bytes, nullptr, GL_STATIC_DRAW);
 
 	const std::string directory(path.c_str(), path.find_last_of('/'));
 	processNode(scene->mRootNode, scene, meshes, directory.c_str());
 
-	for (unsigned int i = 0; i!= meshes.size(); i++){
-		for (unsigned int j = 0; j != meshes[i].textures.size(); j++)
-			BIGMesh.textures.push_back(meshes[i].textures[j]);
-	}
 
 	printf("second vertexNumber = %d\n", prevMeshNumVertices);
 	printf("first indexNumber = %d\n", prevMeshNumIndices);
@@ -414,7 +411,7 @@ void Model::Draw(Shader &shader){
 	glUniform1iv(location, diffuseTexturesIDs.size(), diffuseTexturesIDs.data());
 	
 	// upload the inddeces to the GPU
-	glBindVertexArray(BIGMesh.VAO);
+	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(prevMeshNumIndices), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 

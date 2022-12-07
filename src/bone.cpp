@@ -5,7 +5,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <math.h>
 
-static int m_NumPositions, m_NumRotations, m_NumScalings;
+static int numPositions, numRotations, numScalings;
 extern bool Q_squad;
 
 static glm::mat4 m_LocalTransform;
@@ -16,26 +16,26 @@ static glm::mat4 m_LocalTransform;
 Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){
 	Bone::m_Name     = name;
 	Bone::m_ID       = ID;
-	m_NumPositions   = channel->mNumPositionKeys;
-	m_NumScalings    = channel->mNumScalingKeys;
-	m_NumRotations   = channel->mNumRotationKeys;
+	numPositions   = channel->mNumPositionKeys;
+	numScalings    = channel->mNumScalingKeys;
+	numRotations   = channel->mNumRotationKeys;
 	m_LocalTransform = glm::mat4(1.0f);
 
-	for (int i = 0; i < m_NumPositions; i++){
+	for (int i = 0; i < numPositions; i++){
 		KeyPosition data;
 		data.position = AssimpGLMHelpers::GetGLMVec(channel->mPositionKeys[i].mValue);
 		data.timeStamp = channel->mPositionKeys[i].mTime;
 		Bone::m_Positions.push_back(data);
 	}
 
-	for (int i = 0; i < m_NumRotations; i++){
+	for (int i = 0; i < numRotations; i++){
 		KeyRotation data;
 		data.orientation = AssimpGLMHelpers::GetGLMQuat(channel->mRotationKeys[i].mValue);
 		data.timeStamp = channel->mRotationKeys[i].mTime;
 		Bone::m_Rotations.push_back(data);
 	}
 
-	for (int i = 0; i < m_NumScalings; i++){
+	for (int i = 0; i < numScalings; i++){
 		KeyScale data;
 		data.scale = AssimpGLMHelpers::GetGLMVec(channel->mScalingKeys[i].mValue);
 		data.timeStamp = channel->mScalingKeys[i].mTime;
@@ -44,11 +44,11 @@ Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){
 }
 
 // Gets normalized value for Lerp & Slerp
-float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float animationTime){
+inline float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float animationTime){
 	return (animationTime - lastTimeStamp) / (nextTimeStamp - lastTimeStamp);
 }
 // math shit
-const glm::vec3 mix(const glm::vec3& a, const glm::vec3& b, const float t){
+inline const glm::vec3 mix(const glm::vec3& a, const glm::vec3& b, const float t){
 #if LINEAR_INTERPOLATION	
 	return (a * (1-t)) + (b * t);
 #elif OPTIMIZED_LINEAR_INTERPOLATION
@@ -62,7 +62,7 @@ const glm::vec3 mix(const glm::vec3& a, const glm::vec3& b, const float t){
 #endif
 }
 
-const glm::quat mix(const glm::quat& a, const glm::quat& b, const float t){
+inline const glm::quat mix(const glm::quat& a, const glm::quat& b, const float t){
 	const float Tsquare      = t * t;
 	const float threeTsquare = 3 * Tsquare;
 	//const float twoTminus3   = 2 * t - 3; 
@@ -72,48 +72,43 @@ const glm::quat mix(const glm::quat& a, const glm::quat& b, const float t){
 	return result;
 }
 
-const glm::quat inverse (const glm::quat& q){
-	glm::quat result;
-	result.w =  (q.w);
-	result.x = -(q.x);
-	result.y = -(q.y);
-	result.z = -(q.z);
-	return result;
+inline const glm::quat inverse (const glm::quat& q){
+	return glm::quat((q.w), -(q.x), -(q.y), -(q.z));
 }
 
-const glm::quat log(const glm::quat& q){
+inline const glm::quat log(const glm::quat& q){
 	float a = acosf(q.w);
 	const float s = sinf(a);
 
-	if(!s) return glm::quat(0.0f, 0.0f, 0.0f, 0.0f);
-
-	a /= s;
-
-	const glm::quat result = glm::quat(0.0f, (q.x * a), (q.y * a), (q.z * a));
-	return result;
+	if(!s){
+		return glm::quat(0.0f, 0.0f, 0.0f, 0.0f);
+	}else{
+		a /= s;
+		return glm::quat(0.0f, (q.x * a), (q.y * a), (q.z * a));
+	}
 }
 
-const glm::quat exp(const glm::quat& q){
+inline const glm::quat exp(const glm::quat& q){
 	const float a = sqrtf(q.x * q.x + q.y * q.y + q.z * q.z);
 	float s = sinf(a);
 	const float c = cosf(a);
 
-	if (!a) return glm::quat( c, 0, 0, 0 );
-
-	s /= a;
-
-	const glm::quat result = glm::quat(c, q.x * s,  q.y * s,  q.z * s);
-	return result;
+	if (!a){
+		return glm::quat( c, 0, 0, 0 );
+	}else{
+		s /= a;
+		return glm::quat(c, q.x * s,  q.y * s,  q.z * s);
+	}
 }
 
-const glm::quat intermediate(const glm::quat& previous, const glm::quat& current, const glm::quat& next){
+inline const glm::quat intermediate(const glm::quat& previous, const glm::quat& current, const glm::quat& next){
 	const glm::quat inv_quat = inverse(current);
 	const glm::quat result = current * exp( (glm::log(next * inv_quat) + glm::log(previous * inv_quat)) * (-0.25f));
 
 	return result;
 }
 
-const glm::quat squad(const glm::quat& q1, const glm::quat& q2, const glm::quat& s1, const glm::quat& s2, const float t){
+inline const glm::quat squad(const glm::quat& q1, const glm::quat& q2, const glm::quat& s1, const glm::quat& s2, const float t){
 	const glm::quat slerp1 = mix(q1, q2, t);
 	const glm::quat slerp2 = mix(s1, s2, t);
 	const float   t_factor = 2 * t * (1.0f-t);
@@ -123,16 +118,16 @@ const glm::quat squad(const glm::quat& q1, const glm::quat& q2, const glm::quat&
 	return result;
 }
 
-const glm::quat all_in_one_squad(const glm::quat& q0, const glm::quat& q1, const glm::quat& q2, const glm::quat& q3, const float t){
-	const glm::quat inner1 = glm::intermediate(q0, q1, q2);
-	const glm::quat inner2 = glm::intermediate(q1, q2, q3);
+inline const glm::quat all_in_one_squad(const glm::quat& q0, const glm::quat& q1, const glm::quat& q2, const glm::quat& q3, const float t){
+	const glm::quat inner1 = intermediate(q0, q1, q2);
+	const glm::quat inner2 = intermediate(q1, q2, q3);
 
-	const glm::quat result = glm::squad(q1, q2, inner1, inner2, t);
+	const glm::quat result = squad(q1, q2, inner1, inner2, t);
 
 	return result;
 }
 
-const glm::quat squad_from_data(const std::vector<KeyRotation>& rotations, const unsigned int current_index, const float scalarFactor){
+inline const glm::quat squad_from_data(const std::vector<KeyRotation>& rotations, const unsigned int current_index, const float scalarFactor){
 	const glm::quat* q_prev = &rotations[current_index-1].orientation;
 	const glm::quat* q_curr = &rotations[ current_index ].orientation;
 	const glm::quat* q_next = &rotations[current_index+1].orientation;
@@ -147,11 +142,8 @@ const glm::quat squad_from_data(const std::vector<KeyRotation>& rotations, const
 
 // Gets the current index on mKeyPositions to interpolate to based on
 // the current animation time
-int GetPositionIndex(float animationTime, const std::vector<KeyPosition>& m_Positions){
-	//while (animationTime > m_Positions.back().timeStamp)
-	//	animationTime -= m_Positions.back().timeStamp;
-
-	for (int i = 0; i != (m_NumPositions - 1); i++){
+inline int GetPositionIndex(const float animationTime, const std::vector<KeyPosition>& m_Positions){
+	for (int i = 0; i != (numPositions - 1); i++){
 		if (animationTime < m_Positions[i+1].timeStamp){
 			return i;
 		}
@@ -161,11 +153,8 @@ int GetPositionIndex(float animationTime, const std::vector<KeyPosition>& m_Posi
 
 // Gets the current index on mKeyRotations to interpolate to based on the
 // current animation time
-int GetRotationIndex(float animationTime, const std::vector<KeyRotation>& m_Rotations){
-	//while (animationTime > m_Rotations.back().timeStamp)
-	//	animationTime -= m_Rotations.back().timeStamp;
-
-	for (int i = 0; i != (m_NumRotations - 1); i++){
+inline int GetRotationIndex(const float animationTime, const std::vector<KeyRotation>& m_Rotations){
+	for (int i = 0; i != (numRotations - 1); i++){
 		if (animationTime < m_Rotations[i+1].timeStamp){
 			return i;
 		}
@@ -175,11 +164,8 @@ int GetRotationIndex(float animationTime, const std::vector<KeyRotation>& m_Rota
 
 // Gets the current index on mKeyScalings to interpolate to based on the
 // current animation time
-int GetScaleIndex(float animationTime, const std::vector<KeyScale>& m_Scales){
-	//while (animationTime > m_Scales.back().timeStamp)
-	//	animationTime -= m_Scales.back().timeStamp;
-
-	for (int i = 0; i != (m_NumScalings - 1); i++){
+inline int GetScaleIndex(const float animationTime, const std::vector<KeyScale>& m_Scales){
+	for (int i = 0; i != (numScalings - 1); i++){
 		if (animationTime < m_Scales[i+1].timeStamp){
 			return i;
 		}
@@ -189,8 +175,8 @@ int GetScaleIndex(float animationTime, const std::vector<KeyScale>& m_Scales){
 
 // figures out which position keys to interpolate b/w and performs the interpolation 
 // and returns the translation matrix
-glm::mat4 InterpolatePosition(float animationTime, const std::vector<KeyPosition>& m_Positions){
-	if (m_NumPositions == 1){
+inline const glm::mat4 InterpolatePosition(const float animationTime, const std::vector<KeyPosition>& m_Positions){
+	if (numPositions == 1){
 		return glm::translate(glm::mat4(1.0f), m_Positions[0].position);
 	}
 
@@ -203,9 +189,9 @@ glm::mat4 InterpolatePosition(float animationTime, const std::vector<KeyPosition
 
 // figures out which rotations keys to interpolate b/w and performs the interpolation 
 // and returns the rotation matrix
-glm::mat4 InterpolateRotation(float animationTime, const std::vector<KeyRotation>& m_Rotations){
+inline const glm::mat4 InterpolateRotation(const float animationTime, const std::vector<KeyRotation>& m_Rotations){
 	
-	if (m_NumRotations == 1){
+	if (numRotations == 1){
 		return glm::toMat4(glm::normalize(m_Rotations[0].orientation));
 	}
 
@@ -245,8 +231,8 @@ glm::mat4 InterpolateRotation(float animationTime, const std::vector<KeyRotation
 
 // figures out which scaling keys to interpolate b/w and performs the interpolation 
 // and returns the scale matrix
-glm::mat4 InterpolateScaling(float animationTime, const std::vector<KeyScale>& m_Scales){
-	if (m_NumScalings == 1){
+inline const glm::mat4 InterpolateScaling(float animationTime, const std::vector<KeyScale>& m_Scales){
+	if (numScalings == 1){
 		return glm::scale(glm::mat4(1.0f), m_Scales[0].scale);
 	}
 	
