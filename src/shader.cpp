@@ -179,13 +179,13 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 #endif /* 'C'(see) I told you i was cool */
 
 #if CACHSHADERLOCATIONS
-GLint Shader::getUniformLocation(const std::string& name){
+GLint Shader::getUniformLocation(const char* name){
 	// if the uniform location is already cached
 	if(Shader::uniformLocationCache.find(name) != Shader::uniformLocationCache.end()){
 		return Shader::uniformLocationCache[name];
 	}else{
 		// we store the uniform location if its not already
-		GLint location = glGetUniformLocation(ID, name.c_str());
+		GLint location = glGetUniformLocation(ID, name);
 		Shader::uniformLocationCache[name] = location;
 		return location;
 	}
@@ -202,7 +202,9 @@ void Shader::use(){
 
 // utility uniform functions
 // ------------------------------------------------------------------------
+#if IWANNAUSESTD__STRING
 void Shader::setBool(const std::string &name, bool value){
+
 	GLint location;
 	#if CACHSHADERLOCATIONS
 	if (mapped)
@@ -342,6 +344,137 @@ void Shader::setMat4(const std::string &name, const glm::mat4 &mat){
 	glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
 }
 
+#else
+
+void Shader::setBool(const char* name, bool value){
+
+	GLint location;
+	#if CACHSHADERLOCATIONS
+	if (mapped)
+		location = getUniformLocation(name);
+	else
+	#endif
+		location = glGetUniformLocation(ID, name);
+	glUniform1i(location, (int)value);
+}
+
+// ------------------------------------------------------------------------
+void Shader::setInt(const char* name, int value){
+	GLint location;
+	#if CACHSHADERLOCATIONS
+	if (mapped)
+		location = getUniformLocation(name);
+	else
+	#endif
+		location = glGetUniformLocation(ID, name);
+	glUniform1i(location, value);
+}
+
+// ------------------------------------------------------------------------
+void Shader::setFloat(const char* name, float value){
+	GLint location;
+	#if CACHSHADERLOCATIONS
+	if (mapped)
+		location = getUniformLocation(name);
+	else
+	#endif
+		location = glGetUniformLocation(ID, name);
+	glUniform1f(location, value);
+}
+
+// ------------------------------------------------------------------------
+void Shader::setVec2(const char* name, const glm::vec2 &value){
+	GLint location;
+	#if CACHSHADERLOCATIONS
+	if (mapped)
+		location = getUniformLocation(name);
+	else
+	#endif
+		location = glGetUniformLocation(ID, name);
+	glUniform2fv(location, 1, &value[0]);
+}
+
+void Shader::setVec2(const char* name, float x, float y){
+	GLint location;
+	#if CACHSHADERLOCATIONS
+	if (mapped)
+		location = getUniformLocation(name);
+	else
+	#endif
+		location = glGetUniformLocation(ID, name);
+	glUniform2f(location, x, y);
+}
+
+// ------------------------------------------------------------------------
+void Shader::setVec3(const char* name, const glm::vec3 &value){
+	GLint location;
+	#if CACHSHADERLOCATIONS
+	if (mapped)
+		location = getUniformLocation(name);
+	else
+	#endif
+		location = glGetUniformLocation(ID, name);
+	glUniform3fv(location, 1, &value[0]);
+}
+
+void Shader::setVec3(const char* name, float x, float y, float z){
+	GLint location;
+	#if CACHSHADERLOCATIONS
+	if (mapped)
+		location = getUniformLocation(name);
+	else
+	#endif
+		location = glGetUniformLocation(ID, name);
+	glUniform3f(location, x, y, z);
+}
+
+// ------------------------------------------------------------------------
+void Shader::setVec4(const char* name, const glm::vec4 &value){
+	GLint location;
+	#if CACHSHADERLOCATIONS
+	if (mapped)
+		location = getUniformLocation(name);
+	else
+	#endif
+		location = glGetUniformLocation(ID, name);
+	glUniform4fv(location, 1, &value[0]);
+}
+
+void Shader::setVec4(const char* name, float x, float y, float z, float w){
+	GLint location;
+	#if CACHSHADERLOCATIONS
+	if (mapped)
+		location = getUniformLocation(name);
+	else
+	#endif
+		location = glGetUniformLocation(ID, name);
+	glUniform4f(location, x, y, z, w);
+}
+
+// ------------------------------------------------------------------------
+void Shader::setMat2(const char* name, const glm::mat2 &mat){
+	GLint location;
+	#if CACHSHADERLOCATIONS
+	if (mapped)
+		location = getUniformLocation(name);
+	else
+	#endif
+		location = glGetUniformLocation(ID, name);
+	glUniformMatrix2fv(location, 1, GL_FALSE, &mat[0][0]);
+}
+
+// ------------------------------------------------------------------------
+void Shader::setMat3(const char* name, const glm::mat3 &mat){
+	GLint location;
+	#if CACHSHADERLOCATIONS
+	if (mapped)
+		location = getUniformLocation(name);
+	else
+	#endif
+		location = glGetUniformLocation(ID, name);
+	glUniformMatrix3fv(location, 1, GL_FALSE, &mat[0][0]);
+}
+
 //-------------------------------------------------------------------------
 void Shader::setMat4(const char* name, const glm::mat4 &mat){
 	GLint location;
@@ -353,3 +486,5 @@ void Shader::setMat4(const char* name, const glm::mat4 &mat){
 		location = glGetUniformLocation(ID, name);
 	glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
 }
+
+#endif

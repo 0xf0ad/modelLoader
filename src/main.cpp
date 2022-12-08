@@ -12,6 +12,7 @@
 #include <bits/types/FILE.h>
 #include <cstdlib>
 #include <cstring>
+#include <glm/trigonometric.hpp>
 #include <stdio.h>
 #include <string>
 #include <x86intrin.h>
@@ -238,8 +239,6 @@ int main(int argc, char** argv){
 	float rotDegre = 0.0f;
 	int animIndex = 0;
 	char uniform[24] = "finalBonesMatrices[   ]";
-	char U_index[5];
-
 
 	// render loop
 	// -----------
@@ -298,9 +297,9 @@ int main(int argc, char** argv){
 		if(outlined) ImGui::SliderFloat("outline scale", &scale, 0.0f, 2.0f);
 		ImGui::ColorEdit3("clear color", clrColorPtr);        // Edit 3 floats representing a the background color
 
-		ImGui::SliderFloat("field of view", &camera.Zoom, 0.0f, 180.0f);
+		ImGui::SliderFloat("field of view", &camera.mFieldOfView, 0.0f, PI);
 		ImGui::SliderFloat("Camera Speed", &camera.maxSpeed, 0.0f, 50.0f);
-		ImGui::SliderFloat("Mouse Sensitivity", &camera.MouseSensitivity, 0.0f, 1.0f);
+		ImGui::SliderFloat("Mouse Sensitivity",&camera.mMouseSensitivity, 0.0f, 1.0f);
 		//if (ImGui::Button("Botton")) { }                                 // Buttons return true when clicked
 
 		// controlling face rendering (render only front faces or only back ones)
@@ -377,7 +376,7 @@ int main(int argc, char** argv){
 
 
 		// view/projection transformations
-		projection = glm::perspective(glm::radians(camera.Zoom), (float)WIN_WIDTH / (float)WIN_HEIGHT, 0.1f, 100.0f);
+		projection = glm::perspective(camera.mFieldOfView, (float)WIN_WIDTH / (float)WIN_HEIGHT, 0.1f, 100.0f);
 		view = camera.GetViewMatrix();
 		// render the loaded model by setting the model transformation
 		model = glm::mat4(1.0f);
@@ -402,13 +401,12 @@ int main(int argc, char** argv){
 		ourShader.setMat4("projection", projection);
 		ourShader.setMat4("view"      , view);
 		ourShader.setMat4("model"     , model);
-		ourShader.setVec3("cameraPos" , camera.Position);
+		ourShader.setVec3("cameraPos" , camera.mPosition);
 
 		if (animated){
 			animator->UpdateAnimation(deltaTime);
 			for (unsigned int i = 0; i != 255; i++){
-				sprintf(U_index, "%u]", i);
-				strcpy((uniform+19), U_index);
+				sprintf(uniform, "finalBonesMatrices[%u]", i);
 				ourShader.setMat4(uniform, animator->m_FinalBoneMatrices[i]);
 			}
 		}
@@ -435,8 +433,7 @@ int main(int argc, char** argv){
 			ourModel.Draw(outLiner);
 			if (animated)
 				for (unsigned int i = 0; i != 100; i++){
-					sprintf(U_index, "%u]", i);
-					strcpy((uniform+19), U_index);
+					sprintf(uniform, "finalBonesMatrices[%u]", i);
 					ourShader.setMat4(uniform, animator->m_FinalBoneMatrices[i]);
 				}
 			glStencilMask(0xFF);
@@ -601,32 +598,32 @@ static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre){
 		ImGui::Text("how we can correct your model's cordinates ?");
 		if (ImGui::Button("Rotate by  90° on X axis")){
 			*AxisRot = glm::vec3(1.0f, 0.0f, 0.0f);
-			*rotDegre = glm::radians(90.0f);
+			*rotDegre = HALF_PI; // 90 degrees
 		}
 		else if (ImGui::Button("Rotate by -90° on X axis")){
 			*AxisRot = glm::vec3(1.0f, 0.0f, 0.0f);
-			*rotDegre = glm::radians(-90.0f);
+			*rotDegre = -HALF_PI; // -90 dgrees
 		}
 		else if (ImGui::Button("Rotate by  90° on Y axis")){
 			*AxisRot = glm::vec3(0.0f, 1.0f, 0.0f);
-			*rotDegre = glm::radians(90.0f);
+			*rotDegre = HALF_PI; // 90 degrees
 		}
 		else if (ImGui::Button("Rotate by -90° on Y axis")){
 			*AxisRot = glm::vec3(0.0f, 1.0f, 0.0f);
-			*rotDegre = glm::radians(-90.0f);
+			*rotDegre = -HALF_PI; // -90 degrees
 		}
 		else if (ImGui::Button("Rotate by  90° on Z axis")){
 			*AxisRot = glm::vec3(0.0f, 0.0f, 1.0f);
-			*rotDegre = glm::radians(90.0f);
+			*rotDegre = HALF_PI; // 90 degrees
 		}
 		else if (ImGui::Button("Rotate by -90° on Z axis")){
 			*AxisRot = glm::vec3(0.0f, 0.0f, 1.0f);
-			*rotDegre = glm::radians(-90.0f);
+			*rotDegre = -HALF_PI; // -90 degrees
 		}
 		else if (ImGui::Button("Reset")){
 			*rotDegre = 0.0f;
 		}
-		else if (/*ImGui::SameLine();*/ ImGui::Button("Close"))
+		else if (ImGui::Button("Close"))
 			*p_open = false;
 		ImGui::End();
 	}

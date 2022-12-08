@@ -38,10 +38,9 @@ static unsigned char size_of_vertex = sizeof(Vertex);
 
 unsigned int TextureFromFile(const char* path, const char* directory, const aiTexture* embeddedTexture/*, bool gamma = false*/){
 
-	char* filename = (char*) malloc(strlen(directory) + strlen(path) + 2);
-	filename = strncpy(filename, directory, strlen(directory));
-	filename = strncat(filename, "/", 2);
-	filename = strncat(filename, path, strlen(path));
+	size_t strlenth = strlen(directory) + strlen(path) + 2;
+	char filename[strlenth];
+	snprintf(filename, strlenth, "%s/%s", directory, path);
 
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -80,18 +79,19 @@ unsigned int TextureFromFile(const char* path, const char* directory, const aiTe
 		fprintf(stderr, "Texture failed to load at path: %s\n", filename);
 	}
 
-	free(filename);
 	stbi_image_free(data);
 	return textureID;
 }
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.
-std::vector<Texture> loadMaterialTextures(const aiMaterial *mat, aiTextureType type, const char* dir, const aiScene* scene){
+void loadMaterialTextures(std::vector<Texture>& textures, const aiMaterial *mat, aiTextureType type, const char* dir, const aiScene* scene){
 	
-	std::vector<Texture> textures;
+	size_t numTextures = mat->GetTextureCount(type);
+	textures_loaded.reserve(numTextures);
+	textures.reserve(numTextures);
 
-	for(unsigned int i = 0; i != mat->GetTextureCount(type); i++){
+	for(unsigned int i = 0; i != numTextures; i++){
 		aiString str;
 		// get the texture
 		if(!mat->GetTexture(type, i, &str)){
@@ -103,7 +103,7 @@ std::vector<Texture> loadMaterialTextures(const aiMaterial *mat, aiTextureType t
 			bool skip = false;
 			for(unsigned int j = 0; j != textures_loaded.size(); j++){
 				if(!strcmp(textures_loaded[j].path.c_str(), str.C_Str())){
-					textures.push_back(textures_loaded[j]);
+					textures.emplace_back(textures_loaded[j]);
 					skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
 					break;
 				}
@@ -114,13 +114,12 @@ std::vector<Texture> loadMaterialTextures(const aiMaterial *mat, aiTextureType t
 				texture.id = TextureFromFile(str.C_Str(), dir, scene->GetEmbeddedTexture(str.C_Str()));
 				texture.path = str.C_Str();
 				texture.type = type;//texType;
-				textures.push_back(texture);
+				textures.emplace_back(texture);
 				// store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
-				textures_loaded.push_back(texture);
+				textures_loaded.emplace_back(texture);
 			}
 		}
 	}
-	return textures;
 }
 
 Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
@@ -211,14 +210,22 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 	// assigne textures
 	// ----------------
 	const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-	std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, dir, scene);
-	textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-	std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, dir, scene);
-	textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-	std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, dir, scene);
-	textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-	std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, dir, scene);
-	textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+
+	//std::vector<Texture> diffuseMaps;
+	loadMaterialTextures(textures, material, aiTextureType_DIFFUSE, dir, scene);
+	//textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+
+	//std::vector<Texture> specularMaps;
+	loadMaterialTextures(textures, material, aiTextureType_SPECULAR, dir, scene);
+	//textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+
+	//std::vector<Texture> normalMaps;
+	loadMaterialTextures(textures, material, aiTextureType_HEIGHT, dir, scene);
+	//textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+
+	//std::vector<Texture> heightMaps;
+	loadMaterialTextures(textures, material, aiTextureType_AMBIENT, dir, scene);
+	//textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
 	gTextures.insert(gTextures.begin(), textures.begin(), textures.end());
 
