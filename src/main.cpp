@@ -9,8 +9,11 @@
 #include "../headers/camera.h"
 #include "../headers/animator.h"
 #include <GLFW/glfw3.h>
+#include <bits/types/FILE.h>
 #include <cstdlib>
+#include <cstring>
 #include <stdio.h>
+#include <string>
 #include <x86intrin.h>
 
 /* -======settings======- */
@@ -234,6 +237,8 @@ int main(int argc, char** argv){
 	glm::vec3 AxisRot = glm::vec3(0.0f);
 	float rotDegre = 0.0f;
 	int animIndex = 0;
+	char uniform[24] = "finalBonesMatrices[   ]";
+	char U_index[5];
 
 
 	// render loop
@@ -294,6 +299,8 @@ int main(int argc, char** argv){
 		ImGui::ColorEdit3("clear color", clrColorPtr);        // Edit 3 floats representing a the background color
 
 		ImGui::SliderFloat("field of view", &camera.Zoom, 0.0f, 180.0f);
+		ImGui::SliderFloat("Camera Speed", &camera.maxSpeed, 0.0f, 50.0f);
+		ImGui::SliderFloat("Mouse Sensitivity", &camera.MouseSensitivity, 0.0f, 1.0f);
 		//if (ImGui::Button("Botton")) { }                                 // Buttons return true when clicked
 
 		// controlling face rendering (render only front faces or only back ones)
@@ -399,8 +406,11 @@ int main(int argc, char** argv){
 
 		if (animated){
 			animator->UpdateAnimation(deltaTime);
-			for (unsigned int i = 0; i != 255; i++)
-				ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + ']', animator->m_FinalBoneMatrices[i]);
+			for (unsigned int i = 0; i != 255; i++){
+				sprintf(U_index, "%u]", i);
+				strcpy((uniform+19), U_index);
+				ourShader.setMat4(uniform, animator->m_FinalBoneMatrices[i]);
+			}
 		}
 
 		#if IWANNASTENCILBUFFER
@@ -424,8 +434,11 @@ int main(int argc, char** argv){
 			outLiner.setBool ("animated", animated);
 			ourModel.Draw(outLiner);
 			if (animated)
-				for (unsigned int i = 0; i != 100; i++)
-					outLiner.setMat4("finalBonesMatrices[" + std::to_string(i) + ']', animator->m_FinalBoneMatrices[i]);
+				for (unsigned int i = 0; i != 100; i++){
+					sprintf(U_index, "%u]", i);
+					strcpy((uniform+19), U_index);
+					ourShader.setMat4(uniform, animator->m_FinalBoneMatrices[i]);
+				}
 			glStencilMask(0xFF);
 			glStencilFunc(GL_ALWAYS, false, 0xFF);
 			glEnable(GL_DEPTH_TEST);
@@ -489,7 +502,7 @@ void processInput(GLFWwindow *window){
 	if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		camera.ProcessKeyboard(SLOW, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
-		camera.ProcessKeyboard(NSLOW, deltaTime);
+		camera.ProcessKeyboard(FAST, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 		camera.ProcessKeyboard(GO_UP, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)

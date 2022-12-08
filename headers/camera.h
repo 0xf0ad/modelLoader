@@ -1,6 +1,7 @@
 #pragma once
 
 #include "libs/glad.h"
+#include <assimp/material.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -13,7 +14,7 @@ enum cameraCmd {
 	LEFT,
 	RIGHT,
 	SLOW,
-	NSLOW,
+	FAST,
 	GO_UP,
 	GO_DOWN
 };
@@ -21,8 +22,8 @@ enum cameraCmd {
 // Default camera values
 #define YAW          -90.0f
 #define PITCH         0.00f
-#define SPEED         07.5f
-#define nSPEED        02.5f
+#define maxSPEED      07.5f
+#define minSPEED      02.5f
 #define SENSITIVITY   0.15f
 #define ZOOM          60.0f
 
@@ -32,7 +33,7 @@ class Camera{
 public:
 	// camera Attributes
 	glm::vec3 Position;
-	glm::vec3 Front;
+	glm::vec3 Front = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 Up;
 	glm::vec3 Right;
 	glm::vec3 WorldUp;
@@ -41,11 +42,12 @@ public:
 	float Pitch;
 	// camera options
 	float MovementSpeed;
-	float MouseSensitivity;
-	float Zoom;
+	float maxSpeed = maxSPEED, minSpeed = minSPEED;
+	float MouseSensitivity = SENSITIVITY;
+	float Zoom = ZOOM;
 
 	// constructor with vectors
-	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM){
+	Camera(const glm::vec3& position = glm::vec3(0.0f, 0.0f, 0.0f), const glm::vec3& up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH){
 		Position = position;
 		WorldUp = up;
 		Yaw = yaw;
@@ -53,7 +55,7 @@ public:
 		updateCameraVectors();
 	}
 	// constructor with scalar values
-	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM){
+	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch){
 		Position = glm::vec3(posX, posY, posZ);
 		WorldUp = glm::vec3(upX, upY, upZ);
 		Yaw = yaw;
@@ -78,9 +80,9 @@ public:
 		if (command == RIGHT)
 			Position += Right * velocity;
 		if (command == SLOW)
-			MovementSpeed = nSPEED;
-		if (command == NSLOW)
-			MovementSpeed = SPEED;
+			MovementSpeed = minSpeed;
+		if (command == FAST)
+			MovementSpeed = maxSpeed;
 		if (command == GO_UP)
 			Position = WorldUp * velocity;
 		if (command == GO_DOWN)

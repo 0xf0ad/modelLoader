@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <assimp/material.h>
 #include <assimp/mesh.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -86,7 +87,7 @@ unsigned int TextureFromFile(const char* path, const char* directory, const aiTe
 
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.
-std::vector<Texture> loadMaterialTextures(const aiMaterial *mat, aiTextureType type, textureType texType, const char* dir, const aiScene* scene){
+std::vector<Texture> loadMaterialTextures(const aiMaterial *mat, aiTextureType type, const char* dir, const aiScene* scene){
 	
 	std::vector<Texture> textures;
 
@@ -112,7 +113,7 @@ std::vector<Texture> loadMaterialTextures(const aiMaterial *mat, aiTextureType t
 				Texture texture;
 				texture.id = TextureFromFile(str.C_Str(), dir, scene->GetEmbeddedTexture(str.C_Str()));
 				texture.path = str.C_Str();
-				texture.type = texType;
+				texture.type = type;//texType;
 				textures.push_back(texture);
 				// store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
 				textures_loaded.push_back(texture);
@@ -134,7 +135,6 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 		if (tmpVerticesBoneData.size() == prevMeshNumVertices)
 			tmpVerticesBoneData.reserve(mesh->mNumVertices);
 
-		//vertices.reserve(mesh->mNumVertices);
 		for(int i = 0; i != MAX_BONE_INFLUENCE; i++){
 			tmpVertexBoneData.boneIDs[i] = 0;
 			tmpVertexBoneData.weights[i] = 0.0f;
@@ -184,12 +184,8 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 				boneInfoMap[boneName] = newBoneInfo;
 				boneID = m_BoneCounter;
 				m_BoneCounter++;
-				//printf("found newBoneInfo : %d\n", boneID);
-				//printf("Bone %s\n", boneName);
 			}else{
 				boneID = boneInfoMap[boneName].id;
-				//printf("found oldBoneInfo : %d\n", boneID);
-				//printf("Bone %s\n", boneName);
 			}
 			assert(boneID);
 
@@ -215,13 +211,13 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 	// assigne textures
 	// ----------------
 	const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-	std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, diffuse_texture, dir, scene);
+	std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, dir, scene);
 	textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-	std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, specular_texture, dir, scene);
+	std::vector<Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, dir, scene);
 	textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-	std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, normal_texture, dir, scene);
+	std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, dir, scene);
 	textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-	std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, height_texture, dir, scene);
+	std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, dir, scene);
 	textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
 	gTextures.insert(gTextures.begin(), textures.begin(), textures.end());
@@ -388,18 +384,19 @@ void loadModel(const char* path){
 
 		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
 
-		textureType typeName = gTextures[i].type;
+		aiTextureType typeName = gTextures[i].type;
 		unsigned char textureID = gTextures[i].id;
 
-		if     (typeName == diffuse_texture){
+		// chack if the texture is diffuse type
+		if     (typeName == aiTextureType_DIFFUSE){
 			diffuseTexturesIDs.push_back(textureID);
 			glBindTextureUnit(textureID , textureID);
 		}
-		else if(typeName == specular_texture)
+		else if(typeName == aiTextureType_SPECULAR)
 			specularTexturesIDs.push_back(textureID);
-		else if(typeName == normal_texture)
+		else if(typeName == aiTextureType_HEIGHT)
 			normalTexturesIDs.push_back(textureID);
-		else if(typeName == height_texture)
+		else if(typeName == aiTextureType_AMBIENT)
 			heightTexturesIDs.push_back(textureID);
 	}
 

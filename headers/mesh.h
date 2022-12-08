@@ -1,5 +1,6 @@
 #pragma once
 
+#include <assimp/material.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "shader.h"
@@ -9,6 +10,7 @@
 
 #define TANGENT   false
 #define BITANGENT false
+#define IWANTMYIMPLEMENTATIONOFTEXTUREENUM false
 
 struct Vertex {
 	// position
@@ -35,16 +37,18 @@ struct Vertex {
 	float weights[MAX_BONE_INFLUENCE] = {0.0f};
 };
 
+#if IWANTMYIMPLEMENTATIONOFTEXTUREENUM
 enum textureType{
 	diffuse_texture,
 	specular_texture,
 	normal_texture,
 	height_texture
 };
+#endif /* IWANTMYIMPLEMENTATIONOFTEXTUREENUM */ 
 
 struct Texture {
 	unsigned int id;
-	textureType type;
+	aiTextureType type;
 	std::string path;
 };
 

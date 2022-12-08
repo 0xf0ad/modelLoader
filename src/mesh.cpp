@@ -103,19 +103,20 @@ void Mesh::setupMesh(){
 	for(unsigned int i = 0; i != textures.size(); i++){
 
 		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
-		
-		textureType typeName = textures[i].type;
+
+		aiTextureType typeName = textures[i].type;
 		unsigned char textureID = textures[i].id;
 
-		if     (typeName == diffuse_texture){
+		// chack if the texture is diffuse type
+		if     (typeName == aiTextureType_DIFFUSE){
 			defuseTexturesIDs.push_back(textureID);
 			glBindTextureUnit(textureID , textureID);
 		}
-		else if(typeName == specular_texture)
+		else if(typeName == aiTextureType_SPECULAR)
 			specularTexturesIDs.push_back(textureID);
-		else if(typeName == normal_texture)
+		else if(typeName == aiTextureType_HEIGHT)
 			normalTexturesIDs.push_back(textureID);
-		else if(typeName == height_texture)
+		else if(typeName == aiTextureType_AMBIENT)
 			heightTexturesIDs.push_back(textureID);
 	}
 }

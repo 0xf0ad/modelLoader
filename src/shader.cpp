@@ -341,3 +341,15 @@ void Shader::setMat4(const std::string &name, const glm::mat4 &mat){
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
 }
+
+//-------------------------------------------------------------------------
+void Shader::setMat4(const char* name, const glm::mat4 &mat){
+	GLint location;
+	#if CACHSHADERLOCATIONS
+	if (mapped)
+		location = getUniformLocation(name);
+	else
+	#endif
+		location = glGetUniformLocation(ID, name);
+	glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
+}
