@@ -6,7 +6,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <unordered_map>
-#include <cstring>
+#include <string.h>
 
 #include "mesh.h"
 
@@ -20,12 +20,6 @@ struct BoneInfo{
 struct vertexBoneData{
 	unsigned char boneIDs[4];
 	float weights[4];
-};
-
-struct strequal_to{
-	bool operator()(const char* s1, const char* s2) const{
-		return (!strcmp(s1, s2));
-	}
 };
 
 struct stdstrequal_to{
@@ -42,20 +36,6 @@ struct stdstrHash{
 			value = value * 37 + str[i];
 
 		return value;
-	}
-};
-
-
-struct strHash{
-	int operator()(const char* str) const{
-		unsigned int long hash = 0;
-
-		while(*str){
-			hash = (hash * hash) + *str;
-			str++;	
-		}
-
-		return hash & (0x7FFFFFFF);
 	}
 };
 

@@ -1,6 +1,10 @@
+#include <cstdlib>
+#include <string.h>
 #include "../headers/bone.h"
+#include <glm/detail/type_quat.hpp>
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_exponential.hpp>
+#include <glm/ext/quaternion_geometric.hpp>
 #include <glm/fwd.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <math.h>
@@ -13,8 +17,8 @@ static glm::mat4 m_LocalTransform;
 #define BICUBIC_INTERPOLATION true
 
 // reads keyframes from aiNodeAnim
-Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){
-	Bone::m_Name     = name;
+Bone::Bone(const char* name, int ID, const aiNodeAnim* channel){
+	Bone::m_Name     = strdup(name);
 	Bone::m_ID       = ID;
 	numPositions   = channel->mNumPositionKeys;
 	numScalings    = channel->mNumScalingKeys;
@@ -23,24 +27,28 @@ Bone::Bone(const std::string& name, int ID, const aiNodeAnim* channel){
 
 	for (int i = 0; i < numPositions; i++){
 		KeyPosition data;
-		data.position = AssimpGLMHelpers::GetGLMVec(channel->mPositionKeys[i].mValue);
+		data.position = assimpVec2glm(channel->mPositionKeys[i].mValue);
 		data.timeStamp = channel->mPositionKeys[i].mTime;
 		Bone::m_Positions.push_back(data);
 	}
 
 	for (int i = 0; i < numRotations; i++){
 		KeyRotation data;
-		data.orientation = AssimpGLMHelpers::GetGLMQuat(channel->mRotationKeys[i].mValue);
+		data.orientation = assimpQuat2glm(channel->mRotationKeys[i].mValue);
 		data.timeStamp = channel->mRotationKeys[i].mTime;
 		Bone::m_Rotations.push_back(data);
 	}
 
 	for (int i = 0; i < numScalings; i++){
 		KeyScale data;
-		data.scale = AssimpGLMHelpers::GetGLMVec(channel->mScalingKeys[i].mValue);
+		data.scale = assimpVec2glm(channel->mScalingKeys[i].mValue);
 		data.timeStamp = channel->mScalingKeys[i].mTime;
 		Bone::m_Scales.push_back(data);
 	}
+}
+
+Bone::~Bone(){
+//	free((void*)m_Name);
 }
 
 // Gets normalized value for Lerp & Slerp
@@ -127,6 +135,12 @@ inline const glm::quat all_in_one_squad(const glm::quat& q0, const glm::quat& q1
 	return result;
 }
 
+inline const glm::quat nlerp(const glm::quat& a, const glm::quat& b, float t){
+	glm::quat tmp = a + t* (b - a);
+	return glm::normalize(tmp);
+}
+
+
 inline const glm::quat squad_from_data(const std::vector<KeyRotation>& rotations, const unsigned int current_index, const float scalarFactor){
 	const glm::quat* q_prev = &rotations[current_index-1].orientation;
 	const glm::quat* q_curr = &rotations[ current_index ].orientation;
@@ -187,6 +201,22 @@ inline const glm::mat4 InterpolatePosition(const float animationTime, const std:
 			GetScaleFactor(m_Positions[index].timeStamp, m_Positions[index + 1].timeStamp, animationTime)));
 }
 
+
+const glm::quat SQUAD(const glm::quat& q0, const glm::quat& q1, const glm::quat& q2, const glm::quat& q3, float lambda){
+      // Modify quaternions for shortest path
+      const glm::quat q01 = glm::length(q1 - q0) < glm::length(q1 + q0) ? q0 : inverse(q0);
+      const glm::quat q21 = glm::length(q1 - q2) < glm::length(q1 + q2) ? q2 : inverse(q2);
+      const glm::quat q31 = glm::length(q21- q3) < glm::length(q21+ q3) ? q3 : inverse(q3);
+      
+      // Calculate helper quaternions
+      glm::quat a = intermediate(q01, q1, q21);
+      glm::quat b = intermediate(q1, q21, q31);
+      
+      return glm::slerp(glm::slerp(q1, q21, lambda), glm::slerp(a, b, lambda), 2.0f * lambda * (1.0f - lambda));
+    }
+
+
+
 // figures out which rotations keys to interpolate b/w and performs the interpolation 
 // and returns the rotation matrix
 inline const glm::mat4 InterpolateRotation(const float animationTime, const std::vector<KeyRotation>& m_Rotations){
@@ -204,6 +234,10 @@ inline const glm::mat4 InterpolateRotation(const float animationTime, const std:
 	/*
 	 * WHY DOES CUBIC INTERPOLATION SEEMS LIKE THE LINEAR ONE IT SHOULD NOT BE THAT WAY
 	 */
+
+	 /*
+	  * FUCK IT I AM ONLY GOING TO USE THE SLERP, SQUAD IS JUST UNNECESSARY HEADACH
+	  */
 	
 	if(Q_squad){
 		N_returned = glm::slerp(m_Rotations[index].orientation, m_Rotations[index+1].orientation, scalarFactor);
@@ -213,12 +247,14 @@ inline const glm::mat4 InterpolateRotation(const float animationTime, const std:
 		
 		//O_returned = squad_from_data(m_Rotations, index, scalarFactor);
 	}else{
-		O_returned = glm::squad(m_Rotations[index].orientation, m_Rotations[index+1].orientation,
+		/*O_returned = glm::squad(m_Rotations[index].orientation, m_Rotations[index+1].orientation,
 			    //   m_Rotations[index].orientation * glm::exp((glm::log(q * m_Rotations[index+1].orientation) + glm::log(q * m_Rotations[index-1].orientation)) * -0.25f),
 				//   m_Rotations[index+1].orientation * glm::exp((glm::log(q * m_Rotations[index].orientation) + glm::log(q * m_Rotations[index+2].orientation)) * -0.25f),
 			       intermediate(m_Rotations[index-1].orientation, m_Rotations[index].orientation, m_Rotations[index+1].orientation),
 				   intermediate(m_Rotations[index].orientation, m_Rotations[index+1].orientation, m_Rotations[index+2].orientation),
-				   scalarFactor);
+				   scalarFactor);*/
+		O_returned = all_in_one_squad(m_Rotations[index-1].orientation, m_Rotations[index].orientation, m_Rotations[index+1].orientation, m_Rotations[index+2].orientation, scalarFactor);
+		//O_returned = nlerp(m_Rotations[index].orientation, m_Rotations[index+1].orientation, scalarFactor);
 	}
 	
 	if(Q_squad){

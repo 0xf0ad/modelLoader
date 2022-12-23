@@ -10,11 +10,9 @@
 #include "../headers/animator.h"
 #include <GLFW/glfw3.h>
 #include <bits/types/FILE.h>
-#include <cstdlib>
-#include <cstring>
-#include <glm/trigonometric.hpp>
+#include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
-#include <string>
 #include <x86intrin.h>
 
 /* -======settings======- */
@@ -164,6 +162,26 @@ int main(int argc, char** argv){
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
 
+	Shader linesShader("shaders/lineVertShader", "shaders/lineFragShader");
+	
+	unsigned int LVBO;
+	unsigned int LVAO;
+	float linePoints[] = {
+		0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f
+	};
+
+	glGenVertexArrays(1, &LVAO);
+	glGenBuffers(1, &LVBO);
+
+
+	glBindBuffer(GL_ARRAY_BUFFER, LVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(linePoints), linePoints, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, sizeof(linePoints)/(sizeof(float[3])), GL_FLOAT, GL_FALSE, 2 * sizeof(float), (const GLvoid*)0);
+	glEnableVertexAttribArray(0);
+
+
 	printf("%llu\t ticks on shader 3\n", cyclesDiffrence);
 
 	unsigned int uniformBufferBlock;
@@ -238,7 +256,7 @@ int main(int argc, char** argv){
 	glm::vec3 AxisRot = glm::vec3(0.0f);
 	float rotDegre = 0.0f;
 	int animIndex = 0;
-	char uniform[24] = "finalBonesMatrices[   ]";
+	char uniform[] = "b_Mats[   ]";
 
 	// render loop
 	// -----------
@@ -406,10 +424,19 @@ int main(int argc, char** argv){
 		if (animated){
 			animator->UpdateAnimation(deltaTime);
 			for (unsigned int i = 0; i != 255; i++){
-				sprintf(uniform, "finalBonesMatrices[%u]", i);
+				sprintf(uniform, "b_Mats[%u]", i);
 				ourShader.setMat4(uniform, animator->m_FinalBoneMatrices[i]);
 			}
 		}
+
+
+
+
+
+		/*linesShader.use();
+		glBindVertexArray(LVAO);
+		glDrawArrays(GL_LINES, 0, 2);*/
+
 
 		#if IWANNASTENCILBUFFER
 			// write to stencil buffer
@@ -433,7 +460,7 @@ int main(int argc, char** argv){
 			ourModel.Draw(outLiner);
 			if (animated)
 				for (unsigned int i = 0; i != 100; i++){
-					sprintf(uniform, "finalBonesMatrices[%u]", i);
+					sprintf(uniform, "b_Mats[%u]", i);
 					ourShader.setMat4(uniform, animator->m_FinalBoneMatrices[i]);
 				}
 			glStencilMask(0xFF);

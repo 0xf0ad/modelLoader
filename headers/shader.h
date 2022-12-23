@@ -8,21 +8,46 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+#include <string.h>
+
+struct strequal_to{
+	bool operator()(const char* s1, const char* s2) const{
+		return (!strcmp(s1, s2));
+	}
+};
+
+struct strHash{
+	int operator()(const char* str) const{
+		unsigned int long hash = 0;
+
+		while(*str){
+			hash = (hash * hash) + *str;
+			str++;	
+		}
+
+		return hash & (0x7FFFFFFF);
+	}
+};
 
 class Shader{
 public:
-	//the program ID
+	// the program ID
 	unsigned int ID;
 	bool mapped = false;
 
-	//constractor reads and build the shader
+	// constractor reads and build the shader
 	Shader(const char* vertexPath, const char* fragmentPath);
 
-	//use the shader
+	// use the shader
 	void use();
 
 	//store the uniform location
+#if IWANNAUSESTD__STRING
 	std::unordered_map<std::string, GLint> uniformLocationCache;
+#else
+	std::unordered_map<const char*, GLint, strHash, strequal_to> uniformLocationCache;
+#endif
+
 	GLint getUniformLocation(const char* name);
 
 	// utility uniform functions

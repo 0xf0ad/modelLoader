@@ -33,8 +33,7 @@ public:
 	void CalculateBoneTransform(const AssimpNodeData* node, const glm::mat4* parentTransform){
 		const glm::mat4* nodeTransform;
 		const char* index = node->name;
-		const std::string stdIndex = index;
-		Bone* bone = m_CurrentAnimation->FindBone(stdIndex);
+		Bone* bone = m_CurrentAnimation->FindBone(index);
 
 		if (bone){
 			bone->Update(m_CurrentTime);

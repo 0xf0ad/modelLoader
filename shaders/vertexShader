@@ -20,7 +20,7 @@ uniform mat4 model;
 
 uniform bool animated;
 
-uniform mat4 finalBonesMatrices[250];
+uniform mat4 b_Mats[250];
 mat4 BoneTransform;
 
 out VS_OUT{
@@ -32,10 +32,10 @@ void main(){
 	if (!animated) {
 		gl_Position = projection * view * model * vec4(pos, 1.0);
 	}else{
-		BoneTransform  = finalBonesMatrices[boneIds[0]] * weights[0];
-		BoneTransform += finalBonesMatrices[boneIds[1]] * weights[1];
-		BoneTransform += finalBonesMatrices[boneIds[2]] * weights[2];
-		BoneTransform += finalBonesMatrices[boneIds[3]] * weights[3];
+		BoneTransform  = b_Mats[boneIds[0]] * weights[0];
+		BoneTransform += b_Mats[boneIds[1]] * weights[1];
+		BoneTransform += b_Mats[boneIds[2]] * weights[2];
+		BoneTransform += b_Mats[boneIds[3]] * weights[3];
 
 		vec4 PosL = BoneTransform * vec4(pos, 1.0);
 		gl_Position = projection * view * model * PosL;

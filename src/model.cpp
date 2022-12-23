@@ -36,7 +36,7 @@ static unsigned char size_of_vertex = sizeof(Vertex);
 
 
 
-unsigned int TextureFromFile(const char* path, const char* directory, const aiTexture* embeddedTexture/*, bool gamma = false*/){
+unsigned int TextureFromFile(const char* path, const char* directory, const aiTexture* emTexture/*, bool gamma = false*/){
 
 	size_t strlenth = strlen(directory) + strlen(path) + 2;
 	char filename[strlenth];
@@ -49,10 +49,10 @@ unsigned int TextureFromFile(const char* path, const char* directory, const aiTe
 	unsigned char* data;
 	
 	// check if the texture is embedded on the model file
-	if(!embeddedTexture)
+	if(!emTexture)
 		data = stbi_load(filename, &width, &height, &nrComponents, 0);
 	else
-		data = stbi_load_from_memory((const stbi_uc *)embeddedTexture->pcData, embeddedTexture->mWidth,
+		data = stbi_load_from_memory((stbi_uc*)emTexture->pcData, emTexture->mWidth,
 		                           &width, &height, &nrComponents, 0);
 
 	if (data){
@@ -76,7 +76,7 @@ unsigned int TextureFromFile(const char* path, const char* directory, const aiTe
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}else{
-		fprintf(stderr, "Texture failed to load at path: %s\n", filename);
+		fprintf(stderr, "Texture failed to load at path: %s\n\t%s |/| %s\n%p\n", filename, directory, path, emTexture);
 	}
 
 	stbi_image_free(data);
@@ -111,7 +111,8 @@ void loadMaterialTextures(std::vector<Texture>& textures, const aiMaterial *mat,
 
 			if(!skip){	// if texture hasn't been loaded already, load it
 				Texture texture;
-				texture.id = TextureFromFile(str.C_Str(), dir, scene->GetEmbeddedTexture(str.C_Str()));
+				const aiTexture* emTexture = scene->GetEmbeddedTexture(str.C_Str());
+				texture.id = TextureFromFile(str.C_Str(), dir, emTexture);
 				texture.path = str.C_Str();
 				texture.type = type;//texType;
 				textures.emplace_back(texture);
@@ -179,7 +180,7 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 			if(boneInfoMap.find(boneName) == boneInfoMap.end()){
 				BoneInfo newBoneInfo;
 				newBoneInfo.id = m_BoneCounter;
-				newBoneInfo.offset = AssimpGLMHelpers::ConvertMatrixToGLMFormat(bone->mOffsetMatrix);
+				newBoneInfo.offset = assimpMatrix2glm(bone->mOffsetMatrix);
 				boneInfoMap[boneName] = newBoneInfo;
 				boneID = m_BoneCounter;
 				m_BoneCounter++;
@@ -342,14 +343,15 @@ void loadModel(const char* path){
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size_of_the_element_buffer_in_bytes, nullptr, GL_STATIC_DRAW);
-
+ 
 	unsigned int difference = strrchr(path, '/') - path;
-	char* directory = (char*) malloc(sizeof(char) * difference);
-	directory = strncpy(directory, path, difference);
+	const char* directory ;
+	directory = strndup(path, difference);
+	//printf("directory : %s\npath : %s\ndifference : %d\nits size : %zu\n", directory, path, difference, strlen(directory));
 
 	processNode(scene->mRootNode, scene, meshes, directory);
 
-	free(directory);
+	free((void*)directory);
 
 
 	// vertex positions

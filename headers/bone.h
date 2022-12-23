@@ -27,11 +27,12 @@ public:
 	std::vector<KeyPosition> m_Positions;
 	std::vector<KeyRotation> m_Rotations;
 	std::vector<KeyScale> m_Scales;
-	std::string m_Name;
+	const char* m_Name;
 	unsigned int m_ID;
 
 	// reads keyframes from aiNodeAnim
-	Bone(const std::string& name, int ID, const aiNodeAnim* channel);
+	Bone(const char* name, int ID, const aiNodeAnim* channel);
+	~Bone();
 
 	// interpolates  b/w positions,rotations & scaling keys based on the curren time of
 	// the animation and prepares the local transformation matrix by combining all keys tranformations

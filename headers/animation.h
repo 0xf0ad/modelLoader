@@ -4,7 +4,9 @@
 #include <assimp/mesh.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <climits>
 #include <functional>
+#include <string.h>
 #include <iterator>
 #include <memory>
 #include <string.h>
@@ -102,10 +104,11 @@ public:
 		freeNodeHeirarchy(&m_RootNode);	
 	}
 
-	Bone* FindBone(const std::string& name){
+	Bone* FindBone(const char* name){
 		// idk wtf is going on
 		auto iter = std::find_if(m_Bones.begin(), m_Bones.end(), [&](const Bone& Bone){
-			return Bone.m_Name == name;
+			return (!strcmp(Bone.m_Name, name));
+			//return Bone.m_Name == name;
 		});
 
 		if (iter == m_Bones.end()) return nullptr;
@@ -170,7 +173,7 @@ private:
 		if(src){
 			// write the node data to the AssimpNodeData
 			dest->name = strdup(src->mName.C_Str());
-			dest->transformation = AssimpGLMHelpers::ConvertMatrixToGLMFormat(src->mTransformation);
+			dest->transformation = assimpMatrix2glm(src->mTransformation);
 			dest->children.reserve(src->mNumChildren);
 
 			// load the children to the children vector

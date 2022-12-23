@@ -82,9 +82,9 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 Shader::Shader(const char* vertexPath, const char* fragmentPath){
 	// 1 - retrieve the vertex and fragment source code from filepath
 	// --------------------------------------------------------------
-	char *vertexCode, *fragmentCode;
+	char *vertexCode,   *fragmentCode;
 	FILE *v_ShaderFile, *f_ShaderFile;
-	uint v_StreamSize, f_StreamSize;
+	uint  v_StreamSize,  f_StreamSize;
 
 	
 	// open file
