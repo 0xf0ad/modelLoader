@@ -3,33 +3,26 @@
 
 Mesh::Mesh(const std::vector<Vertex>&  vertices,
            const std::vector<uint>&    indices,
-           const std::vector<Texture>& textures){
+           const std::vector<Texture>& textures):
+           vertices(vertices), indices(indices), textures(textures){
 
-	this->vertices = vertices;
-	this->indices  = indices;
-	this->textures = textures;
 
-		//printf("OMG i just allocated %zu bytes\n", sizeof(*this));
-
+	//printf("OMG i just allocated %zu bytes\n", sizeof(*this));
 
 	//setupMesh();
 }
 
 Mesh::Mesh(const std::vector<uint>&    indices,
-           const std::vector<Texture>& textures){
+           const std::vector<Texture>& textures):
+           indices(indices), textures(textures){
 
-	this->indices  = indices;
-	this->textures = textures;
-
-		//printf("OMG i just allocated %zu bytes\n", sizeof(*this));
-
+	//printf("OMG i just allocated %zu bytes\n", sizeof(*this));
 
 	//setupMesh();
 }
 
-Mesh::Mesh(const std::vector<Texture>& textures){
-
-	this->textures = textures;
+Mesh::Mesh(const std::vector<Texture>& textures):
+           textures(textures){
 
 	//printf("OMG i just allocated %zu bytes\n", sizeof(*this));
 

@@ -2,13 +2,23 @@
 
 #include "libs/glad.h"
 #include "libs/assimp_glm_helpers.h"
+#include <unordered_map>
+
+#if IWANNAUSESTD__STRING
 
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <unordered_map>
+
+#else
+
+#include <bits/types/FILE.h>
+#include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
+
+#endif
 
 struct strequal_to{
 	bool operator()(const char* s1, const char* s2) const{

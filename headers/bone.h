@@ -1,10 +1,10 @@
 #pragma once
-#include <list>
+
 #include "model.h"
 #include "libs/assimp_glm_helpers.h"
+#include <glm/gtx/quaternion.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
 
 struct KeyPosition{
 	glm::vec3 position;
@@ -24,11 +24,11 @@ struct KeyScale{
 
 class Bone{
 public:
-	std::vector<KeyPosition> m_Positions;
-	std::vector<KeyRotation> m_Rotations;
-	std::vector<KeyScale> m_Scales;
-	const char* m_Name;
-	unsigned int m_ID;
+	std::vector<KeyPosition> mPositions;
+	std::vector<KeyRotation> mRotations;
+	std::vector<KeyScale> mScales;
+	const char* mName;
+	unsigned int mID;
 
 	// reads keyframes from aiNodeAnim
 	Bone(const char* name, int ID, const aiNodeAnim* channel);

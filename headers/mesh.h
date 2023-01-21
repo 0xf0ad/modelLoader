@@ -1,15 +1,14 @@
 #pragma once
 
 #include <assimp/material.h>
-#include <glm/gtc/matrix_transform.hpp>
 
 #include "shader.h"
 #include <vector>
 
 #define MAX_BONE_INFLUENCE 4
 
-#define TANGENT   false
-#define BITANGENT false
+#define TANGENT                            false
+#define BITANGENT                          false
 #define IWANTMYIMPLEMENTATIONOFTEXTUREENUM false
 
 struct Vertex {

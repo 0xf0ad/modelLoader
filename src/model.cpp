@@ -1,18 +1,7 @@
 #include <assert.h>
-#include <assimp/material.h>
-#include <assimp/mesh.h>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-#include <assimp/texture.h>
-#include <assimp/types.h>
-#include <cstddef>
-#include <cstdlib>
-#include <cstring>
-#include <functional>
-#include <glm/ext/vector_float3.hpp>
-#include <glm/fwd.hpp>
+#include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
-#include <sys/types.h>
 #include "../headers/model.h"
 #include "../headers/animation.h"
 

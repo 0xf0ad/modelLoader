@@ -9,7 +9,6 @@
 #include "../headers/camera.h"
 #include "../headers/animator.h"
 #include <GLFW/glfw3.h>
-#include <bits/types/FILE.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -34,8 +33,8 @@
 
 // camera
 Camera camera(glm::vec3(0.0f, 3.0f, 9.0f));
-float lastX = WIN_WIDTH  >> 1;	// deviding the width by 2 (but divition is expensive 
-float lastY = WIN_HEIGHT >> 1;	// insted we will shift the width by 1 witch save us some CPU cycles)
+double lastX = WIN_WIDTH  >> 1;	// deviding the width by 2 (but divition is expensive)
+double lastY = WIN_HEIGHT >> 1;	// insted we will shift the width by 1 witch save us some CPU cycles)
 
 bool firstMouse = true;
 bool showOverlay = true;
@@ -51,10 +50,11 @@ extern bool Q_squad = true;
 // timing
 float deltaTime = 0.0f, lastFrame = 0.0f;
 
+
 // define functions
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void processInput(GLFWwindow *window);
+void processInput(Camera* camera,GLFWwindow *window);
 static void ShowOverlay(bool* p_open);
 static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre);
 
@@ -196,7 +196,7 @@ int main(int argc, char** argv){
 	#endif
 
 	#if IWANNAASKYBOX
-		initCubeMap();
+		CubeMap cubemap;
 	#endif
 
 	// load models
@@ -225,7 +225,7 @@ int main(int argc, char** argv){
 		LOG("animation got loaded");
 		animator  = new Animator(animation);
 		animator->PlayAnimation(animation);
-		animator->m_CurrentTime=0.0f;
+		animator->mCurrentTime=0.0f;
 		LOG("animator got created");
 	}
 
@@ -282,7 +282,7 @@ int main(int argc, char** argv){
 
 		// input
 		// -----
-		processInput(window);
+		processInput(&camera, window);
 
 		// render
 		// ------
@@ -356,7 +356,7 @@ int main(int argc, char** argv){
 
 
 		if(animated){
-			if(ImGui::Combo("animations", &animIndex, animation->m_AnimationsNames.data(), animation->m_AnimationsNames.size())){
+			if(ImGui::Combo("animations", &animIndex, animation->mAnimationsNames.data(), animation->mAnimationsNames.size())){
 				delete animation;
 				LOG("animation got deleted");
 				animation = new Animation(argv[2], &ourModel, animIndex);
@@ -408,7 +408,7 @@ int main(int argc, char** argv){
 			skyBoxShader.use();
 			skyBoxShader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix())));
 			skyBoxShader.setMat4("projection", projection);
-			drawCubeMap();
+			cubemap.drawCubeMap();
 		#endif
 
 
@@ -425,7 +425,7 @@ int main(int argc, char** argv){
 			animator->UpdateAnimation(deltaTime);
 			for (unsigned int i = 0; i != 255; i++){
 				sprintf(uniform, "b_Mats[%u]", i);
-				ourShader.setMat4(uniform, animator->m_FinalBoneMatrices[i]);
+				ourShader.setMat4(uniform, animator->mFinalBoneMatrices[i]);
 			}
 		}
 
@@ -461,7 +461,7 @@ int main(int argc, char** argv){
 			if (animated)
 				for (unsigned int i = 0; i != 100; i++){
 					sprintf(uniform, "b_Mats[%u]", i);
-					ourShader.setMat4(uniform, animator->m_FinalBoneMatrices[i]);
+					ourShader.setMat4(uniform, animator->mFinalBoneMatrices[i]);
 				}
 			glStencilMask(0xFF);
 			glStencilFunc(GL_ALWAYS, false, 0xFF);
@@ -506,7 +506,7 @@ int main(int argc, char** argv){
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window){
+void processInput(Camera* camera,GLFWwindow *window){
 	// terminate the process when pressing ESCAPE on the keyboard
 	// and move the camera around with WASD keys
 	// and speed up or slow down the camera using left shift
@@ -516,21 +516,21 @@ void processInput(GLFWwindow *window){
 	//if(glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS){}
 	//if(glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS){}
 	if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.ProcessKeyboard(FORWARD, deltaTime);
+		camera->ProcessKeyboard(FORWARD, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera.ProcessKeyboard(LEFT, deltaTime);
+		camera->ProcessKeyboard(LEFT, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera.ProcessKeyboard(BACKWARD, deltaTime);
+		camera->ProcessKeyboard(BACKWARD, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera.ProcessKeyboard(RIGHT, deltaTime);
+		camera->ProcessKeyboard(RIGHT, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-		camera.ProcessKeyboard(SLOW, deltaTime);
+		camera->ProcessKeyboard(SLOW, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
-		camera.ProcessKeyboard(FAST, deltaTime);
+		camera->ProcessKeyboard(FAST, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		camera.ProcessKeyboard(GO_UP, deltaTime);
+		camera->ProcessKeyboard(GO_UP, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-		camera.ProcessKeyboard(GO_DOWN, deltaTime);
+		camera->ProcessKeyboard(GO_DOWN, deltaTime);
 	if(glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS){
 		//msaaLvl = 8;
 	}
@@ -550,20 +550,17 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 // -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
 
-	float xpos = static_cast<float>(xposIn);
-	float ypos = static_cast<float>(yposIn);
-
 	if(firstMouse){
-		lastX = xpos;
-		lastY = ypos;
+		lastX = xposIn;
+		lastY = yposIn;
 		firstMouse = false;
 	}
 
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+	double xoffset = xposIn - lastX;
+	double yoffset = lastY - yposIn; // reversed since y-coordinates go from bottom to top
 
-	lastX = xpos;
-	lastY = ypos;
+	lastX = xposIn;
+	lastY = yposIn;
 
 	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS){
 		camera.ProcessMouseMovement(xoffset, yoffset);

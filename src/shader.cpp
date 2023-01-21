@@ -1,8 +1,4 @@
 #include "../headers/shader.h"
-#include <bits/types/FILE.h>
-#include <cstdlib>
-#include <stdio.h>
-#include <unordered_map>
 
 #define IWASNOTCOOL         false // cuz I am cool, and i use C
 #define CACHSHADERLOCATIONS  true // idk why but it just give me worst results
@@ -86,7 +82,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 	FILE *v_ShaderFile, *f_ShaderFile;
 	uint  v_StreamSize,  f_StreamSize;
 
-	
+
 	// open file
 	v_ShaderFile = fopen(vertexPath  , "r");
 	f_ShaderFile = fopen(fragmentPath, "r");
@@ -95,9 +91,10 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 	if(!(v_ShaderFile && f_ShaderFile)){
 		if(!v_ShaderFile)
 			fprintf(stderr, "could not open vertex shader file, check if it exists on %s\n", vertexPath);
-		else if(!f_ShaderFile)
+		if(!f_ShaderFile)
 			fprintf(stderr, "could not open fragment shader file, check if it exists on %s\n", fragmentPath);
 		return;
+
 	}else{
 
 		// getting the size of the vertex shader file
@@ -134,25 +131,25 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 
 	// compile the vertex shader and free it's string as long as we dont need it
 	vertex = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex, true, &vertexCode, NULL);
+	glShaderSource(vertex, true, &vertexCode, nullptr);
 	free(vertexCode);
 	glCompileShader(vertex);
 	// check for errors durring compiling the vertex shader
 	glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
 	if(!success){
-		glGetShaderInfoLog(vertex, 512, NULL, infoLog);
+		glGetShaderInfoLog(vertex, sizeof(infoLog), nullptr, infoLog);
 		fprintf(stderr, "ERROR : failed to compile the vertex shader : \n%s\n", infoLog);
 	}
 
 	// compile the fragment shader and free it's string as long as we dont need it
 	fragment = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment, true, &fragmentCode, NULL);
+	glShaderSource(fragment, true, &fragmentCode, nullptr);
 	free(fragmentCode);
 	glCompileShader(fragment);
 	// check for errors durring compiling the fragment shader
 	glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
 	if(!success){
-		glGetShaderInfoLog(fragment, 512, NULL, infoLog);
+		glGetShaderInfoLog(fragment, sizeof(infoLog), NULL, infoLog);
 		fprintf(stderr, "ERROR : failed to compile the fragment shader : \n%s\n", infoLog);
 	}
 
@@ -168,7 +165,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 	// check linking errors
 	glGetProgramiv(ID, GL_LINK_STATUS, &success);
 	if(!success){
-		glGetProgramInfoLog(ID, 512, NULL, infoLog);
+		glGetProgramInfoLog(ID, sizeof(infoLog), nullptr, infoLog);
 		fprintf(stderr, "ERROR : failed to link the shaders to the program : \n%s\n", infoLog);
 	}
 
@@ -206,11 +203,11 @@ void Shader::use(){
 void Shader::setBool(const std::string &name, bool value){
 
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniform1i(location, (int)value);
 }
@@ -218,11 +215,11 @@ void Shader::setBool(const std::string &name, bool value){
 // ------------------------------------------------------------------------
 void Shader::setInt(const std::string &name, int value){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniform1i(location, value);
 }
@@ -230,11 +227,11 @@ void Shader::setInt(const std::string &name, int value){
 // ------------------------------------------------------------------------
 void Shader::setFloat(const std::string &name, float value){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniform1f(location, value);
 }
@@ -242,22 +239,22 @@ void Shader::setFloat(const std::string &name, float value){
 // ------------------------------------------------------------------------
 void Shader::setVec2(const std::string &name, const glm::vec2 &value){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniform2fv(location, 1, &value[0]);
 }
 
 void Shader::setVec2(const std::string &name, float x, float y){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniform2f(location, x, y);
 }
@@ -265,22 +262,22 @@ void Shader::setVec2(const std::string &name, float x, float y){
 // ------------------------------------------------------------------------
 void Shader::setVec3(const std::string &name, const glm::vec3 &value){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniform3fv(location, 1, &value[0]);
 }
 
 void Shader::setVec3(const std::string &name, float x, float y, float z){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniform3f(location, x, y, z);
 }
@@ -288,22 +285,22 @@ void Shader::setVec3(const std::string &name, float x, float y, float z){
 // ------------------------------------------------------------------------
 void Shader::setVec4(const std::string &name, const glm::vec4 &value){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniform4fv(location, 1, &value[0]);
 }
 
 void Shader::setVec4(const std::string &name, float x, float y, float z, float w){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniform4f(location, x, y, z, w);
 }
@@ -311,11 +308,11 @@ void Shader::setVec4(const std::string &name, float x, float y, float z, float w
 // ------------------------------------------------------------------------
 void Shader::setMat2(const std::string &name, const glm::mat2 &mat){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniformMatrix2fv(location, 1, GL_FALSE, &mat[0][0]);
 }
@@ -323,11 +320,11 @@ void Shader::setMat2(const std::string &name, const glm::mat2 &mat){
 // ------------------------------------------------------------------------
 void Shader::setMat3(const std::string &name, const glm::mat3 &mat){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniformMatrix3fv(location, 1, GL_FALSE, &mat[0][0]);
 }
@@ -335,11 +332,11 @@ void Shader::setMat3(const std::string &name, const glm::mat3 &mat){
 //-------------------------------------------------------------------------
 void Shader::setMat4(const std::string &name, const glm::mat4 &mat){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name.c_str());
 	glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
 }
@@ -349,11 +346,11 @@ void Shader::setMat4(const std::string &name, const glm::mat4 &mat){
 void Shader::setBool(const char* name, bool value){
 
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name);
 	glUniform1i(location, (int)value);
 }
@@ -361,11 +358,11 @@ void Shader::setBool(const char* name, bool value){
 // ------------------------------------------------------------------------
 void Shader::setInt(const char* name, int value){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name);
 	glUniform1i(location, value);
 }
@@ -373,11 +370,11 @@ void Shader::setInt(const char* name, int value){
 // ------------------------------------------------------------------------
 void Shader::setFloat(const char* name, float value){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name);
 	glUniform1f(location, value);
 }
@@ -385,22 +382,22 @@ void Shader::setFloat(const char* name, float value){
 // ------------------------------------------------------------------------
 void Shader::setVec2(const char* name, const glm::vec2 &value){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name);
 	glUniform2fv(location, 1, &value[0]);
 }
 
 void Shader::setVec2(const char* name, float x, float y){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name);
 	glUniform2f(location, x, y);
 }
@@ -408,22 +405,22 @@ void Shader::setVec2(const char* name, float x, float y){
 // ------------------------------------------------------------------------
 void Shader::setVec3(const char* name, const glm::vec3 &value){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name);
 	glUniform3fv(location, 1, &value[0]);
 }
 
 void Shader::setVec3(const char* name, float x, float y, float z){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name);
 	glUniform3f(location, x, y, z);
 }
@@ -431,22 +428,22 @@ void Shader::setVec3(const char* name, float x, float y, float z){
 // ------------------------------------------------------------------------
 void Shader::setVec4(const char* name, const glm::vec4 &value){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name);
 	glUniform4fv(location, 1, &value[0]);
 }
 
 void Shader::setVec4(const char* name, float x, float y, float z, float w){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name);
 	glUniform4f(location, x, y, z, w);
 }
@@ -454,11 +451,11 @@ void Shader::setVec4(const char* name, float x, float y, float z, float w){
 // ------------------------------------------------------------------------
 void Shader::setMat2(const char* name, const glm::mat2 &mat){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name);
 	glUniformMatrix2fv(location, 1, GL_FALSE, &mat[0][0]);
 }
@@ -466,11 +463,11 @@ void Shader::setMat2(const char* name, const glm::mat2 &mat){
 // ------------------------------------------------------------------------
 void Shader::setMat3(const char* name, const glm::mat3 &mat){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name);
 	glUniformMatrix3fv(location, 1, GL_FALSE, &mat[0][0]);
 }
@@ -478,11 +475,11 @@ void Shader::setMat3(const char* name, const glm::mat3 &mat){
 //-------------------------------------------------------------------------
 void Shader::setMat4(const char* name, const glm::mat4 &mat){
 	GLint location;
-	#if CACHSHADERLOCATIONS
+#if CACHSHADERLOCATIONS
 	if (mapped)
 		location = getUniformLocation(name);
 	else
-	#endif
+#endif
 		location = glGetUniformLocation(ID, name);
 	glUniformMatrix4fv(location, 1, GL_FALSE, &mat[0][0]);
 }

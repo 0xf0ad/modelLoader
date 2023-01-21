@@ -12,43 +12,43 @@
 static int numPositions, numRotations, numScalings;
 extern bool Q_squad;
 
-static glm::mat4 m_LocalTransform;
+static glm::mat4 mLocalTransform;
 
 #define BICUBIC_INTERPOLATION true
 
 // reads keyframes from aiNodeAnim
 Bone::Bone(const char* name, int ID, const aiNodeAnim* channel){
-	Bone::m_Name     = strdup(name);
-	Bone::m_ID       = ID;
+	Bone::mName    = strdup(name);
+	Bone::mID      = ID;
 	numPositions   = channel->mNumPositionKeys;
 	numScalings    = channel->mNumScalingKeys;
 	numRotations   = channel->mNumRotationKeys;
-	m_LocalTransform = glm::mat4(1.0f);
+	mLocalTransform = glm::mat4(1.0f);
 
 	for (int i = 0; i < numPositions; i++){
 		KeyPosition data;
 		data.position = assimpVec2glm(channel->mPositionKeys[i].mValue);
 		data.timeStamp = channel->mPositionKeys[i].mTime;
-		Bone::m_Positions.push_back(data);
+		Bone::mPositions.push_back(data);
 	}
 
 	for (int i = 0; i < numRotations; i++){
 		KeyRotation data;
 		data.orientation = assimpQuat2glm(channel->mRotationKeys[i].mValue);
 		data.timeStamp = channel->mRotationKeys[i].mTime;
-		Bone::m_Rotations.push_back(data);
+		Bone::mRotations.push_back(data);
 	}
 
 	for (int i = 0; i < numScalings; i++){
 		KeyScale data;
 		data.scale = assimpVec2glm(channel->mScalingKeys[i].mValue);
 		data.timeStamp = channel->mScalingKeys[i].mTime;
-		Bone::m_Scales.push_back(data);
+		Bone::mScales.push_back(data);
 	}
 }
 
 Bone::~Bone(){
-//	free((void*)m_Name);
+//	free((void*)mName);
 }
 
 // Gets normalized value for Lerp & Slerp
@@ -282,9 +282,9 @@ inline const glm::mat4 InterpolateScaling(float animationTime, const std::vector
 // interpolates  b/w positions,rotations & scaling keys based on the curren time of
 // the animation and prepares the local transformation matrix by combining all keys tranformations
 void Bone::Update(float animationTime){
-	m_LocalTransform = InterpolatePosition(animationTime, Bone::m_Positions) *
-	                   InterpolateRotation(animationTime, Bone::m_Rotations) *
-	                   InterpolateScaling (animationTime, Bone::m_Scales);
+	mLocalTransform = InterpolatePosition(animationTime, Bone::mPositions) *
+	                   InterpolateRotation(animationTime, Bone::mRotations) *
+	                   InterpolateScaling (animationTime, Bone::mScales);
 }
 
-glm::mat4* Bone::GetLocalTransform() const { return &m_LocalTransform; }
+glm::mat4* Bone::GetLocalTransform() const { return &mLocalTransform; }

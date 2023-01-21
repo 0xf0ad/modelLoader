@@ -4,14 +4,8 @@
 #include <assimp/mesh.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#include <climits>
-#include <functional>
-#include <string.h>
-#include <iterator>
-#include <memory>
 #include <string.h>
 #include <unordered_map>
-#include <utility>
 
 #include "bone.h"
 #include "model.h"
@@ -20,20 +14,26 @@
 
 struct AssimpNodeData{
 	glm::mat4 transformation;
-	//std::string name;
+	BoneInfo* bone;
 	const char* name;
 	std::vector<AssimpNodeData> children;
 };
 
+/*struct animatedBone{
+	const char* name;
+	unsigned int  id;
+	glm::mat4 offset;
+};*/
+
 class Animation{
 public:
-	float m_Duration;
-	int m_TicksPerSecond;
-	std::vector<Bone> m_Bones;		// a vector of bones(obviously) 
-	std::vector<const char*> m_AnimationsNames;		// a vector of animation names allocated on the heap
-	AssimpNodeData m_RootNode;
-	//std::unordered_map<const char*, BoneInfo, strHash, strequal_to> m_BoneInfoMap;	// a hash table of bones and their names (i hate the fact i have to search that table to find bone names on the game loop) 
-	std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> m_BoneInfoMap;	// a hash table of bones and their names (i hate the fact i have to search that table to find bone names on the game loop) 
+	float mDuration;
+	int mTicksPerSecond;
+	std::vector<Bone> mBones;		// a vector of bones(obviously) 
+	std::vector<const char*> mAnimationsNames;		// a vector of animation names allocated on the heap
+	AssimpNodeData mRootNode;
+	//std::unordered_map<const char*, BoneInfo, strHash, strequal_to> mBoneInfoMap;	// a hash table of bones and their names (i hate the fact i have to search that table to find bone names on the game loop) 
+	std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> mBoneInfoMap;	// a hash table of bones and their names (i hate the fact i have to search that table to find bone names on the game loop) 
 
 	Animation() = default;
 
@@ -72,56 +72,75 @@ public:
 		#endif
 
 		// reserve the number of bones to the hashed map and the bones vector(dynamic array)
-		printf("numBones : %d\n", *(model->GetBoneCount()));
-		m_Bones.reserve((*model->GetBoneCount())-1);
-		m_BoneInfoMap.reserve((*model->GetBoneCount())-1);
+		unsigned char boneNum = *(model->GetBoneCount()) - 1;
+		printf("numBones : %d\n", boneNum);
+		mBones.reserve(boneNum);
+		mBoneInfoMap.reserve(boneNum);
 		fillAnimationVector(scene);
 
-		m_Duration = scene->mAnimations[animIndex]->mDuration;
-		m_TicksPerSecond = scene->mAnimations[animIndex]->mTicksPerSecond;
-		readHeirarchyData(&m_RootNode, scene->mRootNode);
+		mDuration = scene->mAnimations[animIndex]->mDuration;
+		mTicksPerSecond = scene->mAnimations[animIndex]->mTicksPerSecond;
 		readMissingBones(scene->mAnimations[animIndex], model);
+		readHeirarchyData(&mRootNode, scene->mRootNode, model);
 		printf("numBones : %d\n", *(model->GetBoneCount()));
 		importer.FreeScene();
 	}
 
 	Animation(const aiScene* scene, Model* model, unsigned char animIndex = 0){
 		// reserve the number of bones to the hashed map and the bones vector(dynamic array)
-		m_Bones.reserve((*model->GetBoneCount())-1);		// get the bone number by subtracting 1 from the boneCount
-		m_BoneInfoMap.reserve((*model->GetBoneCount())-1);	// same here
+		// get the bone number by subtracting 1 from the boneCount
+		unsigned char boneNum = *(model->GetBoneCount()) - 1;
+		mBones.reserve(boneNum);
+		mBoneInfoMap.reserve(boneNum);
 		fillAnimationVector(scene);
 
-		m_Duration = scene->mAnimations[animIndex]->mDuration;
-		m_TicksPerSecond = scene->mAnimations[animIndex]->mTicksPerSecond;
-		readHeirarchyData(&m_RootNode, scene->mRootNode);
+		mDuration = scene->mAnimations[animIndex]->mDuration;
+		mTicksPerSecond = scene->mAnimations[animIndex]->mTicksPerSecond;
 		readMissingBones(scene->mAnimations[animIndex], model);
+		readHeirarchyData(&mRootNode, scene->mRootNode, model);
 	}
 
 	~Animation() {
 		// freed heap allocated strings
-		for (unsigned int i = 0; i != m_AnimationsNames.size(); i++)
-			free((void*)m_AnimationsNames[i]);
-		freeNodeHeirarchy(&m_RootNode);	
+		for (unsigned int i = 0; i != mAnimationsNames.size(); i++)
+			free((void*)mAnimationsNames[i]);
+		freeNodeHeirarchy(&mRootNode);	
 	}
 
 	Bone* FindBone(const char* name){
 		// idk wtf is going on
-		auto iter = std::find_if(m_Bones.begin(), m_Bones.end(), [&](const Bone& Bone){
-			return (!strcmp(Bone.m_Name, name));
-			//return Bone.m_Name == name;
+		auto iter = std::find_if(mBones.begin(), mBones.end(), [&](const Bone& bone){
+			return (!strcmp(bone.mName, name));
 		});
 
-		if (iter == m_Bones.end()) return nullptr;
+		if (iter == mBones.end()) return nullptr;
 		else return &(*iter);
+	}
+
+	Bone* FindBone(unsigned char id){
+		// idk wtf is going on
+		auto iter = std::find_if(mBones.begin(), mBones.end(), [&](const Bone& bone){
+			return bone.mID == id;
+		});
+
+		if (iter == mBones.end()) return nullptr;
+		else return &(*iter);
+	}
+
+	Bone* GetBone(unsigned char id){
+		if(id <= mBones.size() && id != 0)
+			return &mBones[id-1];
+		else
+			return nullptr;
 	}
 
 private:
 
 	void fillAnimationVector(const aiScene* scene){
-		m_AnimationsNames.reserve(scene->mNumAnimations);
+		mAnimationsNames.reserve(scene->mNumAnimations);
 		for (unsigned int i=0; i != scene->mNumAnimations; i++){
 			const char* Name = strdup(scene->mAnimations[i]->mName.C_Str());
-			m_AnimationsNames.emplace_back(Name);
+			mAnimationsNames.emplace_back(Name);
 		}
 	}
 
@@ -130,7 +149,7 @@ private:
 	void readMissingBones(const aiAnimation* animation, Model* model){
 		// getting m_BoneInfoMap and boneCount from Model class
 		//std::unordered_map<const char*, BoneInfo, strHash, strequal_to>& boneInfoMap = model->GetBoneInfoMap();
-		std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& boneInfoMap = model->GetBoneInfoMap();	
+		std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& boneInfoMap = model->GetBoneInfoMap();
 		//m_BoneInfoMap = model->GetBoneInfoMap();
 		unsigned char boneCount = *model->GetBoneCount();
 		//printf("BoneinfoMap size is %lu\n", boneInfoMap.size());
@@ -145,41 +164,51 @@ private:
 
 			if (boneInfoMap.find(nodeName) == boneInfoMap.end()){
 				boneInfoMap[nodeName].id = boneCount++;
-				//printf("i found a missing bone %d\n", boneInfoMap[nodeName].id);
-				//printf("boneCount %d\n", boneCount);
-				//if(boneInfoMap.find(nodeName) == boneInfoMap.end())
-				//	printf("FUCKING STRANGEEEEEEEEEEEEEE\n");
-			}//else{
-				//printf("IT FUCKING FAILLED\n");
-			//}
+				/*printf("i found a missing bone %d\n", boneInfoMap[nodeName].id);
+				printf("boneCount %d\n", boneCount);
+				if(boneInfoMap.find(nodeName) == boneInfoMap.end())
+					printf("FUCKING STRANGEEEEEEEEEEEEEE\n");*/
+			}/*else{
+				printf("IT FUCKING FAILLED\n");
+			}*/
 
-			//for(unsigned int i = 0; i != m_Bones.size(); i++){
-				//printf("compare those %s // %s\n", nodeName, m_Bones[i].m_Name.c_str());
-				//if (strcmp(nodeName, m_Bones[i].m_Name.c_str()) == 0){
-					//printf("strcmp works hhh\n");
-				//}
-			//}
-			
+			/*for(unsigned int i = 0; i != m_Bones.size(); i++){
+				printf("compare those %s // %s\n", nodeName, m_Bones[i].m_Name.c_str());
+				if (strcmp(nodeName, m_Bones[i].m_Name.c_str()) == 0){
+					printf("strcmp works hhh\n");
+				}
+			}*/
+
 			Bone thaBone = Bone(nodeName, boneInfoMap[nodeName].id, channel);
 
-			m_Bones.emplace_back(thaBone);
+			//printf("mBone.size() = %zu\tthaBone.mID = %d\n", mBones.size(), thaBone.mID);
+			//mBones[thaBone.mID] = thaBone;
+			mBones.emplace_back(thaBone);
+			//mBones.emplace(mBones.begin() + thaBone.mID, thaBone);
 		}
 		*model->GetBoneCount() = boneCount;
 		//printf("BoneinfoMap size is %lu\n", m_BoneInfoMap.size());
-		m_BoneInfoMap = boneInfoMap;
+		mBoneInfoMap = boneInfoMap;
 	}
 
-	void readHeirarchyData(AssimpNodeData* dest, const aiNode* src){
+	void readHeirarchyData(AssimpNodeData* dest, const aiNode* src, Model* model){
+		static std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& boneInfoMap = model->GetBoneInfoMap();
 		if(src){
 			// write the node data to the AssimpNodeData
 			dest->name = strdup(src->mName.C_Str());
 			dest->transformation = assimpMatrix2glm(src->mTransformation);
+
+			if (boneInfoMap.find(dest->name) != boneInfoMap.end())
+				dest->bone = &boneInfoMap[dest->name];
+			else
+				dest->bone = nullptr;
+
 			dest->children.reserve(src->mNumChildren);
 
 			// load the children to the children vector
 			for (unsigned int i = 0; i != src->mNumChildren; i++){
 				AssimpNodeData newData;
-				readHeirarchyData(&newData, src->mChildren[i]);
+				readHeirarchyData(&newData, src->mChildren[i], model);
 				dest->children.emplace_back(newData);
 			}
 		}else{
