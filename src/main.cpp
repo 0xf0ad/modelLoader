@@ -59,7 +59,7 @@ static void ShowOverlay(bool* p_open);
 static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre);
 
 
-int main(int argc, char** argv){
+int main(int argc, const char** argv){
 
 	// check for number of arguments
 	if(argc == 1){
@@ -356,7 +356,7 @@ int main(int argc, char** argv){
 
 
 		if(animated){
-			if(ImGui::Combo("animations", &animIndex, animation->mAnimationsNames.data(), animation->mAnimationsNames.size())){
+			if(ImGui::Combo("animations", &animIndex, animation->mAnimationsNames, animation->mNumAnimations)){
 				delete animation;
 				LOG("animation got deleted");
 				animation = new Animation(argv[2], &ourModel, animIndex);
@@ -377,8 +377,6 @@ int main(int argc, char** argv){
 			glVertex3f(10, 10, 10);
 			glVertex3f(20, 20, 20);
 		glEnd();*/
-
-
 
 
 		ShowCordDialog(&show_cordSet_window, &AxisRot, &rotDegre);

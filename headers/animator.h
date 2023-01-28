@@ -7,12 +7,6 @@
 #include "bone.h"
 #include "model.h"
 
-/*struct animatedBone{
-	const char* name;
-	unsigned int  id;
-	glm::mat4 offset;
-};*/
-
 class Animator{
 public:
 	glm::mat4 mFinalBoneMatrices[256] = { glm::mat4(1.0f) };
@@ -40,11 +34,11 @@ public:
 
 	void CalculateBoneTransform(const AssimpNodeData* node, const glm::mat4* parentTransform){
 		const glm::mat4* nodeTransform;
-		const char* s_index = node->name;
+		//const char* s_index = node->name;
 		const BoneInfo* boneInfo = node->bone;
 
 		if(boneInfo){
-			Bone* bone = mCurrentAnimation->FindBone(boneInfo->id);
+			Bone* bone = mCurrentAnimation->BonesArray[boneInfo->id];
 			bone->Update(mCurrentTime);
 			nodeTransform = bone->GetLocalTransform();
 		}else{

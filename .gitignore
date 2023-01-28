@@ -34,11 +34,11 @@
 # Folders
 .vscode/
 bin/
+build/
 models/
 modelLoader/
 
 # custom files i dont want to share
 run.sh
-makefile1
 load
 

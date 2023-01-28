@@ -24,13 +24,15 @@ struct KeyScale{
 
 class Bone{
 public:
-	std::vector<KeyPosition> mPositions;
-	std::vector<KeyRotation> mRotations;
-	std::vector<KeyScale> mScales;
+	KeyPosition* mPositions;
+	KeyRotation* mRotations;
+	KeyScale* mScales;
+
 	const char* mName;
 	unsigned int mID;
 
 	// reads keyframes from aiNodeAnim
+	Bone() = default;
 	Bone(const char* name, int ID, const aiNodeAnim* channel);
 	~Bone();
 

@@ -1,4 +1,4 @@
-#include <cstdlib>
+#include <stdlib.h>
 #include <string.h>
 #include "../headers/bone.h"
 #include <glm/detail/type_quat.hpp>
@@ -12,43 +12,58 @@
 static int numPositions, numRotations, numScalings;
 extern bool Q_squad;
 
-static glm::mat4 mLocalTransform;
+static glm::mat4 localTransform;
 
 #define BICUBIC_INTERPOLATION true
 
 // reads keyframes from aiNodeAnim
 Bone::Bone(const char* name, int ID, const aiNodeAnim* channel){
-	Bone::mName    = strdup(name);
-	Bone::mID      = ID;
+	mName          = strdup(name);
+	//printf("Hi I am %s\tI will live in adress %p\n", mName, mName);
+	mID            = ID;
 	numPositions   = channel->mNumPositionKeys;
 	numScalings    = channel->mNumScalingKeys;
 	numRotations   = channel->mNumRotationKeys;
-	mLocalTransform = glm::mat4(1.0f);
+	localTransform = glm::mat4(1.0f);
+	
+	mPositions = (KeyPosition*) malloc(sizeof(KeyPosition[numPositions]));
+	mRotations = (KeyRotation*) malloc(sizeof(KeyRotation[numRotations]));
+	mScales    = (KeyScale*)    malloc(sizeof(KeyScale[numScalings]));
+
+	KeyPosition tmpPosData[numPositions];
+	KeyRotation tmpRotData[numRotations];
+	KeyScale tmpScaleData[numScalings];
 
 	for (int i = 0; i < numPositions; i++){
-		KeyPosition data;
-		data.position = assimpVec2glm(channel->mPositionKeys[i].mValue);
-		data.timeStamp = channel->mPositionKeys[i].mTime;
-		Bone::mPositions.push_back(data);
+		tmpPosData[i].position = assimpVec2glm(channel->mPositionKeys[i].mValue);
+		tmpPosData[i].timeStamp = channel->mPositionKeys[i].mTime;
+		memcpy(mPositions, tmpPosData, sizeof(KeyPosition[numPositions]));
 	}
 
 	for (int i = 0; i < numRotations; i++){
-		KeyRotation data;
-		data.orientation = assimpQuat2glm(channel->mRotationKeys[i].mValue);
-		data.timeStamp = channel->mRotationKeys[i].mTime;
-		Bone::mRotations.push_back(data);
+		tmpRotData[i].orientation = assimpQuat2glm(channel->mRotationKeys[i].mValue);
+		tmpRotData[i].timeStamp = channel->mRotationKeys[i].mTime;
+		memcpy(mRotations, tmpRotData, sizeof(KeyRotation[numRotations]));
 	}
 
 	for (int i = 0; i < numScalings; i++){
-		KeyScale data;
-		data.scale = assimpVec2glm(channel->mScalingKeys[i].mValue);
-		data.timeStamp = channel->mScalingKeys[i].mTime;
-		Bone::mScales.push_back(data);
+		tmpScaleData[i].scale = assimpVec2glm(channel->mScalingKeys[i].mValue);
+		tmpScaleData[i].timeStamp = channel->mScalingKeys[i].mTime;
+		memcpy(mScales, tmpScaleData, sizeof(KeyScale[numScalings]));
 	}
 }
 
 Bone::~Bone(){
-//	free((void*)mName);
+	printf("i am a bone and my name is %s\tI live in adress %p\n", mName, mName);
+	
+//	if(mName)
+	free((void*)mName);
+//	if(mPositions)
+		free(mPositions);
+//	if(mRotations)
+		free(mRotations);
+//	if(mScales)
+		free(mScales);
 }
 
 // Gets normalized value for Lerp & Slerp
@@ -156,7 +171,7 @@ inline const glm::quat squad_from_data(const std::vector<KeyRotation>& rotations
 
 // Gets the current index on mKeyPositions to interpolate to based on
 // the current animation time
-inline int GetPositionIndex(const float animationTime, const std::vector<KeyPosition>& m_Positions){
+inline int GetPositionIndex(const float animationTime, const KeyPosition* m_Positions){
 	for (int i = 0; i != (numPositions - 1); i++){
 		if (animationTime < m_Positions[i+1].timeStamp){
 			return i;
@@ -167,7 +182,7 @@ inline int GetPositionIndex(const float animationTime, const std::vector<KeyPosi
 
 // Gets the current index on mKeyRotations to interpolate to based on the
 // current animation time
-inline int GetRotationIndex(const float animationTime, const std::vector<KeyRotation>& m_Rotations){
+inline int GetRotationIndex(const float animationTime, const KeyRotation* m_Rotations){
 	for (int i = 0; i != (numRotations - 1); i++){
 		if (animationTime < m_Rotations[i+1].timeStamp){
 			return i;
@@ -178,7 +193,7 @@ inline int GetRotationIndex(const float animationTime, const std::vector<KeyRota
 
 // Gets the current index on mKeyScalings to interpolate to based on the
 // current animation time
-inline int GetScaleIndex(const float animationTime, const std::vector<KeyScale>& m_Scales){
+inline int GetScaleIndex(const float animationTime, const KeyScale* m_Scales){
 	for (int i = 0; i != (numScalings - 1); i++){
 		if (animationTime < m_Scales[i+1].timeStamp){
 			return i;
@@ -189,7 +204,7 @@ inline int GetScaleIndex(const float animationTime, const std::vector<KeyScale>&
 
 // figures out which position keys to interpolate b/w and performs the interpolation 
 // and returns the translation matrix
-inline const glm::mat4 InterpolatePosition(const float animationTime, const std::vector<KeyPosition>& m_Positions){
+inline const glm::mat4 InterpolatePosition(const float animationTime, const KeyPosition* m_Positions){
 	if (numPositions == 1){
 		return glm::translate(glm::mat4(1.0f), m_Positions[0].position);
 	}
@@ -219,7 +234,7 @@ const glm::quat SQUAD(const glm::quat& q0, const glm::quat& q1, const glm::quat&
 
 // figures out which rotations keys to interpolate b/w and performs the interpolation 
 // and returns the rotation matrix
-inline const glm::mat4 InterpolateRotation(const float animationTime, const std::vector<KeyRotation>& m_Rotations){
+inline const glm::mat4 InterpolateRotation(const float animationTime, const KeyRotation* m_Rotations){
 	
 	if (numRotations == 1){
 		return glm::toMat4(glm::normalize(m_Rotations[0].orientation));
@@ -267,7 +282,7 @@ inline const glm::mat4 InterpolateRotation(const float animationTime, const std:
 
 // figures out which scaling keys to interpolate b/w and performs the interpolation 
 // and returns the scale matrix
-inline const glm::mat4 InterpolateScaling(float animationTime, const std::vector<KeyScale>& m_Scales){
+inline const glm::mat4 InterpolateScaling(float animationTime, const KeyScale* m_Scales){
 	if (numScalings == 1){
 		return glm::scale(glm::mat4(1.0f), m_Scales[0].scale);
 	}
@@ -282,9 +297,9 @@ inline const glm::mat4 InterpolateScaling(float animationTime, const std::vector
 // interpolates  b/w positions,rotations & scaling keys based on the curren time of
 // the animation and prepares the local transformation matrix by combining all keys tranformations
 void Bone::Update(float animationTime){
-	mLocalTransform = InterpolatePosition(animationTime, Bone::mPositions) *
+	localTransform = InterpolatePosition(animationTime, Bone::mPositions) *
 	                   InterpolateRotation(animationTime, Bone::mRotations) *
 	                   InterpolateScaling (animationTime, Bone::mScales);
 }
 
-glm::mat4* Bone::GetLocalTransform() const { return &mLocalTransform; }
+glm::mat4* Bone::GetLocalTransform() const { return &localTransform; }
