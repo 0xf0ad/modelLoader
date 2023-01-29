@@ -425,8 +425,6 @@ int main(int argc, const char** argv){
 
 
 
-
-
 		/*linesShader.use();
 		glBindVertexArray(LVAO);
 		glDrawArrays(GL_LINES, 0, 2);*/
