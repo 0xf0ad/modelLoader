@@ -41,4 +41,5 @@ modelLoader/
 # custom files i dont want to share
 run.sh
 load
+imgui.ini
 
