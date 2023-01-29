@@ -9,8 +9,7 @@
 
 class Animator{
 public:
-	glm::mat4 mFinalBoneMatrices[256] = { glm::mat4(1.0f) };
-
+	glm::mat4 mFinalBoneMatrices[256];
 	Animation* mCurrentAnimation;
 	float mCurrentTime = 0.0f;
 
@@ -21,7 +20,7 @@ public:
 	void UpdateAnimation(float dt){
 		if (mCurrentAnimation){
 			mCurrentTime += mCurrentAnimation->mTicksPerSecond * dt;
-			mCurrentTime = fmod(mCurrentTime, mCurrentAnimation->mDuration);
+			mCurrentTime = fmodf(mCurrentTime, mCurrentAnimation->mDuration);
 			glm::mat4 rootNode(1.0f);
 			CalculateBoneTransform(&mCurrentAnimation->mRootNode, &rootNode);
 		}
@@ -34,7 +33,6 @@ public:
 
 	void CalculateBoneTransform(const AssimpNodeData* node, const glm::mat4* parentTransform){
 		const glm::mat4* nodeTransform;
-		//const char* s_index = node->name;
 		const BoneInfo* boneInfo = node->bone;
 
 		if(boneInfo){

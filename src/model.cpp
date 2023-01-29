@@ -12,7 +12,6 @@ std::vector<GLint>   diffuseTexturesIDs;
 std::vector<GLint>   specularTexturesIDs;
 std::vector<GLint>   normalTexturesIDs;
 std::vector<GLint>   heightTexturesIDs;
-//static Mesh          BIGMesh;
 static unsigned char m_BoneCounter = 1;
 static unsigned int  prevMeshNumVertices = 0;
 static unsigned int  prevMeshNumIndices = 0;
@@ -21,7 +20,26 @@ static unsigned int VAO, VBO, EBO;
 static std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> boneInfoMap;
 static unsigned char size_of_vertex = sizeof(Vertex);
 
-//#define AI_CONFIG_PP_RVC_FLAGS 
+#define IMPORT_FLAGS                     \
+	aiProcess_Triangulate               |\
+	aiProcess_GenSmoothNormals          |\
+	aiProcess_JoinIdenticalVertices     |\
+	aiProcess_GenUVCoords               |\
+	aiProcess_LimitBoneWeights          |\
+	aiProcess_RemoveComponent           |\
+	aiProcess_RemoveRedundantMaterials  |\
+	aiProcess_OptimizeMeshes            |\
+	aiProcess_OptimizeGraph             |\
+	aiProcess_ImproveCacheLocality      |\
+	aiProcess_FindDegenerates           |\
+	aiProcess_FindInvalidData
+
+#define REMOVED_COMPONENTS               \
+	aiComponent_TANGENTS_AND_BITANGENTS |\
+	aiComponent_COLORS                  |\
+	aiComponent_LIGHTS                  |\
+	aiComponent_CAMERAS                 |\
+	aiComponent_ANIMATIONS
 
 
 
@@ -286,31 +304,20 @@ void getThemAll(unsigned int* numMeshes, unsigned int* numIndices, unsigned int*
 
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
 void loadModel(const char* path){
-	std::vector<Mesh>    meshes;
+	std::vector<Mesh> meshes;
 
 	// read file via ASSIMP
-	Assimp::Importer import;
-	const aiScene *scene = import.ReadFile(path,
-		aiProcess_Triangulate             |\
-		aiProcess_GenSmoothNormals        |\
-		aiProcess_JoinIdenticalVertices   |\
-		aiProcess_GenUVCoords             |\
-		aiProcess_LimitBoneWeights        |\
-		aiProcess_RemoveComponent         |\
-		aiProcess_RemoveRedundantMaterials|\
-		aiProcess_OptimizeMeshes          |\
-		aiProcess_OptimizeGraph           |\
-		aiProcess_ImproveCacheLocality    |\
-		aiProcess_FindDegenerates         |\
-		aiProcess_FindInvalidData         );
+	Assimp::Importer importer;
+	importer.SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, REMOVED_COMPONENTS);
+	importer.SetPropertyInteger(AI_CONFIG_PP_LBW_MAX_WEIGHTS, 4);
+	const aiScene *scene = importer.ReadFile(path, IMPORT_FLAGS);
 
 	//check for importing errors
 	if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode){
-		fprintf(stderr, "ERROR::ASSIMP::%s\n", import.GetErrorString());
+		fprintf(stderr, "ERROR::ASSIMP::%s\n", importer.GetErrorString());
 		return;
 	}
 
-	//modelHasAnimations = scene->HasAnimations();
 	unsigned int numMeshs = 0, numIndices = 0, numVertices = 0;
 	getThemAll(&numMeshs, &numIndices, &numVertices, scene->mRootNode, scene);
 
@@ -336,7 +343,6 @@ void loadModel(const char* path){
 	unsigned int difference = strrchr(path, '/') - path;
 	const char* directory ;
 	directory = strndup(path, difference);
-	//printf("directory : %s\npath : %s\ndifference : %d\nits size : %zu\n", directory, path, difference, strlen(directory));
 
 	processNode(scene->mRootNode, scene, meshes, directory);
 
@@ -398,10 +404,10 @@ void loadModel(const char* path){
 			heightTexturesIDs.push_back(textureID);
 	}
 
-	aiMemoryInfo in;
-	import.GetMemoryRequirements(in);
-	printf("allocated : %i bytes\n", in.total);
-	printf("%i of them are animations\n", in.animations);
+	aiMemoryInfo mem;
+	importer.GetMemoryRequirements(mem);
+	printf("allocated : %i bytes in %i node\n", mem.total, mem.nodes);
+	//printf("%i of them are animations\n", in.animations);
 
 }
 

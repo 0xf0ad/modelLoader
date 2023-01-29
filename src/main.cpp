@@ -39,8 +39,6 @@ double lastY = WIN_HEIGHT >> 1;	// insted we will shift the width by 1 witch sav
 bool firstMouse = true;
 bool showOverlay = true;
 bool animated = true;
-//unsigned char msaaLvl = 4;
-//unsigned char prevMsaaLvl = msaaLvl;
 
 // some useless global variables
 // how do I shut those warnnings about initialisation
@@ -146,14 +144,14 @@ int main(int argc, const char** argv){
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
 
-	printf("%llu\t ticks on shader 1\n", cyclesDiffrence);
+	printf("%llu\tticks on shader 1\n", cyclesDiffrence);
 
 	initCycleID = __rdtsc();
 	Shader outLiner ("shaders/outlinervs"  , "shaders/outlinerfs"    );
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
 
-	printf("%llu\t ticks on shader 2\n", cyclesDiffrence);
+	printf("%llu\tticks on shader 2\n", cyclesDiffrence);
 
 	initCycleID = __rdtsc();
 	#if IWANNAASKYBOX
@@ -182,7 +180,7 @@ int main(int argc, const char** argv){
 	glEnableVertexAttribArray(0);
 
 
-	printf("%llu\t ticks on shader 3\n", cyclesDiffrence);
+	printf("%llu\tticks on shader 3\n", cyclesDiffrence);
 
 	unsigned int uniformBufferBlock;
 	glGenBuffers(1, &uniformBufferBlock);
@@ -210,7 +208,7 @@ int main(int argc, const char** argv){
 	LOG("model got loaded");
 	cyclesDiffrence = finishCylceID - initCycleID;
 
-	printf("%llu\t ticks on loading model\n", cyclesDiffrence);
+	printf("%llu\tticks on loading model\n", cyclesDiffrence);
 
 	Animation *animation;
 	Animator  *animator;
@@ -390,7 +388,6 @@ int main(int argc, const char** argv){
 		ShowOverlay(&showOverlay);
 
 
-
 		// view/projection transformations
 		projection = glm::perspective(camera.mFieldOfView, (float)WIN_WIDTH / (float)WIN_HEIGHT, 0.1f, 100.0f);
 		view = camera.GetViewMatrix();
@@ -408,7 +405,6 @@ int main(int argc, const char** argv){
 			skyBoxShader.setMat4("projection", projection);
 			cubemap.drawCubeMap();
 		#endif
-
 
 
 		// enable shader before setting uniforms

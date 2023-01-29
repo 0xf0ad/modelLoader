@@ -1,11 +1,9 @@
 #pragma once
 
-#include <array>
 #include <assimp/anim.h>
 #include <assimp/mesh.h>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
-#include <cstdlib>
 #include <stdlib.h>
 #include <string.h>
 #include <unordered_map>
@@ -14,8 +12,6 @@
 #include "bone.h"
 #include "model.h"
 
-//#define AI_CONFIG_PP_RVC_FLAGS
-
 struct AssimpNodeData{
 	glm::mat4 transformation;
 	BoneInfo* bone;
@@ -23,12 +19,35 @@ struct AssimpNodeData{
 	std::vector<AssimpNodeData> children;
 };
 
+
+#define ANIM_IMPORT_FLAGS               \
+	aiProcess_Triangulate              |\
+	aiProcess_RemoveComponent          |\
+	aiProcess_OptimizeGraph            |\
+	aiProcess_OptimizeMeshes           |\
+	aiProcess_JoinIdenticalVertices    |\
+	aiProcess_LimitBoneWeights         |\
+	aiProcess_ImproveCacheLocality     |\
+	aiProcess_FindDegenerates
+
+#define ANIM_REMOVED_COMPONENTS              \
+	aiComponent_NORMALS                |\
+	aiComponent_TANGENTS_AND_BITANGENTS|\
+	aiComponent_COLORS                 |\
+	aiComponent_TEXCOORDS              |\
+	aiComponent_TEXTURES               |\
+	aiComponent_LIGHTS                 |\
+	aiComponent_CAMERAS                |\
+	aiComponent_MATERIALS
+
+
 class Animation{
 public:
 	float mDuration;
 	int mTicksPerSecond;
+
 	#if FANCYCPPFEUTRES
-	//std::vector<Bone> mBones;		// a vector of bones(obviously) 
+	std::vector<Bone> mBones;		// a vector of bones(obviously) 
 	#endif
 	const char** mAnimationsNames;
 	unsigned int mNumAnimations;
@@ -44,17 +63,11 @@ public:
 
 		// import the model from the given path
 		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile(animationPath,
-			aiProcess_Triangulate           |\
-			/*aiProcess_RemoveComponent       |\*/
-			aiProcess_OptimizeGraph         |\
-			aiProcess_OptimizeMeshes        |\
-			aiProcess_JoinIdenticalVertices |\
-			aiProcess_LimitBoneWeights      |\
-			aiProcess_ImproveCacheLocality  |\
-			/*aiProcess_PreTransformVertices  |\*/
-			aiProcess_FindDegenerates       /*|\
-			aiProcess_FindInvalidData*/       );
+
+		importer.SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, ANIM_REMOVED_COMPONENTS);
+		importer.SetPropertyInteger(AI_CONFIG_PP_LBW_MAX_WEIGHTS, 4);
+
+		const aiScene* scene = importer.ReadFile(animationPath, ANIM_IMPORT_FLAGS);
 
 
 		// error handlling
@@ -141,46 +154,28 @@ private:
 			mAnimationsNames[i] = strdup(scene->mAnimations[i]->mName.C_Str());
 
 	}
-
 	
 	// THIS FUNCTION FOR SOME REASON DONT FOUND THE EXISTING CONST CHARs* ON THE BONEINFOMAP
 	void readMissingBones(const aiAnimation* animation, Model* model){
 		// getting m_BoneInfoMap and boneCount from Model class
 		//std::unordered_map<const char*, BoneInfo, strHash, strequal_to>& boneInfoMap = model->GetBoneInfoMap();
 		std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& boneInfoMap = model->GetBoneInfoMap();
-		//m_BoneInfoMap = model->GetBoneInfoMap();
-		unsigned char boneCount = *model->GetBoneCount();
-		//printf("BoneinfoMap size is %lu\n", boneInfoMap.size());
 
 		// reading channels(bones engaged in an animation and their keyframes)
 		for (unsigned int i = 0; i != animation->mNumChannels; i++){
 
 			const aiNodeAnim* channel = animation->mChannels[i];
 			const char* nodeName = channel->mNodeName.C_Str();
-			//printf("Bone %s\n", nodeName);
-			//strcmp(nodeName, boneInfoMap[nodeName]);
 
 			if (boneInfoMap.find(nodeName) == boneInfoMap.end()){
-				boneInfoMap[nodeName].id = boneCount++;
-				boneNum++;
-				//BonesArray = (Bone**) reallocarray(BonesArray, boneNum, sizeof(Bone*));
-				/*printf("i found a missing bone %d\n", boneInfoMap[nodeName].id);
-				printf("boneCount %d\n", boneCount);
+				boneInfoMap[nodeName].id = ++boneNum;
+				/*printf("boneCount %d\n", boneCount);
 				if(boneInfoMap.find(nodeName) == boneInfoMap.end())
 					printf("FUCKING STRANGEEEEEEEEEEEEEE\n");*/
 			}/*else{
 
 			}*/
 
-			/*for(unsigned int i = 0; i != m_Bones.size(); i++){
-				printf("compare those %s // %s\n", nodeName, m_Bones[i].m_Name.c_str());
-				if (strcmp(nodeName, m_Bones[i].m_Name.c_str()) == 0){
-					printf("strcmp works hhh\n");
-				}
-			}*/
-
-
-			// it3nkch ikhanad achko illa gis std::vector
 			Bone* thaBone = (Bone*) malloc(sizeof(Bone));
 			*thaBone = Bone(nodeName, boneInfoMap[nodeName].id, channel);
 			BonesArray[boneInfoMap[nodeName].id] = thaBone;
@@ -190,8 +185,7 @@ private:
 			#endif
 
 		}
-		*model->GetBoneCount() = boneCount;
-		//printf("BoneinfoMap size is %lu\n", m_BoneInfoMap.size());
+		*model->GetBoneCount() = boneNum + 1;
 		mBoneInfoMap = boneInfoMap;
 	}
 

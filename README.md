@@ -6,9 +6,20 @@ a program that loads 3D models
 ------------------
 
 ```bash
-git clone https://github.com/hadsitewa3r/OpenGL.git && \
+git clone https://github.com/hadsitewa3r/modelLoader.git && \
 cd modelLoader && \
 make
+```
+
+or prefferebly compile with CMake
+
+```bash
+cd modelLoader
+mkdir build\
+cd build\
+cmake ..
+cmake --build .
+cd ..
 ```
 
 if you want to access the tool as a command from the tharminal you can add
@@ -43,10 +54,18 @@ sudo pacman -S glfw glm assimp
 you can use the tool after clonning and compiling the source code by executing
 
 ```bash
-./load [the path of 3D the model file] [the path to the animation if there is any]
+./load [the path of 3D the model file] [the path to the animation if existed]
 ```
 
-some file format containe the model and the animation at the same time that require you o type the same path twice if you want to access to the skeletal animation or once if you only want to view the 3D model contained in that file
+if the model contain animations you can load it without them by speciffying the model path at the first argument, or with animation by re-entring the model file's path twice for example
+
+```bash
+./load ~/Documents/a_guy_running.fbx #to load the 3D model without animations
+./load ~/Documents/a_guy_running.fbx ~/Documents/a_guy_running.fbx #to load the 3D model with their animating
+```
+
+the reason it is like that is for some files mainly .mdl and .md5 for IDteck and GldSrc and Source engines separate the 3D models and animations on several files
+
 
 you actially can access the tool from the therminal without 'cd'ing into the git directory if you install it and you can lunch it by
 
