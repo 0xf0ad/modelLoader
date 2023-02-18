@@ -36,10 +36,6 @@ Camera camera(glm::vec3(0.0f, 3.0f, 9.0f));
 double lastX = WIN_WIDTH  >> 1;	// deviding the width by 2 (but divition is expensive)
 double lastY = WIN_HEIGHT >> 1;	// insted we will shift the width by 1 witch save us some CPU cycles)
 
-bool firstMouse = true;
-bool showOverlay = true;
-bool animated = true;
-
 // some useless global variables
 // how do I shut those warnnings about initialisation
 extern bool outlined = false;
@@ -47,7 +43,6 @@ extern bool Q_squad = true;
 
 // timing
 float deltaTime = 0.0f, lastFrame = 0.0f;
-
 
 // define functions
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -58,6 +53,8 @@ static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre);
 
 
 int main(int argc, const char** argv){
+	bool animated = true;
+	bool showOverlay = true;
 
 	// check for number of arguments
 	if(argc == 1){
@@ -176,7 +173,7 @@ int main(int argc, const char** argv){
 	glBindBuffer(GL_ARRAY_BUFFER, LVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(linePoints), linePoints, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, sizeof(linePoints)/(sizeof(float[3])), GL_FLOAT, GL_FALSE, 2 * sizeof(float), (const GLvoid*)0);
+	glVertexAttribPointer(0, sizeof(linePoints)/(sizeof(float[3])), GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
 	glEnableVertexAttribArray(0);
 
 
@@ -542,24 +539,14 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 // -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
 
-	if(firstMouse){
-		lastX = xposIn;
-		lastY = yposIn;
-		firstMouse = false;
-	}
-
-	double xoffset = xposIn - lastX;
-	double yoffset = lastY - yposIn; // reversed since y-coordinates go from bottom to top
+	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS){
+		camera.ProcessMouseMovement(xposIn - lastX, lastY - yposIn);
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}else
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
 	lastX = xposIn;
 	lastY = yposIn;
-
-	if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS){
-		camera.ProcessMouseMovement(xoffset, yoffset);
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	}if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_RELEASE){
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-	}
 }
 
 static void ShowOverlay(bool* p_open){
