@@ -88,7 +88,7 @@ int main(int argc, const char** argv){
 
 	// glfw window creation
 	// --------------------
-	GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "wa7d_rajl_l9ito_f_QUAKE", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, argv[1], NULL, NULL);
 	if (!window){
 		fprintf(stderr, "Failed to create GLFW window\n");
 		glfwTerminate();
