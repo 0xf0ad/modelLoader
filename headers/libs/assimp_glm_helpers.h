@@ -1,11 +1,11 @@
 #pragma once
 
-#include<assimp/quaternion.h>
-#include<assimp/vector3.h>
-#include<assimp/matrix4x4.h>
-#include<glm/glm.hpp>
-#include<glm/gtc/quaternion.hpp>
-
+#include <assimp/quaternion.h>
+#include <assimp/vector3.h>
+#include <assimp/matrix4x4.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <immintrin.h>
 
 static inline glm::mat4 assimpMatrix2glm(const aiMatrix4x4& from){
 	glm::mat4 to;
@@ -23,4 +23,28 @@ static inline glm::vec3 assimpVec2glm(const aiVector3D& vec) {
 
 static inline glm::quat assimpQuat2glm(const aiQuaternion& pOrientation){
 	return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
+}
+
+inline glm::mat4 mul_Mat4Mat4(const glm::mat4* m1, const glm::mat4* m2) {
+
+	glm::mat4 result;
+	__m128 row;
+	//const float* mat1 = &(*m2)[0][0];
+	//const float* mat2 = &(*m2)[0][0];
+	__m128 colum0 = _mm_loadu_ps(&(*m2)[0][0]);
+	__m128 colum1 = _mm_loadu_ps(&(*m2)[1][0]);
+	__m128 colum2 = _mm_loadu_ps(&(*m2)[2][0]);
+	__m128 colum3 = _mm_loadu_ps(&(*m2)[3][0]);
+
+	for(uint8_t i = 0; i != 4; i++){
+		row = _mm_add_ps(_mm_add_ps(
+							_mm_mul_ps(_mm_set1_ps((*m1)[i][0]), colum0),
+							_mm_mul_ps(_mm_set1_ps((*m1)[i][1]), colum1)),
+						_mm_add_ps(
+							_mm_mul_ps(_mm_set1_ps((*m1)[i][2]), colum2),
+							_mm_mul_ps(_mm_set1_ps((*m1)[i][3]), colum3)));
+		_mm_store_ps(&result[i][0], row);
+	}
+
+	return result;
 }

@@ -19,6 +19,10 @@ static uint numPositions, numRotations, numScalings;
 extern bool Q_squad;
 
 static glm::mat4 localTransform;
+static glm::mat4 mat_Scalling;
+static glm::mat4 mat_Rotation;
+static glm::mat4 mat_Position;
+static glm::mat4 temp_result;
 
 #define BICUBIC_INTERPOLATION true
 
@@ -357,9 +361,11 @@ inline const glm::mat4 InterpolateScaling(float animationTime, const KeyScale* m
 // interpolates  b/w positions,rotations & scaling keys based on the curren time of
 // the animation and prepares the local transformation matrix by combining all keys tranformations
 void Bone::Update(float animationTime){
-	localTransform = InterpolatePosition(animationTime, mPositions) *
-	                 InterpolateRotation(animationTime, mRotations) *
-	                 InterpolateScaling (animationTime, mScales);
+	mat_Scalling = InterpolateScaling(animationTime, mScales);
+	mat_Rotation = InterpolateRotation(animationTime, mRotations);
+	mat_Position = InterpolatePosition(animationTime, mPositions);
+	temp_result = mul_Mat4Mat4(&mat_Scalling, &mat_Rotation);
+	localTransform = mul_Mat4Mat4(&temp_result, &mat_Position);
 }
 
 glm::mat4* Bone::GetLocalTransform() const { return &localTransform; }
