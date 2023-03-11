@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/matrix.hpp>
 #include <stdint.h>
+#include "mymath.h"
 #include "animation.h"
 #include "bone.h"
 #include "model.h"
@@ -15,8 +16,11 @@ public:
 	glm::mat4 mFinalBoneMatrices[256];
 	Animation* mCurrentAnimation;
 	float mCurrentTime = 0.0f;
+	uint8_t boneNumber;
 	
 	Animator(Animation* animation){
+		boneNumber = animation->boneNum + 1;
+		printf("boneNum %d\n", boneNumber);
 		mCurrentAnimation = animation;
 	}
 
@@ -46,10 +50,10 @@ public:
 			nodeTransform = &node->transformation;
 		}
 
-		glm::mat4 ParentTimesNode = mul_Mat4Mat4(nodeTransform, parentTransform);
+		glm::mat4 ParentTimesNode = mul_Mat4Mat4(*nodeTransform, *parentTransform);
 
 		if(boneInfo)
-			mFinalBoneMatrices[boneInfo->id] = mul_Mat4Mat4(&boneInfo->offset, &ParentTimesNode);
+			mFinalBoneMatrices[boneInfo->id] = mul_Mat4Mat4(boneInfo->offset, ParentTimesNode);
 
 		for (unsigned int i = 0; i != node->children.size(); i++)
 			CalculateBoneTransform(&node->children[i], &ParentTimesNode);

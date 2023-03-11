@@ -30,7 +30,7 @@ struct AssimpNodeData{
 	aiProcess_ImproveCacheLocality     |\
 	aiProcess_FindDegenerates
 
-#define ANIM_REMOVED_COMPONENTS              \
+#define ANIM_REMOVED_COMPONENTS         \
 	aiComponent_NORMALS                |\
 	aiComponent_TANGENTS_AND_BITANGENTS|\
 	aiComponent_COLORS                 |\
@@ -55,11 +55,11 @@ public:
 	//std::unordered_map<const char*, BoneInfo, strHash, strequal_to> mBoneInfoMap;	// a hash table of bones and their names (i hate the fact i have to search that table to find bone names on the game loop)
 	std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> mBoneInfoMap;	// a hash table of bones and their names (i hate the fact i have to search that table to find bone names on the game loop)
 	Bone **BonesArray;
-	unsigned char boneNum;
+	uint8_t boneNum;
 
 	Animation() = default;
 
-	Animation(const char* animationPath, Model* model, unsigned char animIndex = 0){
+	Animation(const char* animationPath, Model* model, uint8_t animIndex = 0){
 
 		// import the model from the given path
 		Assimp::Importer importer;
@@ -102,7 +102,7 @@ public:
 		printf("numBones : %d\n", *(model->GetBoneCount()));
 	}
 
-	Animation(const aiScene* scene, Model* model, unsigned char animIndex = 0){
+	Animation(const aiScene* scene, Model* model, uint8_t animIndex = 0){
 		// reserve the number of bones to the hashed map and the bones vector(dynamic array)
 		// get the bone number by subtracting 1 from the boneCount
 		boneNum = *(model->GetBoneCount()) - 1;
@@ -138,7 +138,7 @@ public:
 	}
 	#endif
 
-	Bone* FindBone(unsigned char id){
+	Bone* FindBone(uint8_t id){
 		if(id <= boneNum)
 			return BonesArray[id];
 		else
@@ -167,17 +167,16 @@ private:
 			const aiNodeAnim* channel = animation->mChannels[i];
 			const char* nodeName = channel->mNodeName.C_Str();
 
-			if (boneInfoMap.find(nodeName) == boneInfoMap.end()){
+			if (boneInfoMap.find(nodeName) == boneInfoMap.end())
 				boneInfoMap[nodeName].id = ++boneNum;
-				/*printf("boneCount %d\n", boneCount);
-				if(boneInfoMap.find(nodeName) == boneInfoMap.end())
-					printf("FUCKING STRANGEEEEEEEEEEEEEE\n");*/
-			}/*else{
-
-			}*/
 
 			Bone* thaBone = (Bone*) malloc(sizeof(Bone));
+			#if true
 			*thaBone = Bone(nodeName, boneInfoMap[nodeName].id, channel);
+			#else
+			Bone thaotherBone(nodeName, boneInfoMap[nodeName].id, channel);
+			memcpy(thaBone, &thaotherBone, sizeof(Bone));
+			#endif
 			BonesArray[boneInfoMap[nodeName].id] = thaBone;
 
 			#if FANCYCPPFEUTRES

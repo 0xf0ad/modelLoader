@@ -34,6 +34,7 @@ public:
 	// reads keyframes from aiNodeAnim
 	Bone() = default;
 	Bone(const char* name, int ID, const aiNodeAnim* channel);
+	Bone(Bone& other);
 	~Bone();
 
 	// interpolates  b/w positions,rotations & scaling keys based on the curren time of

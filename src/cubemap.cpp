@@ -11,8 +11,8 @@ unsigned int loadCubemap(const char** faces){
 	stbi_set_flip_vertically_on_load(false);
 
 	int width, height, nrChannels;
-	for (unsigned char i = 0; i != 6; i++){
-		unsigned char *data = stbi_load(faces[i], &width, &height, &nrChannels, 0);
+	for (uint8_t i = 0; i != 6; i++){
+		uint8_t *data = stbi_load(faces[i], &width, &height, &nrChannels, 0);
 
 		if (data)
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);

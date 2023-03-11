@@ -58,7 +58,7 @@ void Mesh::setupMesh(){
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(indices[0]), &indices[0], GL_STATIC_DRAW);
 
 
-	unsigned char sizeofVertex = sizeof(Vertex);
+	uint8_t sizeofVertex = sizeof(Vertex);
 	// vertex positions
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeofVertex, (void*)0);
@@ -98,7 +98,7 @@ void Mesh::setupMesh(){
 		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
 
 		aiTextureType typeName = textures[i].type;
-		unsigned char textureID = textures[i].id;
+		uint8_t textureID = textures[i].id;
 
 		// chack if the texture is diffuse type
 		if     (typeName == aiTextureType_DIFFUSE){

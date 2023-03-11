@@ -9,6 +9,7 @@
 #include "../headers/camera.h"
 #include "../headers/animator.h"
 #include <GLFW/glfw3.h>
+#include <cstdint>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -39,7 +40,7 @@ double lastY = WIN_HEIGHT >> 1;	// insted we will shift the width by 1 witch sav
 // some useless global variables
 // how do I shut those warnnings about initialisation
 extern bool outlined = false;
-extern bool Q_squad = true;
+extern bool G_squad = true;
 
 // timing
 float deltaTime = 0.0f, lastFrame = 0.0f;
@@ -329,7 +330,7 @@ int main(int argc, const char** argv){
 			}
 		#endif
 
-		ImGui::Checkbox("squad", &Q_squad);
+		ImGui::Checkbox("squad", &G_squad);
 
 		// controlling wireframe mode
 		// --------------------------
@@ -414,7 +415,7 @@ int main(int argc, const char** argv){
 
 		if (animated){
 			animator->UpdateAnimation(deltaTime);
-			for (unsigned int i = 0; i != 255; i++){
+			for (uint8_t i = 0; i != animator->boneNumber; i++){
 				sprintf(uniform, "b_Mats[%u]", i);
 				ourShader.setMat4(uniform, animator->mFinalBoneMatrices[i]);
 			}
@@ -448,7 +449,7 @@ int main(int argc, const char** argv){
 			outLiner.setBool ("animated", animated);
 			ourModel.Draw(outLiner);
 			if (animated)
-				for (unsigned int i = 0; i != 100; i++){
+				for (uint8_t i = 0; i != animator->boneNumber; i++){
 					sprintf(uniform, "b_Mats[%u]", i);
 					ourShader.setMat4(uniform, animator->mFinalBoneMatrices[i]);
 				}
@@ -550,7 +551,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn){
 }
 
 static void ShowOverlay(bool* p_open){
-	static unsigned char corner = 0;
+	static uint8_t corner = 0;
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 	const float PAD = 10.0f;
 	const ImGuiViewport* viewport = ImGui::GetMainViewport();

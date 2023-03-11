@@ -19,7 +19,7 @@ struct Vertex {
 	// texture cordinates
 	glm::vec2 TexCoords;
 	// texture ID to batch textures
-	unsigned char textureIndex;
+	uint8_t textureIndex;
 
 #if TANGENT 
 	// tangent
@@ -31,7 +31,7 @@ struct Vertex {
 #endif /* BITANGENT */
 
 	//bone id
-	unsigned char boneIDs[MAX_BONE_INFLUENCE] = {0};
+	uint8_t boneIDs[MAX_BONE_INFLUENCE] = {0};
 	//bone weight
 	float weights[MAX_BONE_INFLUENCE] = {0.0f};
 };

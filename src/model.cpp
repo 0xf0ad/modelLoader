@@ -12,13 +12,13 @@ std::vector<GLint>   diffuseTexturesIDs;
 std::vector<GLint>   specularTexturesIDs;
 std::vector<GLint>   normalTexturesIDs;
 std::vector<GLint>   heightTexturesIDs;
-static unsigned char m_BoneCounter = 1;
+static uint8_t m_BoneCounter = 1;
 static unsigned int  prevMeshNumVertices = 0;
 static unsigned int  prevMeshNumIndices = 0;
 static unsigned int VAO, VBO, EBO;
 //static std::unordered_map<const char*, BoneInfo, strHash, strequal_to> boneInfoMap;
 static std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> boneInfoMap;
-static unsigned char size_of_vertex = sizeof(Vertex);
+static uint8_t size_of_vertex = sizeof(Vertex);
 
 #define IMPORT_FLAGS                     \
 	aiProcess_Triangulate               |\
@@ -53,7 +53,7 @@ unsigned int TextureFromFile(const char* path, const char* directory, const aiTe
 	glGenTextures(1, &textureID);
 
 	int width, height, nrComponents;
-	unsigned char* data;
+	uint8_t* data;
 	
 	// check if the texture is embedded on the model file
 	if(!emTexture)
@@ -142,10 +142,10 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 		if (tmpVerticesBoneData.size() == prevMeshNumVertices)
 			tmpVerticesBoneData.reserve(mesh->mNumVertices);
 
-		for(int i = 0; i != MAX_BONE_INFLUENCE; i++){
+		/*for(int i = 0; i != MAX_BONE_INFLUENCE; i++){
 			tmpVertexBoneData.boneIDs[i] = 0;
 			tmpVertexBoneData.weights[i] = 0.0f;
-		}
+		}*/
 
 		//process mesh positions if it has any
 		if(mesh->HasPositions())
@@ -181,7 +181,7 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 	// -------------
 	if(mesh->HasBones()){
 		for(uint boneIndex = 0; boneIndex != mesh->mNumBones; boneIndex++){
-			unsigned char boneID = 0;
+			uint8_t boneID = 0;
 			aiBone* bone = mesh->mBones[boneIndex];
 			const char* boneName = bone->mName.C_Str();
 			if(boneInfoMap.find(boneName) == boneInfoMap.end()){
@@ -200,7 +200,7 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 				unsigned int vertexId = bone->mWeights[weightIndex].mVertexId;
 				assert(vertexId <= (mesh->mNumVertices));
 
-				for(unsigned char boneIndex = 0; boneIndex != MAX_BONE_INFLUENCE; boneIndex++){
+				for(uint8_t boneIndex = 0; boneIndex != MAX_BONE_INFLUENCE; boneIndex++){
 					if(!tmpVerticesBoneData[vertexId].boneIDs[boneIndex]){
 						tmpVerticesBoneData[vertexId].weights[boneIndex] = bone->mWeights->mWeight;
 						tmpVerticesBoneData[vertexId].boneIDs[boneIndex] = boneID;
@@ -208,7 +208,7 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 					}
 				}
 				glBufferSubData(GL_ARRAY_BUFFER, ((vertexId + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, boneIDs),
-					sizeof(tmpVerticesBoneData.begin()->boneIDs), &tmpVerticesBoneData[vertexId].boneIDs);
+					sizeof(tmpVerticesBoneData.begin()->packed_IDs), &tmpVerticesBoneData[vertexId].packed_IDs);
 				glBufferSubData(GL_ARRAY_BUFFER, ((vertexId + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, weights),
 					sizeof(tmpVerticesBoneData.begin()->weights), &tmpVerticesBoneData[vertexId].weights);
 			}
@@ -275,12 +275,14 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 
 // processes a node in a recursive fashion. Processes each individual mesh located at 
 // the node and repeats this process on its children nodes (if any).
-void processNode(aiNode *node, const aiScene *scene,std::vector<Mesh>& meshes, const char* dir){
+void processNode(aiNode *node, const aiScene *scene, Mesh* meshes, uint offset,const char* dir){
 	// process all the node's meshes (if any)
-	for(unsigned int i = 0; i != node->mNumMeshes; i++)
-		meshes.emplace_back(processMesh(scene->mMeshes[node->mMeshes[i]], scene, dir));
-	for(unsigned int i = 0; i != node->mNumChildren; i++)	// then do the same for each of its children
-		processNode(node->mChildren[i], scene, meshes, dir);
+	uint i = offset;
+	for(; i != (node->mNumMeshes + offset); i++)
+		meshes[i] = processMesh(scene->mMeshes[node->mMeshes[i - offset]], scene, dir);
+
+	for(unsigned int j = 0; j != node->mNumChildren; j++)	// then do the same for each of its children
+		processNode(node->mChildren[j], scene, meshes, (i), dir);
 }
 
 // get the number of meshes and indices and verices from a model and stick it into 
@@ -304,8 +306,6 @@ void getThemAll(unsigned int* numMeshes, unsigned int* numIndices, unsigned int*
 
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
 void loadModel(const char* path){
-	std::vector<Mesh> meshes;
-
 	// read file via ASSIMP
 	Assimp::Importer importer;
 	importer.SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, REMOVED_COMPONENTS);
@@ -325,7 +325,7 @@ void loadModel(const char* path){
 	unsigned int size_of_the_element_buffer_in_bytes = numIndices  * size_of_vertex;
 	printf("first vertexNumber = %d\nfirst indexNumber = %d\n", numVertices, numIndices);
 
-	meshes.reserve(numMeshs);
+	Mesh ameshes[numMeshs];
 
 	glGenVertexArrays(true, &VAO);
 	glGenBuffers(true, &VBO);
@@ -344,7 +344,8 @@ void loadModel(const char* path){
 	const char* directory ;
 	directory = strndup(path, difference);
 
-	processNode(scene->mRootNode, scene, meshes, directory);
+	//processNode(scene->mRootNode, scene, meshes, directory);
+	processNode(scene->mRootNode, scene, ameshes, 0, directory);
 
 	free((void*)directory);
 
@@ -393,7 +394,7 @@ void loadModel(const char* path){
 		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
 
 		aiTextureType typeName = gTextures[i].type;
-		unsigned char textureID = gTextures[i].id;
+		uint8_t textureID = gTextures[i].id;
 
 		// chack if the texture is diffuse type
 		if     (typeName == aiTextureType_DIFFUSE){
@@ -444,4 +445,4 @@ void Model::Draw(Shader &shader){
 
 //std::unordered_map<const char*, BoneInfo, strHash, strequal_to>& Model::GetBoneInfoMap() const { return boneInfoMap; }
 std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& Model::GetBoneInfoMap() const { return boneInfoMap; }
-unsigned char* Model::GetBoneCount() const { return &m_BoneCounter; }
+uint8_t* Model::GetBoneCount() const { return &m_BoneCounter; }

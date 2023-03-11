@@ -12,14 +12,19 @@
 
 struct BoneInfo{
 	// id is index in finalBoneMatrices
-	unsigned char id;
+	uint8_t id;
 	// offset matrix transforms vertex from model space to bone space
 	glm::mat4 offset;
 };
 
 struct vertexBoneData{
-	unsigned char boneIDs[4];
-	float weights[4];
+
+	union{
+		uint8_t  boneIDs[4];
+		uint32_t packed_IDs = 0;
+	};
+
+	float weights[4] = { 0.0f };
 };
 
 struct stdstrequal_to{
@@ -61,5 +66,5 @@ public:
 
 	//std::unordered_map<const char*, BoneInfo, strHash, strequal_to>& GetBoneInfoMap() const;
 	std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& GetBoneInfoMap() const;
-	unsigned char* GetBoneCount() const;
+	uint8_t* GetBoneCount() const;
 };

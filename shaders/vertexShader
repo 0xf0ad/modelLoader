@@ -5,7 +5,7 @@ layout (location = 1) in vec3 norm;
 layout (location = 2) in vec2 tex;
 //layout (location = 3) in vec3 aTangent;
 //layout (location = 4) in vec3 aBitangent;
-layout (location = 3) in unsigned char textureID;
+layout (location = 3) in unsigned int textureID;
 layout (location = 4) in uint bones;
 layout (location = 5) in vec4 weights;
 
@@ -25,7 +25,7 @@ mat4 BoneTransform;
 
 out VS_OUT{
 	vec2 TexCoords;
-	flat unsigned char TextureID;
+	flat unsigned int TextureID;
 } vs_out;
 
 void main(){
