@@ -5,6 +5,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
+#define BONENAME true
 
 struct KeyPosition{
 	glm::vec3 position;
@@ -28,7 +29,9 @@ public:
 	KeyRotation* mRotations;
 	KeyScale* mScales;
 
+#if BONENAME
 	const char* mName;
+#endif
 	unsigned int mID;
 
 	// reads keyframes from aiNodeAnim

@@ -16,7 +16,9 @@ static glm::mat4 localTransform;
 
 // reads keyframes from aiNodeAnim
 Bone::Bone(const char* name, int ID, const aiNodeAnim* channel){
+#if BONENAME
 	mName          = strdup(name);
+#endif
 	mID            = ID;
 	numPositions   = channel->mNumPositionKeys;
 	numScalings    = channel->mNumScalingKeys;
@@ -45,31 +47,24 @@ Bone::Bone(const char* name, int ID, const aiNodeAnim* channel){
 
 Bone::Bone(Bone& other){
 	printf("\t\tBONE : i am coppied from %p, and i live in %p\n", this, &other);
+	#if BONENAME
 	other.mName = strdup(this->mName);
+	#endif
 	other.mPositions = (KeyPosition*) malloc(sizeof(KeyPosition[numPositions]));
 	other.mRotations = (KeyRotation*) malloc(sizeof(KeyRotation[numRotations]));
 	other.mScales    = (KeyScale*)    malloc(sizeof(KeyScale[numScalings]));
 }
 
 Bone::~Bone(){
-	printf("BONE : i am a bone and my name is %s\tI live in adress %p\n", mName, mName);
 
-	/*if(mName){
-		free((void*)mName);
-		mName = NULL;
-	}else
-		printf("L7WA\n");*/
-
+#if BONENAME
 	free((void*)mName);
+#endif
 
-	//assert(false);
-
-//	if(mPositions)
-//		free(mPositions);
-//	if(mRotations)
-//		free(mRotations);
-//	if(mScales)
-//		free(mScales);
+	free(mPositions);
+	free(mRotations);
+	free(mScales);
+	printf("i am being called, do u expect me to answer");
 }
 
 // Gets normalized value for Lerp & Slerp

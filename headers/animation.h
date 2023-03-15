@@ -52,8 +52,8 @@ public:
 	const char** mAnimationsNames;
 	unsigned int mNumAnimations;
 	AssimpNodeData mRootNode;
-	//std::unordered_map<const char*, BoneInfo, strHash, strequal_to> mBoneInfoMap;	// a hash table of bones and their names (i hate the fact i have to search that table to find bone names on the game loop)
-	std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> mBoneInfoMap;	// a hash table of bones and their names (i hate the fact i have to search that table to find bone names on the game loop)
+	//std::unordered_map<const char*, BoneInfo, strHash, strequal_to> mBoneInfoMap;	// a hash table of bones and their names
+	std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>* mBoneInfoMap;	// a hash table of bones and their names
 	Bone **BonesArray;
 	uint8_t boneNum;
 
@@ -92,7 +92,8 @@ public:
 		printf("numBones : %d\n", boneNum);
 		//mBones.reserve(boneNum);
 		BonesArray = (Bone**) malloc(sizeof(Bone[boneNum+1]));
-		mBoneInfoMap.reserve(boneNum);
+		mBoneInfoMap = &model->GetBoneInfoMap();
+		mBoneInfoMap->reserve(boneNum);
 		fillAnimationVector(scene);
 
 		mDuration = scene->mAnimations[animIndex]->mDuration;
@@ -109,7 +110,8 @@ public:
 		#if FANCYCPPFEUTRES
 		mBones.reserve(boneNum);
 		#endif
-		mBoneInfoMap.reserve(boneNum);
+		mBoneInfoMap = &model->GetBoneInfoMap();
+		mBoneInfoMap->reserve(boneNum);
 		BonesArray = (Bone**) malloc(sizeof(Bone[boneNum+1]));
 		fillAnimationVector(scene);
 
@@ -171,12 +173,7 @@ private:
 				boneInfoMap[nodeName].id = ++boneNum;
 
 			Bone* thaBone = (Bone*) malloc(sizeof(Bone));
-			#if true
-			*thaBone = Bone(nodeName, boneInfoMap[nodeName].id, channel);
-			#else
-			Bone thaotherBone(nodeName, boneInfoMap[nodeName].id, channel);
-			memcpy(thaBone, &thaotherBone, sizeof(Bone));
-			#endif
+			new (thaBone) Bone(nodeName, boneInfoMap[nodeName].id, channel);
 			BonesArray[boneInfoMap[nodeName].id] = thaBone;
 
 			#if FANCYCPPFEUTRES
@@ -185,7 +182,6 @@ private:
 
 		}
 		*model->GetBoneCount() = boneNum + 1;
-		mBoneInfoMap = boneInfoMap;
 	}
 
 	void readHeirarchyData(AssimpNodeData* dest, const aiNode* src, Model* model){

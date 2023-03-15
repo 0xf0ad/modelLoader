@@ -8,7 +8,7 @@ cmake_minimum_required(VERSION 3.25)
 #SET(CMAKE_RC_COMPILER i686-w64-mingw32-windres)
 #set(CMAKE_RANLIB i686-w64-mingw32-ranlib)
 
-set(CMAKE_CXX_FLAGS  "-march=native -Wall -Wextra -ggdb -O0")
+set(CMAKE_CXX_FLAGS  "-march=native -Wall -Wextra -g -O0")
 set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
 
 project(modelLoader)
