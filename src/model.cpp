@@ -1,13 +1,13 @@
-#include <assert.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <stdint.h>
+#include <assert.h>
+
 #include "../headers/model.h"
 #include "../headers/animation.h"
 
 // model data
-std::vector<Texture> textures_loaded;
-std::vector<Texture> gTextures;
 std::vector<GLint>   diffuseTexturesIDs;
 std::vector<GLint>   specularTexturesIDs;
 std::vector<GLint>   normalTexturesIDs;
@@ -75,6 +75,7 @@ unsigned int TextureFromFile(const char* path, const char* directory, const aiTe
 			format = GL_FALSE;
 		}
 
+		glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
 		glBindTexture(GL_TEXTURE_2D, textureID);
 		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 		glGenerateMipmap(GL_TEXTURE_2D);
@@ -93,8 +94,9 @@ unsigned int TextureFromFile(const char* path, const char* directory, const aiTe
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.
 void loadMaterialTextures(std::vector<Texture>& textures, const aiMaterial *mat, aiTextureType type, const char* dir, const aiScene* scene){
-	
+
 	size_t numTextures = mat->GetTextureCount(type);
+	static std::vector<Texture> textures_loaded;
 	textures_loaded.reserve(numTextures);
 	textures.reserve(numTextures);
 
@@ -107,21 +109,21 @@ void loadMaterialTextures(std::vector<Texture>& textures, const aiMaterial *mat,
 			stbi_set_flip_vertically_on_load(true);
 
 			// check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
-			bool skip = false;
+			bool alreeadyLoaded = false;
 			for(unsigned int j = 0; j != textures_loaded.size(); j++){
 				if(!strcmp(textures_loaded[j].path.c_str(), str.C_Str())){
 					textures.emplace_back(textures_loaded[j]);
-					skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
+					alreeadyLoaded = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
 					break;
 				}
 			}
 
-			if(!skip){	// if texture hasn't been loaded already, load it
+			if(!alreeadyLoaded){	// if texture hasn't been loaded already, load it
 				Texture texture;
 				const aiTexture* emTexture = scene->GetEmbeddedTexture(str.C_Str());
 				texture.id = TextureFromFile(str.C_Str(), dir, emTexture);
 				texture.path = str.C_Str();
-				texture.type = type;//texType;
+				texture.type = type;
 				textures.emplace_back(texture);
 				// store it as texture loaded for entire model, to ensure we won't unnecesery load duplicate textures.
 				textures_loaded.emplace_back(texture);
@@ -130,7 +132,7 @@ void loadMaterialTextures(std::vector<Texture>& textures, const aiMaterial *mat,
 	}
 }
 
-Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
+void processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 	std::vector<vertexBoneData> tmpVerticesBoneData;
 	std::vector<Texture>        textures;
 
@@ -142,11 +144,6 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 		if (tmpVerticesBoneData.size() == prevMeshNumVertices)
 			tmpVerticesBoneData.reserve(mesh->mNumVertices);
 
-		/*for(int i = 0; i != MAX_BONE_INFLUENCE; i++){
-			tmpVertexBoneData.boneIDs[i] = 0;
-			tmpVertexBoneData.weights[i] = 0.0f;
-		}*/
-
 		//process mesh positions if it has any
 		if(mesh->HasPositions())
 			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, Position)    , sizeof(mesh->mVertices[i])  , &mesh->mVertices[i]);	
@@ -157,7 +154,7 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 
 		// load textures if it has any if not load null coords insted
 		if(mesh->HasTextureCoords(0)){
-			// insert the txture coordinates to the VAO directly from ASSIMP
+			// insert the texture coordinates to the VAO directly from ASSIMP
 			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, TexCoords)   , sizeof(float[2])            , &mesh->mTextureCoords[0][i]);
 			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, textureIndex), sizeof(mesh->mMaterialIndex), &mesh->mMaterialIndex);
 		}else{
@@ -219,76 +216,49 @@ Mesh processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 	// ----------------
 	const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-	//std::vector<Texture> diffuseMaps;
 	loadMaterialTextures(textures, material, aiTextureType_DIFFUSE, dir, scene);
-	//textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-
-	//std::vector<Texture> specularMaps;
 	loadMaterialTextures(textures, material, aiTextureType_SPECULAR, dir, scene);
-	//textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-
-	//std::vector<Texture> normalMaps;
 	loadMaterialTextures(textures, material, aiTextureType_HEIGHT, dir, scene);
-	//textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-
-	//std::vector<Texture> heightMaps;
 	loadMaterialTextures(textures, material, aiTextureType_AMBIENT, dir, scene);
-	//textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
-	gTextures.insert(gTextures.begin(), textures.begin(), textures.end());
+	for(unsigned int i = 0; i != textures.size(); i++){
 
-
-	#if false     /* to make this works you should #define false as 1 (you should not(as you should not run that garbage)) */
-	for(unsigned int i = 0; i != diffuseMaps.size(); i++){
-
+		aiTextureType typeName = textures[i].type;
+		GLuint textureID = textures[i].id;
+		
 		glActiveTexture(GL_TEXTURE0 + mesh->mMaterialIndex + i); // activate proper texture unit before binding
 
-		printf("**************************\n");
-		printf("mesh->mMaterialIndex = %d\n", mesh->mMaterialIndex);
-
-
-		std::string name = diffuseMaps[i].type;
-		unsigned int textureID = diffuseMaps[i].id;
-
-		printf("textureID = %d\n", textureID);
-		//printf("name : %s\n", name.c_str());
-
-
-		if(name == "textureDiffus"){
-			diffuseTexturesIDs.push_back(textureID);	
+		if(typeName == aiTextureType_DIFFUSE){
+			diffuseTexturesIDs.push_back(textureID);
 			glBindTextureUnit(textureID, textureID);
-			//printf("1 specular loaded : %d\n", textureID);
-		}else if(name == "textureSpecul"){
-			BIGMesh.specularTexturesIDs.push_back(textureID);
-		}else if(name == "textureNormal"){
-			BIGMesh.normalTexturesIDs.push_back(textureID);
-		}else if(name == "textureHeight"){
-			BIGMesh.heightTexturesIDs.push_back(textureID);
+		}else if(typeName == aiTextureType_SPECULAR){
+			specularTexturesIDs.push_back(textureID);
+		}else if(typeName == aiTextureType_HEIGHT){
+			normalTexturesIDs.push_back(textureID);
+		}else if(typeName == aiTextureType_AMBIENT){
+			heightTexturesIDs.push_back(textureID);
 		}
 	}
-	#endif /* false */
 
 	prevMeshNumVertices += mesh->mNumVertices;
 	prevMeshNumIndices  += mesh->mNumFaces * mesh->mFaces->mNumIndices;
-	return Mesh(textures);
 }
 
 // processes a node in a recursive fashion. Processes each individual mesh located at 
 // the node and repeats this process on its children nodes (if any).
-void processNode(aiNode *node, const aiScene *scene, Mesh* meshes, uint offset,const char* dir){
+void processNode(aiNode *node, const aiScene *scene, uint offset,const char* dir){
 	// process all the node's meshes (if any)
 	uint i = offset;
 	for(; i != (node->mNumMeshes + offset); i++)
-		meshes[i] = processMesh(scene->mMeshes[node->mMeshes[i - offset]], scene, dir);
+		processMesh(scene->mMeshes[node->mMeshes[i - offset]], scene, dir);
 
 	for(unsigned int j = 0; j != node->mNumChildren; j++)	// then do the same for each of its children
-		processNode(node->mChildren[j], scene, meshes, (i), dir);
+		processNode(node->mChildren[j], scene, (i), dir);
 }
 
 // get the number of meshes and indices and verices from a model and stick it into 
 // 3 variables entered by ther addresses as parametres
-void getThemAll(unsigned int* numMeshes, unsigned int* numIndices, unsigned int* numVertices,
-                aiNode* node, const aiScene* scene){
+void getThemAll(uint* numMeshes, uint* numIndices, uint* numVertices, aiNode* node, const aiScene* scene){
 
 	*numMeshes += node->mNumMeshes;
 
@@ -325,8 +295,6 @@ void loadModel(const char* path){
 	unsigned int size_of_the_element_buffer_in_bytes = numIndices  * size_of_vertex;
 	printf("first vertexNumber = %d\nfirst indexNumber = %d\n", numVertices, numIndices);
 
-	Mesh ameshes[numMeshs];
-
 	glGenVertexArrays(true, &VAO);
 	glGenBuffers(true, &VBO);
 	glGenBuffers(true, &EBO);
@@ -344,8 +312,7 @@ void loadModel(const char* path){
 	const char* directory ;
 	directory = strndup(path, difference);
 
-	//processNode(scene->mRootNode, scene, meshes, directory);
-	processNode(scene->mRootNode, scene, ameshes, 0, directory);
+	processNode(scene->mRootNode, scene, 0, directory);
 
 	free((void*)directory);
 
@@ -389,31 +356,10 @@ void loadModel(const char* path){
 
 	glBindVertexArray(0);
 
-	for(int i=(gTextures.size()-1); i!=-1; i--){
-
-		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
-
-		aiTextureType typeName = gTextures[i].type;
-		uint8_t textureID = gTextures[i].id;
-
-		// chack if the texture is diffuse type
-		if     (typeName == aiTextureType_DIFFUSE){
-			diffuseTexturesIDs.push_back(textureID);
-			glBindTextureUnit(textureID , textureID);
-		}
-		else if(typeName == aiTextureType_SPECULAR)
-			specularTexturesIDs.push_back(textureID);
-		else if(typeName == aiTextureType_HEIGHT)
-			normalTexturesIDs.push_back(textureID);
-		else if(typeName == aiTextureType_AMBIENT)
-			heightTexturesIDs.push_back(textureID);
-	}
-
 	aiMemoryInfo mem;
 	importer.GetMemoryRequirements(mem);
 	printf("allocated : %i bytes in %i node\n", mem.total, mem.nodes);
 	//printf("%i of them are animations\n", in.animations);
-
 }
 
 /*void* Model::loadAnim(){
@@ -441,6 +387,11 @@ void Model::Draw(Shader &shader){
 	glBindVertexArray(0);
 
 	glActiveTexture(GL_TEXTURE0);
+}
+
+Model::~Model(){
+	boneInfoMap.clear();
+	//printf("Allo, i there an one ?, %d\n", boneInfoMap.size());
 }
 
 //std::unordered_map<const char*, BoneInfo, strHash, strequal_to>& Model::GetBoneInfoMap() const { return boneInfoMap; }

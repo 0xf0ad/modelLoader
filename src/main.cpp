@@ -141,6 +141,8 @@ int main(int argc, const char** argv){
 	Shader ourShader("shaders/vertexShader", "shaders/fragmentShader");
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
+	ourShader.setInt("texNum", 16);
+	
 
 	printf("%llu\tticks on shader 1\n", cyclesDiffrence);
 

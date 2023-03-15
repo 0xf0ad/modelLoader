@@ -53,9 +53,7 @@ public:
 		//printf("bro you coppied the model class\n");
 	}*/
 
-	~Model(){
-		//printf("model destructed\n");
-	}
+	~Model();
 
 	// load animation if already loaded from the model class
 	// @note this is a hacky way to do that

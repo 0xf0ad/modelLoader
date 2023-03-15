@@ -46,7 +46,7 @@ enum textureType{
 #endif /* IWANTMYIMPLEMENTATIONOFTEXTUREENUM */ 
 
 struct Texture {
-	unsigned int id;
+	GLuint id;
 	aiTextureType type;
 	std::string path;
 };

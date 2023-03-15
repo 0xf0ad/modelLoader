@@ -5,14 +5,14 @@ layout (location = 1) in vec3 norm;
 layout (location = 2) in vec2 tex;
 //layout (location = 3) in vec3 aTangent;
 //layout (location = 4) in vec3 aBitangent;
-layout (location = 3) in unsigned int textureID;
+layout (location = 3) in uint textureID;
 layout (location = 4) in uint bones;
 layout (location = 5) in vec4 weights;
 
-ivec4 boneIds = ivec4((int( bones         & 255u)),
-                      (int((bones >>  8u) & 255u)),
-                      (int((bones >> 16u) & 255u)),
-                      (int((bones >> 24u) & 255u)));
+ivec4 boneIds = ivec4((uint( bones         & 255u)),
+                      (uint((bones >>  8u) & 255u)),
+                      (uint((bones >> 16u) & 255u)),
+                      (uint((bones >> 24u) & 255u)));
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -25,12 +25,13 @@ mat4 BoneTransform;
 
 out VS_OUT{
 	vec2 TexCoords;
-	flat unsigned int TextureID;
+	flat uint TextureID;
 } vs_out;
 
 void main(){
-	if (!animated) {
+	if (!animated){
 		gl_Position = projection * view * model * vec4(pos, 1.0);
+
 	}else{
 		BoneTransform  = b_Mats[boneIds[0]] * weights[0];
 		BoneTransform += b_Mats[boneIds[1]] * weights[1];
@@ -41,10 +42,10 @@ void main(){
 		gl_Position = projection * view * model * PosL;
 
 		// calculate normals
-		mat3 normalMatrix = transpose(inverse(mat3(BoneTransform)));
+		//mat3 normalMatrix = transpose(inverse(mat3(BoneTransform)));
 		//vec3 T = normalize(normalMatrix * aTangent);
 		//vec3 B = normalize(normalMatrix * aBitangent);
-		vec3 N = normalize(normalMatrix * norm);
+		//vec3 N = normalize(normalMatrix * norm);
 
 		//vec4 NormalL = BoneTransform * vec4(Normal, 0.0);
 		//Normal0 = (gWorld * NormalL).xyz;

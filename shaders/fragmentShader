@@ -4,7 +4,7 @@ out vec4 FragColor;
 
 in VS_OUT{
 	vec2 TexCoords;
-	flat unsigned int TextureID;
+	flat uint TextureID;
 } fs_in;
 
 uniform sampler2D texture_diffuse[16];
