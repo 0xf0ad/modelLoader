@@ -13,14 +13,25 @@ set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
 
 project(modelLoader)
 
-include_directories(${PROJECT_SOURCE_DIR})
-include_directories(${PROJECT_SOURCE_DIR}/gui)
-include_directories(${PROJECT_SOURCE_DIR}/headers)
+# OpenGL
+set(OpenGL_GL_PREFERENCE GLVND)
+find_package(OpenGL REQUIRED)
+include_directories(src ${OPENGL_INCLUDE_DIRS})
 
-add_library(ImGui gui/imgui.cpp gui/imgui_demo.cpp gui/imgui_tables.cpp gui/imgui_widgets.cpp gui/imgui_draw.cpp gui/backends/imgui_impl_glfw.cpp gui/backends/imgui_impl_opengl3.cpp)
-add_executable(load src/bone.cpp src/cubemap.cpp src/glad.c src/main.cpp src/mesh.cpp src/model.cpp src/shader.cpp src/stb_image.c)
+
+add_subdirectory(headers/libs/glad)
+add_subdirectory(headers/libs/stbi)
+add_subdirectory(headers/libs/imgui)
+
+# set "cppsource" variables to all .c and .cpp files in "src"
+file(GLOB_RECURSE cppsource CONFIGURE_DEPENDS "src/*.cpp")
+# same here for other files
+file(GLOB_RECURSE csource   CONFIGURE_DEPENDS "src/*.c")
+#file(GLOB_RECURSE imguisrc  CONFIGURE_DEPENDS "gui/*.cpp")
+
+add_executable(load ${csource} ${cppsource})
+target_link_libraries(load ${OPENGL_LIBRARIES} glad stb_image imgui)
 target_link_libraries(load -lglfw -lGL -lrt -lm -lX11 -lpthread -lXrandr -lXi -ldl -lxcb -lXau -lXdmcp -lassimp)
-target_link_libraries(load ImGui)
 
 add_custom_command(
 	TARGET load

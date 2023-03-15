@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "libs/glad.h"
 #include "shader.h"
 
 class Light{
@@ -15,7 +14,7 @@ class Light{
 	void update();
 };
 
-void Light::init(unsigned int VBO){
+inline void Light::init(unsigned int VBO){
 	unsigned int lightVAO;
 	Shader lightingShader("shaders/vertexLightS","shaders/fragmentLightS");
 

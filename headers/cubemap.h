@@ -1,7 +1,6 @@
 #pragma once
 
-#include "libs/glad.h"
-#include "libs/stb_image.h"
+#include "libs/stbi/stb_image.h"
 #include "camera.h"
 #include <stdio.h>
 

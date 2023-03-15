@@ -7,7 +7,7 @@
 #include <assimp/postprocess.h>
 #include <unordered_map>
 
-#include "libs/stb_image.h"
+#include "libs/stbi/stb_image.h"
 #include "mesh.h"
 
 struct BoneInfo{
