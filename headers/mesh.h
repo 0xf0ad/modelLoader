@@ -68,17 +68,13 @@ public:
 	     const std::vector<uint>&    indices,
 	     const std::vector<Texture>& textures);
 	
-	Mesh(//const std::vector<Vertex>&  vertices,
-	     const std::vector<uint>&    indices,
+	Mesh(const std::vector<uint>&    indices,
 	     const std::vector<Texture>& textures);
 	
-	Mesh(//const std::vector<Vertex>&  vertices,
-	     //const std::vector<uint>&    indices,
-	     const std::vector<Texture>& textures);
+	Mesh(const std::vector<Texture>& textures);
 
 	Mesh(){
 			//printf("OMG i just allocated %zu bytes\n", sizeof(*this));
-
 	};
 
 	/*Mesh(const Mesh& other){

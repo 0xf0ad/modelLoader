@@ -9,7 +9,6 @@
 #include "../headers/camera.h"
 #include "../headers/animator.h"
 #include <GLFW/glfw3.h>
-#include <cstdint>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -138,7 +137,7 @@ int main(int argc, const char** argv){
 	// build and compile shaders
 	// -------------------------
 	initCycleID = __rdtsc();
-	Shader ourShader("shaders/vertexShader", "shaders/fragmentShader");
+	Shader ourShader("shaders/main.vert", "shaders/main.frag");
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
 	ourShader.setInt("texNum", 16);
@@ -147,7 +146,7 @@ int main(int argc, const char** argv){
 	printf("%llu\tticks on shader 1\n", cyclesDiffrence);
 
 	initCycleID = __rdtsc();
-	Shader outLiner ("shaders/outlinervs"  , "shaders/outlinerfs"    );
+	Shader outLiner ("shaders/outliner.vert"  , "shaders/outliner.frag"    );
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
 
@@ -155,12 +154,12 @@ int main(int argc, const char** argv){
 
 	initCycleID = __rdtsc();
 	#if IWANNAASKYBOX
-		Shader skyBoxShader("shaders/skyboxvs" ,"shaders/skyboxfs"       );
+		Shader skyBoxShader("shaders/skybox.vret" ,"shaders/skybox.frag"       );
 	#endif
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
 
-	Shader linesShader("shaders/lineVertShader", "shaders/lineFragShader");
+	Shader linesShader("shaders/line.vert", "shaders/line.frag");
 	
 	unsigned int LVBO;
 	unsigned int LVAO;
@@ -595,7 +594,6 @@ static void ShowOverlay(bool* p_open){
 static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre){
 	// corect cordinates if loaded incorrectly
 	// ---------------------------------------
-	//ImGui::Checkbox("cordinate System incorrect ?", p_open);
 	if(ImGui::Button("cordinates System incorrect ?"))
 		*p_open = true;
 

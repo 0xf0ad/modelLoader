@@ -6,6 +6,7 @@
 
 #include <bits/types/FILE.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -36,6 +37,7 @@ public:
 
 	// constractor reads and build the shader
 	Shader(const char* vertexPath, const char* fragmentPath);
+	void compileNlink(const char* vertexCode, const char* fragmentCode);
 
 	// use the shader
 	void use();

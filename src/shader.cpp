@@ -29,49 +29,8 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 	}catch(std::ifstream::failure e){
 		std::cout << "ERROR : cannot read shader file \n";
 	}
-	const char* vShaderCode = vertexCode.c_str();
-	const char* fShaderCode = fragmentCode.c_str();
 
-	// 2 - compile shaders
-	// -------------------
-	unsigned int vertex, fragment;
-	int success;
-	char infoLog[512];
-	// compile the vertex shader
-	vertex = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex, true, &vShaderCode, NULL);
-	glCompileShader(vertex);
-	// check for errors durring compiling the vertex shader
-	glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
-	if(!success){
-		glGetShaderInfoLog(vertex, 512, NULL, infoLog);
-		std::cout << "ERROR : failed to compile the vertex shader : \n" <<infoLog<<'\n';
-	}
-	// compile the fragment shader
-	fragment = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment, true, &fShaderCode, NULL);
-	glCompileShader(fragment);
-	// check for errors durring compiling the fragment shader
-	glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
-	if(!success){
-		glGetShaderInfoLog(fragment, 512, NULL, infoLog);
-		std::cout << "ERROR : failed to compile the fragment shader : \n" <<infoLog<<'\n';
-	}
-	// shader Program
-	// attach the shaders to the program ID
-	ID = glCreateProgram();
-	glAttachShader(ID, vertex);
-	glAttachShader(ID, fragment);
-	glLinkProgram(ID);
-	// check linking errors
-	glGetProgramiv(ID, GL_LINK_STATUS, &success);
-	if(!success){
-		glGetProgramInfoLog(ID, 512, NULL, infoLog);
-		std::cout << "ERROR : failed to link the shaders to the program : \n" <<infoLog<<'\n';
-	}
-	// delete shader after linking them
-	glDeleteShader(vertex);
-	glDeleteShader(fragment);
+	compileNlink(vertexCode.c_str(), fragmentCode.c_str());
 }
 #else /* I WAS COOL */
 
@@ -123,8 +82,15 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 		fclose(f_ShaderFile);
 	}
 
-	// 2 - compile shaders
-	// --------------------------------------------------------------
+	compileNlink(vertexCode, fragmentCode);
+
+	free(vertexCode);
+	free(fragmentCode);
+}
+#endif /* 'C'(see) I told you i was cool */
+
+void Shader::compileNlink(const char *vertexCode, const char *fragmentCode){
+	
 	unsigned int vertex, fragment;
 	int success;
 	char infoLog[512];
@@ -132,7 +98,6 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 	// compile the vertex shader and free it's string as long as we dont need it
 	vertex = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertex, true, &vertexCode, nullptr);
-	free(vertexCode);
 	glCompileShader(vertex);
 	// check for errors durring compiling the vertex shader
 	glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
@@ -143,8 +108,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 
 	// compile the fragment shader and free it's string as long as we dont need it
 	fragment = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment, true, &fragmentCode, nullptr);
-	free(fragmentCode);
+	glShaderSource(fragment, 1, &fragmentCode, nullptr);
 	glCompileShader(fragment);
 	// check for errors durring compiling the fragment shader
 	glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
@@ -173,7 +137,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 	glDeleteShader(vertex);
 	glDeleteShader(fragment);
 }
-#endif /* 'C'(see) I told you i was cool */
+
 
 #if CACHSHADERLOCATIONS
 GLint Shader::getUniformLocation(const char* name){

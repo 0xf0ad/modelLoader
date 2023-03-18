@@ -8,14 +8,14 @@
 #include "../headers/animation.h"
 
 // model data
-std::vector<GLint>   diffuseTexturesIDs;
-std::vector<GLint>   specularTexturesIDs;
-std::vector<GLint>   normalTexturesIDs;
-std::vector<GLint>   heightTexturesIDs;
-static uint8_t m_BoneCounter = 1;
-static unsigned int  prevMeshNumVertices = 0;
-static unsigned int  prevMeshNumIndices = 0;
-static unsigned int VAO, VBO, EBO;
+std::vector<GLint> diffuseTexturesIDs;
+std::vector<GLint> specularTexturesIDs;
+std::vector<GLint> normalTexturesIDs;
+std::vector<GLint> heightTexturesIDs;
+static uint8_t     m_BoneCounter = 1;
+static uint        prevMeshNumVertices = 0;
+static uint        prevMeshNumIndices = 0;
+static uint        VAO, VBO, EBO;
 //static std::unordered_map<const char*, BoneInfo, strHash, strequal_to> boneInfoMap;
 static std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> boneInfoMap;
 static uint8_t size_of_vertex = sizeof(Vertex);
@@ -43,7 +43,7 @@ static uint8_t size_of_vertex = sizeof(Vertex);
 
 
 
-unsigned int TextureFromFile(const char* path, const char* directory, const aiTexture* emTexture/*, bool gamma = false*/){
+uint TextureFromFile(const char* path, const char* directory, const aiTexture* emTexture/*, bool gamma = false*/){
 
 	size_t strlenth = strlen(directory) + strlen(path) + 2;
 	char filename[strlenth];
@@ -225,7 +225,7 @@ void processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 
 		aiTextureType typeName = textures[i].type;
 		GLuint textureID = textures[i].id;
-		
+
 		glActiveTexture(GL_TEXTURE0 + mesh->mMaterialIndex + i); // activate proper texture unit before binding
 
 		if(typeName == aiTextureType_DIFFUSE){
@@ -246,14 +246,14 @@ void processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 
 // processes a node in a recursive fashion. Processes each individual mesh located at 
 // the node and repeats this process on its children nodes (if any).
-void processNode(aiNode *node, const aiScene *scene, uint offset,const char* dir){
+void processNode(aiNode *node, const aiScene *scene, uint offset, const char* dir){
 	// process all the node's meshes (if any)
 	uint i = offset;
 	for(; i != (node->mNumMeshes + offset); i++)
 		processMesh(scene->mMeshes[node->mMeshes[i - offset]], scene, dir);
 
 	for(unsigned int j = 0; j != node->mNumChildren; j++)	// then do the same for each of its children
-		processNode(node->mChildren[j], scene, (i), dir);
+		processNode(node->mChildren[j], scene, i, dir);
 }
 
 // get the number of meshes and indices and verices from a model and stick it into 
