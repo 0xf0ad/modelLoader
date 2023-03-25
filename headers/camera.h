@@ -1,6 +1,7 @@
 #pragma once
 
 #include "libs/glad/glad.h"
+#include <glm/fwd.hpp>
 #include <math.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -71,8 +72,22 @@ public:
 	}
 
 	// returns the view matrix calculated using Euler Angles and the LookAt Matrix
-	const glm::mat4 GetViewMatrix(){
-		return glm::lookAt(mPosition, mPosition + mFrontDirection, mUpDirection);
+	const glm::mat4 getViewMatrix(){
+		// DA FAK WHY THIS DOESNT WORK ?
+		/*static glm::vec3 oldPosition;
+		static glm::vec3 oldFront;
+		static glm::vec3 oldUP;
+		static glm::mat3 oldResult;
+
+		if(mPosition == oldPosition && mFrontDirection == oldFront && mUpDirection == oldUP)
+			return oldResult;
+		else{
+			oldPosition = mPosition;
+			oldFront = mFrontDirection;
+			oldUP = mUpDirection;
+			oldResult = */return glm::lookAt(mPosition, (mPosition+mFrontDirection), mUpDirection);/*
+			return oldResult;
+		}*/
 	}
 
 	// processes input received from any keyboard-like input system. Accepts input

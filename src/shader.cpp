@@ -30,7 +30,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 		std::cout << "ERROR : cannot read shader file \n";
 	}
 
-	compileNlink(vertexCode.c_str(), fragmentCode.c_str());
+	compile_n_link(vertexCode.c_str(), fragmentCode.c_str());
 }
 #else /* I WAS COOL */
 
@@ -82,14 +82,14 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 		fclose(f_ShaderFile);
 	}
 
-	compileNlink(vertexCode, fragmentCode);
+	compile_n_link(vertexCode, fragmentCode);
 
 	free(vertexCode);
 	free(fragmentCode);
 }
 #endif /* 'C'(see) I told you i was cool */
 
-void Shader::compileNlink(const char *vertexCode, const char *fragmentCode){
+void Shader::compile_n_link(const char *vertexCode, const char *fragmentCode){
 	
 	unsigned int vertex, fragment;
 	int success;
@@ -153,6 +153,11 @@ GLint Shader::getUniformLocation(const char* name){
 }
 #endif
 
+void Shader::bind_ubo(ubo* uniformBuffer){
+	GLuint index = glGetUniformBlockIndex(ID, uniformBuffer->name);
+	glUniformBlockBinding(ID, index, uniformBuffer->bindingPoint);
+	glBindBufferBase(GL_UNIFORM_BUFFER, uniformBuffer->bindingPoint, uniformBuffer->UBO);
+}
 
 // activate the shader
 // ------------------------------------------------------------------------

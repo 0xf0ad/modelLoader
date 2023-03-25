@@ -9,6 +9,8 @@
 #include "../headers/camera.h"
 #include "../headers/animator.h"
 #include <GLFW/glfw3.h>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/fwd.hpp>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -49,7 +51,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void processInput(Camera* camera,GLFWwindow *window);
 static void ShowOverlay(bool* p_open);
-static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre);
+static bool ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre);
 
 
 int main(int argc, const char** argv){
@@ -140,13 +142,12 @@ int main(int argc, const char** argv){
 	Shader ourShader("shaders/main.vert", "shaders/main.frag");
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
-	ourShader.setInt("texNum", 16);
-	
+
 
 	printf("%llu\tticks on shader 1\n", cyclesDiffrence);
 
 	initCycleID = __rdtsc();
-	Shader outLiner ("shaders/outliner.vert"  , "shaders/outliner.frag"    );
+	Shader outLiner ("shaders/outliner.vert", "shaders/outliner.frag");
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
 
@@ -154,12 +155,12 @@ int main(int argc, const char** argv){
 
 	initCycleID = __rdtsc();
 	#if IWANNAASKYBOX
-		Shader skyBoxShader("shaders/skybox.vret" ,"shaders/skybox.frag"       );
+	Shader skyBoxShader("shaders/skybox.vert", "shaders/skybox.frag");
 	#endif
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
 
-	Shader linesShader("shaders/line.vert", "shaders/line.frag");
+	Shader linesShader("shaders/lineShader.vert", "shaders/lineShader.frag");
 	
 	unsigned int LVBO;
 	unsigned int LVAO;
@@ -181,11 +182,11 @@ int main(int argc, const char** argv){
 
 	printf("%llu\tticks on shader 3\n", cyclesDiffrence);
 
-	unsigned int uniformBufferBlock;
-	glGenBuffers(1, &uniformBufferBlock);
-	glBindBuffer(GL_UNIFORM_BUFFER, uniformBufferBlock);
-	glBufferData(GL_UNIFORM_BUFFER, 152, NULL, GL_STATIC_DRAW); // 152 bytes
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+	ubo VP = ubo("VP", 2 * sizeof(glm::mat4));
+	VP.bind(0);
+	ourShader.bind_ubo(&VP);
+	outLiner.bind_ubo(&VP);
+	skyBoxShader.bind_ubo(&VP);
 
 	#if IWANNAUSEAFRAMEBUFFER
 		// define a framebuffer object
@@ -198,7 +199,6 @@ int main(int argc, const char** argv){
 
 	// load models
 	// -----------
-
 	initCycleID = __rdtsc();
 
 	Model ourModel(argv[1]);
@@ -228,6 +228,9 @@ int main(int argc, const char** argv){
 
 	ourShader.use();
 	ourShader.setBool("animated", animated);
+	outLiner.use();
+	outLiner.setBool ("animated", animated);
+
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -248,10 +251,14 @@ int main(int argc, const char** argv){
 	// disable V-Sync to get more than 60 fps
 	glfwSwapInterval(V_Sync);
 	glm::mat4 model = glm::mat4(1.0f);
-	glm::mat4 projection;
-	glm::mat4 view;
+	glm::mat4 projection = glm::perspective(camera.mFieldOfView, (float)WIN_WIDTH / (float)WIN_HEIGHT, 0.1f, 100.0f);
+	glm::mat4 view = camera.getViewMatrix();
+	model = glm::scale(model, glm::vec3(0.25));
+	VP.editBuffer(0, sizeof(glm::mat4), &projection);
+	VP.editBuffer(sizeof(glm::mat4), sizeof(glm::mat4), &view);
 	glm::vec3 AxisRot = glm::vec3(0.0f);
 	float rotDegre = 0.0f;
+	bool mooving = false;
 	int animIndex = 0;
 	char uniform[] = "b_Mats[   ]";
 
@@ -308,11 +315,13 @@ int main(int argc, const char** argv){
 
 		ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 		ImGui::Checkbox("outlining", &outlined);                // check box for outlinig a model
-
 		if(outlined) ImGui::SliderFloat("outline scale", &scale, 0.0f, 2.0f);
 		ImGui::ColorEdit3("clear color", clrColorPtr);        // Edit 3 floats representing a the background color
 
-		ImGui::SliderFloat("field of view", &camera.mFieldOfView, 0.0f, PI);
+		if (ImGui::SliderFloat("field of view", &camera.mFieldOfView, 0.0f, PI)){
+			projection = glm::perspective(camera.mFieldOfView, (float)WIN_WIDTH / (float)WIN_HEIGHT, 0.1f, 100.0f);
+			VP.editBuffer(0, sizeof(glm::mat4), &projection);
+		}
 		ImGui::SliderFloat("Camera Speed", &camera.maxSpeed, 0.0f, 50.0f);
 		ImGui::SliderFloat("Mouse Sensitivity",&camera.mMouseSensitivity, 0.0f, 1.0f);
 		//if (ImGui::Button("Botton")) { }                                 // Buttons return true when clicked
@@ -376,7 +385,7 @@ int main(int argc, const char** argv){
 		glEnd();*/
 
 
-		ShowCordDialog(&show_cordSet_window, &AxisRot, &rotDegre);
+		mooving = ShowCordDialog(&show_cordSet_window, &AxisRot, &rotDegre);
 
 		// displaying text or some variable for debugging for noow its disabled
 		#if false
@@ -387,42 +396,31 @@ int main(int argc, const char** argv){
 		ShowOverlay(&showOverlay);
 
 
-		// view/projection transformations
-		projection = glm::perspective(camera.mFieldOfView, (float)WIN_WIDTH / (float)WIN_HEIGHT, 0.1f, 100.0f);
-		view = camera.GetViewMatrix();
+
 		// render the loaded model by setting the model transformation
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(0.25f, 0.25f, 0.25f));  // it's a bit too big for our scene, so scale it down
-		if(rotDegre != 0.0f){
+		view = camera.getViewMatrix();
+		VP.editBuffer(sizeof(glm::mat4), sizeof(glm::mat4), &view);
+		// enable shader before setting uniforms
+		ourShader.use();
+		// seting uniforms
+		ourShader.setMat4("model", model);
+		if(mooving){
 			model = glm::rotate(model, rotDegre, AxisRot);
 		}
 
 		#if IWANNAASKYBOX
-			skyBoxShader.use();
-			skyBoxShader.setMat4("view", glm::mat4(glm::mat3(camera.GetViewMatrix())));
-			skyBoxShader.setMat4("projection", projection);
-			cubemap.drawCubeMap();
+		skyBoxShader.use();
+		cubemap.drawCubeMap();
 		#endif
-
-
-		// enable shader before setting uniforms
-		ourShader.use();
-		// seting uniforms
-		ourShader.setMat4("projection", projection);
-		ourShader.setMat4("view"      , view);
-		ourShader.setMat4("model"     , model);
-		ourShader.setVec3("cameraPos" , camera.mPosition);
 
 		if (animated){
 			animator->UpdateAnimation(deltaTime);
+			ourShader.use();
 			for (uint8_t i = 0; i != animator->boneNumber; i++){
 				sprintf(uniform, "b_Mats[%u]", i);
 				ourShader.setMat4(uniform, animator->mFinalBoneMatrices[i]);
 			}
 		}
-
-
 
 		/*linesShader.use();
 		glBindVertexArray(LVAO);
@@ -430,9 +428,9 @@ int main(int argc, const char** argv){
 
 
 		#if IWANNASTENCILBUFFER
-			// write to stencil buffer
-			glStencilFunc(GL_ALWAYS, true, 0xFF);
-			glStencilMask(0xFF);
+		// write to stencil buffer
+		glStencilFunc(GL_ALWAYS, true, 0xFF);
+		glStencilMask(0xFF);
 		#endif
 
 		// draw our model
@@ -444,10 +442,7 @@ int main(int argc, const char** argv){
 			glStencilMask(0x00);
 			outLiner.use();
 			outLiner.setFloat("scale", scale);
-			outLiner.setMat4 ("projection", projection);
-			outLiner.setMat4 ("view", view);
 			outLiner.setMat4 ("model", model);
-			outLiner.setBool ("animated", animated);
 			ourModel.Draw(outLiner);
 			if (animated)
 				for (uint8_t i = 0; i != animator->boneNumber; i++){
@@ -591,9 +586,10 @@ static void ShowOverlay(bool* p_open){
 	ImGui::End();
 }
 
-static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre){
+static bool ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre){
 	// corect cordinates if loaded incorrectly
 	// ---------------------------------------
+	bool willMove = false;
 	if(ImGui::Button("cordinates System incorrect ?"))
 		*p_open = true;
 
@@ -603,32 +599,37 @@ static void ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre){
 		if (ImGui::Button("Rotate by  90° on X axis")){
 			*AxisRot = glm::vec3(1.0f, 0.0f, 0.0f);
 			*rotDegre = HALF_PI; // 90 degrees
+			willMove = true;
 		}
 		else if (ImGui::Button("Rotate by -90° on X axis")){
 			*AxisRot = glm::vec3(1.0f, 0.0f, 0.0f);
 			*rotDegre = -HALF_PI; // -90 dgrees
+			willMove = true;
 		}
 		else if (ImGui::Button("Rotate by  90° on Y axis")){
 			*AxisRot = glm::vec3(0.0f, 1.0f, 0.0f);
 			*rotDegre = HALF_PI; // 90 degrees
+			willMove = true;
 		}
 		else if (ImGui::Button("Rotate by -90° on Y axis")){
 			*AxisRot = glm::vec3(0.0f, 1.0f, 0.0f);
 			*rotDegre = -HALF_PI; // -90 degrees
+			willMove = true;
 		}
 		else if (ImGui::Button("Rotate by  90° on Z axis")){
 			*AxisRot = glm::vec3(0.0f, 0.0f, 1.0f);
 			*rotDegre = HALF_PI; // 90 degrees
+			willMove = true;
 		}
 		else if (ImGui::Button("Rotate by -90° on Z axis")){
 			*AxisRot = glm::vec3(0.0f, 0.0f, 1.0f);
 			*rotDegre = -HALF_PI; // -90 degrees
+			willMove = true;
 		}
-		else if (ImGui::Button("Reset")){
-			*rotDegre = 0.0f;
-		}
-		else if (ImGui::Button("Close"))
+		else if (ImGui::Button("Close")){
 			*p_open = false;
+		}
 		ImGui::End();
 	}
+	return willMove;
 }

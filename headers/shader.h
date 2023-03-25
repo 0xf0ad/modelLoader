@@ -10,6 +10,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "ubo.h"
+
 struct strequal_to{
 	bool operator()(const char* s1, const char* s2) const{
 		return (!strcmp(s1, s2));
@@ -37,10 +39,11 @@ public:
 
 	// constractor reads and build the shader
 	Shader(const char* vertexPath, const char* fragmentPath);
-	void compileNlink(const char* vertexCode, const char* fragmentCode);
+	void compile_n_link(const char* vertexCode, const char* fragmentCode);
 
 	// use the shader
 	void use();
+	void bind_ubo(ubo* uniformBuffer);
 
 	//store the uniform location
 	std::unordered_map<const char*, GLint, strHash, strequal_to> uniformLocationCache;

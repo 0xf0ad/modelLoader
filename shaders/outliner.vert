@@ -12,9 +12,12 @@ ivec4 boneIds = ivec4((int( boneIDs         & 255u)),
 
 
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
 uniform float scale;
+
+layout (std140) uniform VP{
+	mat4 STDprojection;
+	mat4 STDview;
+};
 
 uniform bool animated;
 const int MAX_BONE_INFLUENCE = 4;
@@ -23,7 +26,7 @@ mat4 BoneTransform;
 
 void main(){
     if(!animated){
-        gl_Position = projection * view * model * vec4((aPosition + (aNormals * scale)), 1.0f);
+        gl_Position = STDprojection * STDview * model * vec4((aPosition + (aNormals * scale)), 1.0f);
     }else{
         BoneTransform  = finalBonesMatrices[boneIds[0]] * weights[0];
         BoneTransform += finalBonesMatrices[boneIds[1]] * weights[1];
@@ -39,7 +42,7 @@ void main(){
         vec3 N = normalize(normalMatrix * aNormals);
 		
         vec4 PosL = BoneTransform * vec4((aPosition + (N.xyz * scale)), 1.0f);
-		gl_Position = projection * view * model * PosL;
+		gl_Position = STDprojection * STDview * model * PosL;
         //vec4 NormalL = BoneTransform * vec4(Normal, 0.0);
     }
 }

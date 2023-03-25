@@ -14,14 +14,17 @@ ivec4 boneIds = ivec4((uint( bones         & 255u)),
                       (uint((bones >> 16u) & 255u)),
                       (uint((bones >> 24u) & 255u)));
 
-uniform mat4 projection;
-uniform mat4 view;
 uniform mat4 model;
 
 uniform bool animated;
 
 uniform mat4 b_Mats[250];
 mat4 BoneTransform;
+
+layout (std140) uniform VP{
+	mat4 STDprojection;
+	mat4 STDview;
+};
 
 out VS_OUT{
 	vec2 TexCoords;
@@ -30,7 +33,7 @@ out VS_OUT{
 
 void main(){
 	if (!animated){
-		gl_Position = projection * view * model * vec4(pos, 1.0);
+		gl_Position = STDprojection * STDview * model * vec4(pos, 1.0);
 
 	}else{
 		BoneTransform  = b_Mats[boneIds[0]] * weights[0];
@@ -39,7 +42,7 @@ void main(){
 		BoneTransform += b_Mats[boneIds[3]] * weights[3];
 
 		vec4 PosL = BoneTransform * vec4(pos, 1.0);
-		gl_Position = projection * view * model * PosL;
+		gl_Position = STDprojection * STDview * model * PosL;
 
 		// calculate normals
 		//mat3 normalMatrix = transpose(inverse(mat3(BoneTransform)));

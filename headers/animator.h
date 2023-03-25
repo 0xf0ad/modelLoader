@@ -50,10 +50,10 @@ public:
 			nodeTransform = &node->transformation;
 		}
 
-		glm::mat4 ParentTimesNode = mul_Mat4Mat4(*nodeTransform, *parentTransform);
+		glm::mat4 ParentTimesNode = mul_Mat4Mat4(*parentTransform, *nodeTransform);
 
 		if(boneInfo)
-			mFinalBoneMatrices[boneInfo->id] = mul_Mat4Mat4(boneInfo->offset, ParentTimesNode);
+			mFinalBoneMatrices[boneInfo->id] = mul_Mat4Mat4(ParentTimesNode, boneInfo->offset);
 
 		for (unsigned int i = 0; i != node->children.size(); i++)
 			CalculateBoneTransform(&node->children[i], &ParentTimesNode);

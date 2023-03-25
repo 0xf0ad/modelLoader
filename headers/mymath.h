@@ -125,18 +125,18 @@ inline glm::mat4 mul_Mat4Mat4(const glm::mat4& m1, const glm::mat4& m2) {
 	__m128 row;
 	//const float* mat1 = &(*m2)[0][0];
 	//const float* mat2 = &(*m2)[0][0];
-	__m128 colum0 = _mm_loadu_ps(&(m2)[0][0]);
-	__m128 colum1 = _mm_loadu_ps(&(m2)[1][0]);
-	__m128 colum2 = _mm_loadu_ps(&(m2)[2][0]);
-	__m128 colum3 = _mm_loadu_ps(&(m2)[3][0]);
+	__m128 colum0 = _mm_loadu_ps(&(m1)[0][0]);
+	__m128 colum1 = _mm_loadu_ps(&(m1)[1][0]);
+	__m128 colum2 = _mm_loadu_ps(&(m1)[2][0]);
+	__m128 colum3 = _mm_loadu_ps(&(m1)[3][0]);
 
 	for(uint8_t i = 0; i != 4; i++){
 		row = _mm_add_ps(_mm_add_ps(
-							_mm_mul_ps(_mm_set1_ps((m1)[i][0]), colum0),
-							_mm_mul_ps(_mm_set1_ps((m1)[i][1]), colum1)),
+							_mm_mul_ps(_mm_set1_ps((m2)[i][0]), colum0),
+							_mm_mul_ps(_mm_set1_ps((m2)[i][1]), colum1)),
 						_mm_add_ps(
-							_mm_mul_ps(_mm_set1_ps((m1)[i][2]), colum2),
-							_mm_mul_ps(_mm_set1_ps((m1)[i][3]), colum3)));
+							_mm_mul_ps(_mm_set1_ps((m2)[i][2]), colum2),
+							_mm_mul_ps(_mm_set1_ps((m2)[i][3]), colum3)));
 	
 		_mm_store_ps(&result[i][0], row);
 	}

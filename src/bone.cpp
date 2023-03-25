@@ -234,9 +234,9 @@ inline const glm::mat4 InterpolateScaling(float animationTime, const KeyScale* m
 void Bone::Update(float animationTime){
 	localTransform = mul_Mat4Mat4(
 		mul_Mat4Mat4(
-			InterpolateScaling(animationTime, mScales),
+			InterpolatePosition(animationTime, mPositions),
 			InterpolateRotation(animationTime, mRotations)),
-			InterpolatePosition(animationTime, mPositions));
+			InterpolateScaling(animationTime, mScales));
 }
 
 glm::mat4* Bone::GetLocalTransform() const { return &localTransform; }

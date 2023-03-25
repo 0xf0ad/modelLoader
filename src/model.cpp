@@ -62,7 +62,7 @@ uint TextureFromFile(const char* path, const char* directory, const aiTexture* e
 		data = stbi_load_from_memory((stbi_uc*)emTexture->pcData, emTexture->mWidth,
 		                           &width, &height, &nrComponents, 0);
 
-	if (data){
+	if(data){
 		GLenum format;
 		if (nrComponents == 1)
 			format = GL_RED;
@@ -138,11 +138,10 @@ void processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 
 	// process meshes
 	// --------------
+	tmpVerticesBoneData.reserve(mesh->mNumVertices);
+
 	for(unsigned int i = 0; i != mesh->mNumVertices; i++){
 		vertexBoneData tmpVertexBoneData;
-
-		if (tmpVerticesBoneData.size() == prevMeshNumVertices)
-			tmpVerticesBoneData.reserve(mesh->mNumVertices);
 
 		//process mesh positions if it has any
 		if(mesh->HasPositions())
