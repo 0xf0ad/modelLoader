@@ -2,6 +2,7 @@
 
 #include "libs/glad/glad.h"
 #include "libs/assimp_glm_helpers.h"
+#include <cstdint>
 #include <unordered_map>
 
 #include <bits/types/FILE.h>
@@ -20,11 +21,11 @@ struct strequal_to{
 
 struct strHash{
 	int operator()(const char* str) const{
-		unsigned int long hash = 0;
+		uint64_t hash = 0;
 
 		while(*str){
 			hash = (hash * hash) + (*str);
-			str++;	
+			str++;
 		}
 
 		return hash & (0x7FFFFFFF);
@@ -34,7 +35,7 @@ struct strHash{
 class Shader{
 public:
 	// the program ID
-	unsigned int ID;
+	uint32_t ID;
 	bool mapped = false;
 
 	// constractor reads and build the shader

@@ -55,7 +55,8 @@ public:
 
 	// constructor with vectors
 	Camera(const glm::vec3& position = glm::vec3(0.0f, 0.0f, 0.0f),
-	       const glm::vec3& up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH){
+	       const glm::vec3& up       = glm::vec3(0.0f, 1.0f, 0.0f),
+	       float yaw = YAW, float pitch = PITCH){
 		mPosition = position;
 		mWorldUp = up;
 		mYaw = yaw;
@@ -139,7 +140,8 @@ public:
 		front.z = sinf(mYaw) * cosf(mPitch);
 		mFrontDirection = glm::normalize(front);
 		// also re-calculate the Right and Up vector
-		mRightDirection = glm::normalize(glm::cross(mFrontDirection, mWorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+		// normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+		mRightDirection = glm::normalize(glm::cross(mFrontDirection, mWorldUp));  
 		mUpDirection    = glm::normalize(glm::cross(mRightDirection, mFrontDirection));
 	}
 };

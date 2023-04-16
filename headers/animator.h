@@ -45,7 +45,7 @@ public:
 		if(boneInfo){
 			Bone* bone = mCurrentAnimation->BonesArray[boneInfo->id];
 			bone->Update(mCurrentTime);
-			nodeTransform = bone->GetLocalTransform();
+			nodeTransform = &bone->localTransform;
 		}else{
 			nodeTransform = &node->transformation;
 		}

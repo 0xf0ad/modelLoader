@@ -25,7 +25,7 @@
 #define IWANNAADPTHBUFFER          true		// di i want a depth buffer ?
 #define IWANNACULLFACES            true		// do i want a face culler ?
 #define IWANNABLENDER              true		// do i want to enable blending alpha-values (transparency) ?
-#define IWANNATRACKMOUSEPOS       false		// do i want to display mouse positions ?
+#define IWANNATRACKMOUSEPOS       true		// do i want to display mouse positions ?
 #define IWANNAUSEAFRAMEBUFFER     false		// do i want to use a frame buffer ?
 #define IWANNASTENCILBUFFER        true		// do i want to enable the stancil buffer ?
 #define IWANNAGEOMETRYSHADER      false		// do i want a geometry shader ? obviously NO
@@ -567,10 +567,10 @@ static void ShowOverlay(bool* p_open){
 		ImGui::Separator();
 		#if IWANNATRACKMOUSEPOS
 
-		if (ImGui::IsMousePosValid()){
-			ImGui::Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
-		}else{
-			ImGui::Text("Mouse Position: <invalid>");}
+		if (ImGui::IsMousePosValid())
+			ImGui::Text("Mouse Position: (%.1f,%.1f)", ImGui::GetIO().MousePos.x, ImGui::GetIO().MousePos.y);
+		else
+			ImGui::Text("Mouse Position: <invalid>");
 
 		#endif /* IWANNATRACKMOUSEPOS */
 		ImGui::Text("App average %.3f ms/frame\n framerate : (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);

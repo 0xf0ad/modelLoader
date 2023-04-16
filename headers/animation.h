@@ -92,7 +92,7 @@ public:
 		printf("numBones : %d\n", boneNum);
 		//mBones.reserve(boneNum);
 		BonesArray = (Bone**) malloc(sizeof(Bone[boneNum+1]));
-		mBoneInfoMap = &model->GetBoneInfoMap();
+		mBoneInfoMap = &model->boneInfoMap;
 		mBoneInfoMap->reserve(boneNum);
 		fillAnimationVector(scene);
 
@@ -110,7 +110,7 @@ public:
 		#if FANCYCPPFEUTRES
 		mBones.reserve(boneNum);
 		#endif
-		mBoneInfoMap = &model->GetBoneInfoMap();
+		mBoneInfoMap = &model->boneInfoMap;
 		mBoneInfoMap->reserve(boneNum);
 		BonesArray = (Bone**) malloc(sizeof(Bone[boneNum+1]));
 		fillAnimationVector(scene);
@@ -161,7 +161,7 @@ private:
 	void readMissingBones(const aiAnimation* animation, Model* model){
 		// getting m_BoneInfoMap and boneCount from Model class
 		//std::unordered_map<const char*, BoneInfo, strHash, strequal_to>& boneInfoMap = model->GetBoneInfoMap();
-		std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& boneInfoMap = model->GetBoneInfoMap();
+		std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& boneInfoMap = model->boneInfoMap;
 
 		// reading channels(bones engaged in an animation and their keyframes)
 		for (unsigned int i = 0; i != animation->mNumChannels; i++){
@@ -185,7 +185,7 @@ private:
 	}
 
 	void readHeirarchyData(AssimpNodeData* dest, const aiNode* src, Model* model){
-		static std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& boneInfoMap = model->GetBoneInfoMap();
+		static std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& boneInfoMap = model->boneInfoMap;
 		if(src){
 			// write the node data to the AssimpNodeData
 			dest->name = strdup(src->mName.C_Str());

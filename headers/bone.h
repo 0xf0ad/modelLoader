@@ -29,6 +29,8 @@ public:
 	KeyRotation* mRotations;
 	KeyScale* mScales;
 
+	glm::mat4 localTransform;
+
 #if BONENAME
 	const char* mName;
 #endif
@@ -43,7 +45,4 @@ public:
 	// interpolates  b/w positions,rotations & scaling keys based on the curren time of
 	// the animation and prepares the local transformation matrix by combining all keys tranformations
 	void Update(float animationTime);
-
-	// getting the local transofmation outside of the class
-	glm::mat4* GetLocalTransform() const;
 };

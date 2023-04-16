@@ -12,13 +12,11 @@ std::vector<GLint> diffuseTexturesIDs;
 std::vector<GLint> specularTexturesIDs;
 std::vector<GLint> normalTexturesIDs;
 std::vector<GLint> heightTexturesIDs;
-static uint8_t     m_BoneCounter = 1;
+static uint8_t     m_BoneCounter       = 1;
 static uint        prevMeshNumVertices = 0;
-static uint        prevMeshNumIndices = 0;
+static uint        prevMeshNumIndices  = 0;
 static uint        VAO, VBO, EBO;
-//static std::unordered_map<const char*, BoneInfo, strHash, strequal_to> boneInfoMap;
-static std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> boneInfoMap;
-static uint8_t size_of_vertex = sizeof(Vertex);
+static uint8_t     size_of_vertex = sizeof(Vertex);
 
 #define IMPORT_FLAGS                     \
 	aiProcess_Triangulate               |\
@@ -132,7 +130,7 @@ void loadMaterialTextures(std::vector<Texture>& textures, const aiMaterial *mat,
 	}
 }
 
-void processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
+void processMesh(Model* model, aiMesh* mesh, const aiScene* scene, const char* dir){
 	std::vector<vertexBoneData> tmpVerticesBoneData;
 	std::vector<Texture>        textures;
 
@@ -180,15 +178,15 @@ void processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 			uint8_t boneID = 0;
 			aiBone* bone = mesh->mBones[boneIndex];
 			const char* boneName = bone->mName.C_Str();
-			if(boneInfoMap.find(boneName) == boneInfoMap.end()){
+			if(model->boneInfoMap.find(boneName) == model->boneInfoMap.end()){
 				BoneInfo newBoneInfo;
 				newBoneInfo.id = m_BoneCounter;
 				newBoneInfo.offset = assimpMatrix2glm(bone->mOffsetMatrix);
-				boneInfoMap[boneName] = newBoneInfo;
+				model->boneInfoMap[boneName] = newBoneInfo;
 				boneID = m_BoneCounter;
 				m_BoneCounter++;
 			}else{
-				boneID = boneInfoMap[boneName].id;
+				boneID = model->boneInfoMap[boneName].id;
 			}
 			assert(boneID);
 
@@ -245,14 +243,14 @@ void processMesh(aiMesh* mesh, const aiScene* scene, const char* dir){
 
 // processes a node in a recursive fashion. Processes each individual mesh located at 
 // the node and repeats this process on its children nodes (if any).
-void processNode(aiNode *node, const aiScene *scene, uint offset, const char* dir){
+void processNode(Model* model, aiNode *node, const aiScene *scene, uint offset, const char* dir){
 	// process all the node's meshes (if any)
 	uint i = offset;
 	for(; i != (node->mNumMeshes + offset); i++)
-		processMesh(scene->mMeshes[node->mMeshes[i - offset]], scene, dir);
+		processMesh(model, scene->mMeshes[node->mMeshes[i - offset]], scene, dir);
 
 	for(unsigned int j = 0; j != node->mNumChildren; j++)	// then do the same for each of its children
-		processNode(node->mChildren[j], scene, i, dir);
+		processNode(model, node->mChildren[j], scene, i, dir);
 }
 
 // get the number of meshes and indices and verices from a model and stick it into 
@@ -274,7 +272,7 @@ void getThemAll(uint* numMeshes, uint* numIndices, uint* numVertices, aiNode* no
 }
 
 // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
-void loadModel(const char* path){
+void loadModel(Model* model, const char* path){
 	// read file via ASSIMP
 	Assimp::Importer importer;
 	importer.SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, REMOVED_COMPONENTS);
@@ -311,7 +309,7 @@ void loadModel(const char* path){
 	const char* directory ;
 	directory = strndup(path, difference);
 
-	processNode(scene->mRootNode, scene, 0, directory);
+	processNode(model, scene->mRootNode, scene, 0, directory);
 
 	free((void*)directory);
 
@@ -361,17 +359,8 @@ void loadModel(const char* path){
 	//printf("%i of them are animations\n", in.animations);
 }
 
-/*void* Model::loadAnim(){
-	if(modelHasAnimations){
-		Animation* animation = new Animation(l_scene, this);
-		return (void*)(&animation);
-	}else{
-		return nullptr;
-	}
-}*/
-
 Model::Model(const char* path){
-	loadModel(path);
+	loadModel(this, path);
 }
 
 // draws the model, and thus all its meshes
@@ -379,7 +368,7 @@ void Model::Draw(Shader &shader){
 	// batch the textures and upload them the GPU
 	GLint location = glGetUniformLocation(shader.ID, "texture_diffuse");
 	glUniform1iv(location, diffuseTexturesIDs.size(), diffuseTexturesIDs.data());
-	
+
 	// upload the inddeces to the GPU
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(prevMeshNumIndices), GL_UNSIGNED_INT, 0);
@@ -389,10 +378,14 @@ void Model::Draw(Shader &shader){
 }
 
 Model::~Model(){
-	boneInfoMap.clear();
+	
+	/*for(auto iter : boneInfoMap)
+		iter.second;
+
+	boneInfoMap.clear();*/
 	//printf("Allo, i there an one ?, %d\n", boneInfoMap.size());
 }
 
 //std::unordered_map<const char*, BoneInfo, strHash, strequal_to>& Model::GetBoneInfoMap() const { return boneInfoMap; }
-std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& Model::GetBoneInfoMap() const { return boneInfoMap; }
+//std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& Model::GetBoneInfoMap() const { return boneInfoMap; }
 uint8_t* Model::GetBoneCount() const { return &m_BoneCounter; }
