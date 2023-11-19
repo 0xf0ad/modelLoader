@@ -24,9 +24,9 @@ public:
 		mCurrentAnimation = animation;
 	}
 
-	void UpdateAnimation(float dt){
+	void UpdateAnimation(float dt, float speed){
 		if (mCurrentAnimation){
-			mCurrentTime += mCurrentAnimation->mTicksPerSecond * dt;
+			mCurrentTime += mCurrentAnimation->mTicksPerSecond * dt * speed;
 			mCurrentTime = fmodf(mCurrentTime, mCurrentAnimation->mDuration);
 			glm::mat4 rootNode(1.0f);
 			CalculateBoneTransform(&mCurrentAnimation->mRootNode, &rootNode);
@@ -55,7 +55,7 @@ public:
 		if(boneInfo)
 			mFinalBoneMatrices[boneInfo->id] = mul_Mat4Mat4(ParentTimesNode, boneInfo->offset);
 
-		for (unsigned int i = 0; i != node->children.size(); i++)
+		for (uint32_t i = 0; i != node->children.size(); i++)
 			CalculateBoneTransform(&node->children[i], &ParentTimesNode);
 	}
 };

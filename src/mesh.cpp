@@ -38,7 +38,7 @@ void Mesh::Draw(Shader &shader){
 	
 	//upload the inddeces to the GPU
 	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, static_cast<uint32_t>(indices.size()), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 
 	glActiveTexture(GL_TEXTURE0);
@@ -93,7 +93,7 @@ void Mesh::setupMesh(){
 
 	glBindVertexArray(0);
 
-	for(unsigned int i = 0; i != textures.size(); i++){
+	for(uint32_t i = 0; i != textures.size(); i++){
 
 		glActiveTexture(GL_TEXTURE0 + i); // activate proper texture unit before binding
 

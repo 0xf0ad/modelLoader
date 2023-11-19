@@ -9,13 +9,13 @@ class Light{
 	uint8_t power;
 
 
-	void init(unsigned int VBO);
+	void init(uint32_t VBO);
 
 	void update();
 };
 
-inline void Light::init(unsigned int VBO){
-	unsigned int lightVAO;
+inline void Light::init(uint32_t VBO){
+	uint32_t lightVAO;
 	Shader lightingShader("shaders/vertexLightS","shaders/fragmentLightS");
 
 	glGenVertexArrays(1, &lightVAO);

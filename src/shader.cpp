@@ -1,4 +1,5 @@
 #include "../headers/shader.h"
+#include <cstdio>
 
 #define IWASNOTCOOL         false // cuz I am cool, and i use C
 #define CACHSHADERLOCATIONS  true // idk why but it just give me worst results
@@ -70,7 +71,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 		fragmentCode = (char*)malloc(f_StreamSize);
 
 		//read file's buffer content into streams
-		unsigned int i = 0;
+		uint32_t i = 0;
 		while(fgets((vertexCode + i), v_StreamSize, v_ShaderFile))
 			i = ftell(v_ShaderFile);
 		i = 0;
@@ -81,6 +82,10 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 		fclose(v_ShaderFile);
 		fclose(f_ShaderFile);
 	}
+	#ifdef PRINTPARSSEDCODE
+	printf("%s\n\n", vertexCode);
+	printf("%s\n\n", fragmentCode);
+	#endif
 
 	compile_n_link(vertexCode, fragmentCode);
 
@@ -91,19 +96,19 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 
 void Shader::compile_n_link(const char *vertexCode, const char *fragmentCode){
 	
-	unsigned int vertex, fragment;
+	uint32_t vertex, fragment;
 	int success;
 	char infoLog[512];
 
 	// compile the vertex shader and free it's string as long as we dont need it
 	vertex = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex, true, &vertexCode, nullptr);
+	glShaderSource(vertex, 1, &vertexCode, nullptr);
 	glCompileShader(vertex);
 	// check for errors durring compiling the vertex shader
 	glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
 	if(!success){
 		glGetShaderInfoLog(vertex, sizeof(infoLog), nullptr, infoLog);
-		fprintf(stderr, "ERROR : failed to compile the vertex shader : \n%s\n", infoLog);
+		fprintf(stderr, "ERROR : failed to compile the vertex shader : \n\n%s\n", infoLog);
 	}
 
 	// compile the fragment shader and free it's string as long as we dont need it
@@ -114,7 +119,7 @@ void Shader::compile_n_link(const char *vertexCode, const char *fragmentCode){
 	glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
 	if(!success){
 		glGetShaderInfoLog(fragment, sizeof(infoLog), nullptr, infoLog);
-		fprintf(stderr, "ERROR : failed to compile the fragment shader : \n%s\n", infoLog);
+		fprintf(stderr, "ERROR : failed to compile the fragment shader : \n\n%s\n", infoLog);
 	}
 
 

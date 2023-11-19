@@ -7,11 +7,12 @@ public:
 
 	GLuint UBO;
 	uint8_t bindingPoint;
-	unsigned int bufferSize;
+	uint32_t bufferSize;
 	const char* name;
 	void* buffer;
 
 	ubo(const char* pName, size_t pBufferSize);
+
 	~ubo(){
 		freeBuffer();
 		free((void*)name);
@@ -21,5 +22,4 @@ public:
 	void allocBuffer(size_t size);
 	void editBuffer(size_t offset, size_t size, void* data);
 	void freeBuffer();
-
 };

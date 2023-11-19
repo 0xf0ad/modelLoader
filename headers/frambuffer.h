@@ -13,20 +13,20 @@ public:
 	 1.0f,  1.0f,	1.0f, 1.0f
 	};
 
-	unsigned int mQuadIndices[6] = {
+	uint32_t mQuadIndices[6] = {
 		0, 1, 2,
 		0, 2, 3
 	};
 
 
-	unsigned int mFBO;
-	unsigned int mRBO;
-	unsigned int mFramebufferTexture;
-	unsigned int mQuadVAO, mQuadVBO;
+	uint32_t mFBO;
+	uint32_t mRBO;
+	uint32_t mFramebufferTexture;
+	uint32_t mQuadVAO, mQuadVBO;
 
 	Shader* mFBOShader;
 
-	FrameBuffer(unsigned int weight, unsigned int height){
+	FrameBuffer(uint32_t weight, uint32_t height){
 
 		Shader shader("shaders/frmebuffervs","shaders/frmebufferfs");
 		mFBOShader = &shader;

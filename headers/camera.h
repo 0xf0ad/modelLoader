@@ -2,12 +2,13 @@
 
 #include "libs/glad/glad.h"
 #include <glm/fwd.hpp>
+#include <float.h>
 #include <math.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#define PI      3.141592654f
-#define HALF_PI 1.570796327f
+#define PI      3.1415926535898f
+#define HALF_PI 1.5707963267949f
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 enum cameraCmd {
@@ -50,8 +51,8 @@ public:
 	float maxSpeed = maxSPEED, minSpeed = minSPEED;
 	float mMouseSensitivity = SENSITIVITY;
 	float mFieldOfView = FOV;
-	float minPitch = (-HALF_PI) + 0.00001;
-	float maxPitch =   HALF_PI  - 0.00001;
+	float minPitch = - HALF_PI + FLT_EPSILON;
+	float maxPitch =   HALF_PI - FLT_EPSILON;
 
 	// constructor with vectors
 	Camera(const glm::vec3& position = glm::vec3(0.0f, 0.0f, 0.0f),

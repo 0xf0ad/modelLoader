@@ -1,9 +1,9 @@
 #include "../headers/cubemap.h"
 
 
-unsigned int loadCubemap(const char** faces){
+uint32_t loadCubemap(const char** faces){
 
-	unsigned int textureID;
+	uint32_t textureID;
 
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
@@ -68,7 +68,7 @@ CubeMap::CubeMap(){
 
 void CubeMap::drawCubeMap(){
 
-	static unsigned int skyboxIndices[] = {
+	static uint32_t skyboxIndices[] = {
 
 		// Right
 		1, 6, 2,

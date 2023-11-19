@@ -50,7 +50,7 @@ public:
 	std::vector<Bone> mBones;		// a vector of bones(obviously) 
 	#endif
 	const char** mAnimationsNames;
-	unsigned int mNumAnimations;
+	uint32_t mNumAnimations;
 	AssimpNodeData mRootNode;
 	//std::unordered_map<const char*, BoneInfo, strHash, strequal_to> mBoneInfoMap;	// a hash table of bones and their names
 	std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>* mBoneInfoMap;	// a hash table of bones and their names
@@ -88,7 +88,7 @@ public:
 		#endif
 
 		// reserve the number of bones to the hashed map and the bones vector(dynamic array)
-		boneNum = *(model->GetBoneCount()) - 1;
+		boneNum = model->m_BoneCounter - 1;
 		printf("numBones : %d\n", boneNum);
 		//mBones.reserve(boneNum);
 		BonesArray = (Bone**) malloc(sizeof(Bone[boneNum+1]));
@@ -100,13 +100,13 @@ public:
 		mTicksPerSecond = scene->mAnimations[animIndex]->mTicksPerSecond;
 		readMissingBones(scene->mAnimations[animIndex], model);
 		readHeirarchyData(&mRootNode, scene->mRootNode, model);
-		printf("numBones : %d\n", *(model->GetBoneCount()));
+		printf("numBones : %d\n", model->m_BoneCounter);
 	}
 
 	Animation(const aiScene* scene, Model* model, uint8_t animIndex = 0){
 		// reserve the number of bones to the hashed map and the bones vector(dynamic array)
 		// get the bone number by subtracting 1 from the boneCount
-		boneNum = *(model->GetBoneCount()) - 1;
+		boneNum = model->m_BoneCounter - 1;
 		#if FANCYCPPFEUTRES
 		mBones.reserve(boneNum);
 		#endif
@@ -141,10 +141,7 @@ public:
 	#endif
 
 	Bone* FindBone(uint8_t id){
-		if(id <= boneNum)
-			return BonesArray[id];
-		else
-			return nullptr;
+		return (id <= boneNum) ? BonesArray[id] : nullptr;
 	}
 
 private:
@@ -152,7 +149,7 @@ private:
 	void fillAnimationVector(const aiScene* scene){
 		mNumAnimations = scene->mNumAnimations;
 		mAnimationsNames = (const char**) malloc(mNumAnimations);
-		for (unsigned int i=0; i != scene->mNumAnimations; i++)
+		for (uint32_t i=0; i != scene->mNumAnimations; i++)
 			mAnimationsNames[i] = strdup(scene->mAnimations[i]->mName.C_Str());
 
 	}
@@ -164,7 +161,7 @@ private:
 		std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& boneInfoMap = model->boneInfoMap;
 
 		// reading channels(bones engaged in an animation and their keyframes)
-		for (unsigned int i = 0; i != animation->mNumChannels; i++){
+		for (uint32_t i = 0; i != animation->mNumChannels; i++){
 
 			const aiNodeAnim* channel = animation->mChannels[i];
 			const char* nodeName = channel->mNodeName.C_Str();
@@ -181,7 +178,7 @@ private:
 			#endif
 
 		}
-		*model->GetBoneCount() = boneNum + 1;
+		model->m_BoneCounter = boneNum + 1;
 	}
 
 	void readHeirarchyData(AssimpNodeData* dest, const aiNode* src, Model* model){
@@ -199,7 +196,7 @@ private:
 			dest->children.reserve(src->mNumChildren);
 
 			// load the children to the children vector
-			for (unsigned int i = 0; i != src->mNumChildren; i++){
+			for (uint32_t i = 0; i != src->mNumChildren; i++){
 				AssimpNodeData newData;
 				readHeirarchyData(&newData, src->mChildren[i], model);
 				dest->children.emplace_back(newData);
@@ -216,7 +213,7 @@ private:
 			free((void*)src->name);
 
 			// recall this function recursivlly on every children of that node
-			for(unsigned int i = 0; i != src->children.size(); i++)
+			for(uint32_t i = 0; i != src->children.size(); i++)
 				freeNodeHeirarchy(&src->children[i]);
 		}
 	}

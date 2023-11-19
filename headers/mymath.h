@@ -93,7 +93,7 @@ inline const glm::quat nlerp(const glm::quat& a, const glm::quat& b, float t){
 	return glm::normalize(tmp);
 }
 
-inline const glm::quat squad_from_data(const std::vector<KeyRotation>& rotations, const unsigned int current_index, const float scalarFactor){
+inline const glm::quat squad_from_data(const std::vector<KeyRotation>& rotations, const uint32_t current_index, const float scalarFactor){
 	const glm::quat* q_prev = &rotations[current_index-1].orientation;
 	const glm::quat* q_curr = &rotations[ current_index ].orientation;
 	const glm::quat* q_next = &rotations[current_index+1].orientation;

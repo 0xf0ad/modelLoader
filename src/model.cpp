@@ -1,3 +1,5 @@
+#include <assimp/mesh.h>
+#include <assimp/scene.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,10 +14,6 @@ std::vector<GLint> diffuseTexturesIDs;
 std::vector<GLint> specularTexturesIDs;
 std::vector<GLint> normalTexturesIDs;
 std::vector<GLint> heightTexturesIDs;
-static uint8_t     m_BoneCounter       = 1;
-static uint        prevMeshNumVertices = 0;
-static uint        prevMeshNumIndices  = 0;
-static uint        VAO, VBO, EBO;
 static uint8_t     size_of_vertex = sizeof(Vertex);
 
 #define IMPORT_FLAGS                     \
@@ -46,8 +44,9 @@ uint TextureFromFile(const char* path, const char* directory, const aiTexture* e
 	size_t strlenth = strlen(directory) + strlen(path) + 2;
 	char filename[strlenth];
 	snprintf(filename, strlenth, "%s/%s", directory, path);
+	printf("load texture : %s\n", filename);
 
-	unsigned int textureID;
+	uint32_t textureID;
 	glGenTextures(1, &textureID);
 
 	int width, height, nrComponents;
@@ -89,6 +88,7 @@ uint TextureFromFile(const char* path, const char* directory, const aiTexture* e
 	return textureID;
 }
 
+
 // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.
 void loadMaterialTextures(std::vector<Texture>& textures, const aiMaterial *mat, aiTextureType type, const char* dir, const aiScene* scene){
@@ -98,7 +98,7 @@ void loadMaterialTextures(std::vector<Texture>& textures, const aiMaterial *mat,
 	textures_loaded.reserve(numTextures);
 	textures.reserve(numTextures);
 
-	for(unsigned int i = 0; i != numTextures; i++){
+	for(uint32_t i = 0; i != numTextures; i++){
 		aiString str;
 		// get the texture
 		if(!mat->GetTexture(type, i, &str)){
@@ -108,7 +108,7 @@ void loadMaterialTextures(std::vector<Texture>& textures, const aiMaterial *mat,
 
 			// check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
 			bool alreeadyLoaded = false;
-			for(unsigned int j = 0; j != textures_loaded.size(); j++){
+			for(uint32_t j = 0; j != textures_loaded.size(); j++){
 				if(!strcmp(textures_loaded[j].path.c_str(), str.C_Str())){
 					textures.emplace_back(textures_loaded[j]);
 					alreeadyLoaded = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
@@ -138,36 +138,36 @@ void processMesh(Model* model, aiMesh* mesh, const aiScene* scene, const char* d
 	// --------------
 	tmpVerticesBoneData.reserve(mesh->mNumVertices);
 
-	for(unsigned int i = 0; i != mesh->mNumVertices; i++){
+	for(uint32_t i = 0; i != mesh->mNumVertices; i++){
 		vertexBoneData tmpVertexBoneData;
 
 		//process mesh positions if it has any
 		if(mesh->HasPositions())
-			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, Position)    , sizeof(mesh->mVertices[i])  , &mesh->mVertices[i]);	
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + model->prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, Position)    , sizeof(mesh->mVertices[i])  , &mesh->mVertices[i]);	
 
 		// process normals if it has any
 		if(mesh->HasNormals())
-			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, Normal)      , sizeof(mesh->mNormals[i])   , &mesh->mNormals[i]);
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + model->prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, Normal)      , sizeof(mesh->mNormals[i])   , &mesh->mNormals[i]);
 
 		// load textures if it has any if not load null coords insted
 		if(mesh->HasTextureCoords(0)){
 			// insert the texture coordinates to the VAO directly from ASSIMP
-			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, TexCoords)   , sizeof(float[2])            , &mesh->mTextureCoords[0][i]);
-			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, textureIndex), sizeof(mesh->mMaterialIndex), &mesh->mMaterialIndex);
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + model->prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, TexCoords)   , sizeof(float[2])            , &mesh->mTextureCoords[0][i]);
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + model->prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, textureIndex), sizeof(mesh->mMaterialIndex), &mesh->mMaterialIndex);
 		}else{
 			glm::vec2 nullvec(0.0f);	/* I should define a variable to use a pointer with in the next function */
-			glBufferSubData(GL_ARRAY_BUFFER, ((i + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, TexCoords)   , sizeof(nullvec)             , &nullvec);
+			glBufferSubData(GL_ARRAY_BUFFER, ((i + model->prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, TexCoords)   , sizeof(nullvec)             , &nullvec);
 		}
 		tmpVerticesBoneData.emplace_back(tmpVertexBoneData);
 	}
 
 	// process indices
 	// -------------
-	for(unsigned int i = 0; i != mesh->mNumFaces; i++){
+	for(uint32_t i = 0; i != mesh->mNumFaces; i++){
 		aiFace face = mesh->mFaces[i];
-		for(unsigned int j = 0; j != face.mNumIndices; j++){
-			unsigned int tmpCuzPtrs = face.mIndices[j] + prevMeshNumVertices;
-			glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, (((i * face.mNumIndices) + j + prevMeshNumIndices) * sizeof(uint)), sizeof(tmpCuzPtrs), &tmpCuzPtrs);
+		for(uint32_t j = 0; j != face.mNumIndices; j++){
+			uint32_t tmpCuzPtrs = face.mIndices[j] + model->prevMeshNumVertices;
+			glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, (((i * face.mNumIndices) + j + model->prevMeshNumIndices) * sizeof(uint)), sizeof(tmpCuzPtrs), &tmpCuzPtrs);
 		}
 	}
 
@@ -180,18 +180,19 @@ void processMesh(Model* model, aiMesh* mesh, const aiScene* scene, const char* d
 			const char* boneName = bone->mName.C_Str();
 			if(model->boneInfoMap.find(boneName) == model->boneInfoMap.end()){
 				BoneInfo newBoneInfo;
-				newBoneInfo.id = m_BoneCounter;
+				newBoneInfo.id = model->m_BoneCounter;
 				newBoneInfo.offset = assimpMatrix2glm(bone->mOffsetMatrix);
+				model->offsets.push_back(newBoneInfo.offset);
 				model->boneInfoMap[boneName] = newBoneInfo;
-				boneID = m_BoneCounter;
-				m_BoneCounter++;
+				boneID = model->m_BoneCounter;
+				model->m_BoneCounter++;
 			}else{
 				boneID = model->boneInfoMap[boneName].id;
 			}
 			assert(boneID);
 
 			for(uint weightIndex = 0; weightIndex != mesh->mBones[boneIndex]->mNumWeights; weightIndex++){
-				unsigned int vertexId = bone->mWeights[weightIndex].mVertexId;
+				uint32_t vertexId = bone->mWeights[weightIndex].mVertexId;
 				assert(vertexId <= (mesh->mNumVertices));
 
 				for(uint8_t boneIndex = 0; boneIndex != MAX_BONE_INFLUENCE; boneIndex++){
@@ -201,9 +202,9 @@ void processMesh(Model* model, aiMesh* mesh, const aiScene* scene, const char* d
 						break;
 					}
 				}
-				glBufferSubData(GL_ARRAY_BUFFER, ((vertexId + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, boneIDs),
+				glBufferSubData(GL_ARRAY_BUFFER, ((vertexId + model->prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, boneIDs),
 					sizeof(tmpVerticesBoneData.begin()->packed_IDs), &tmpVerticesBoneData[vertexId].packed_IDs);
-				glBufferSubData(GL_ARRAY_BUFFER, ((vertexId + prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, weights),
+				glBufferSubData(GL_ARRAY_BUFFER, ((vertexId + model->prevMeshNumVertices) * size_of_vertex) + offsetof(Vertex, weights),
 					sizeof(tmpVerticesBoneData.begin()->weights), &tmpVerticesBoneData[vertexId].weights);
 			}
 		}
@@ -213,12 +214,12 @@ void processMesh(Model* model, aiMesh* mesh, const aiScene* scene, const char* d
 	// ----------------
 	const aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
-	loadMaterialTextures(textures, material, aiTextureType_DIFFUSE, dir, scene);
+	loadMaterialTextures(textures, material, aiTextureType_DIFFUSE,  dir, scene);
 	loadMaterialTextures(textures, material, aiTextureType_SPECULAR, dir, scene);
-	loadMaterialTextures(textures, material, aiTextureType_HEIGHT, dir, scene);
-	loadMaterialTextures(textures, material, aiTextureType_AMBIENT, dir, scene);
+	loadMaterialTextures(textures, material, aiTextureType_HEIGHT,   dir, scene);
+	loadMaterialTextures(textures, material, aiTextureType_AMBIENT,  dir, scene);
 
-	for(unsigned int i = 0; i != textures.size(); i++){
+	for(uint32_t i = 0; i != textures.size(); i++){
 
 		aiTextureType typeName = textures[i].type;
 		GLuint textureID = textures[i].id;
@@ -237,8 +238,8 @@ void processMesh(Model* model, aiMesh* mesh, const aiScene* scene, const char* d
 		}
 	}
 
-	prevMeshNumVertices += mesh->mNumVertices;
-	prevMeshNumIndices  += mesh->mNumFaces * mesh->mFaces->mNumIndices;
+	model->prevMeshNumVertices += mesh->mNumVertices;
+	model->prevMeshNumIndices  += mesh->mNumFaces * mesh->mFaces->mNumIndices;
 }
 
 // processes a node in a recursive fashion. Processes each individual mesh located at 
@@ -249,7 +250,7 @@ void processNode(Model* model, aiNode *node, const aiScene *scene, uint offset, 
 	for(; i != (node->mNumMeshes + offset); i++)
 		processMesh(model, scene->mMeshes[node->mMeshes[i - offset]], scene, dir);
 
-	for(unsigned int j = 0; j != node->mNumChildren; j++)	// then do the same for each of its children
+	for(uint32_t j = 0; j != node->mNumChildren; j++)	// then do the same for each of its children
 		processNode(model, node->mChildren[j], scene, i, dir);
 }
 
@@ -259,14 +260,14 @@ void getThemAll(uint* numMeshes, uint* numIndices, uint* numVertices, aiNode* no
 
 	*numMeshes += node->mNumMeshes;
 
-	for(unsigned int i = 0; i != node->mNumMeshes; i++){
+	for(uint32_t i = 0; i != node->mNumMeshes; i++){
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		*numVertices += scene->mMeshes[node->mMeshes[i]]->mNumVertices;
-		for(unsigned int j = 0; j != mesh->mNumFaces; j++)
+		for(uint32_t j = 0; j != mesh->mNumFaces; j++)
 			*numIndices += mesh->mFaces[j].mNumIndices;
 	}
 
-	for(unsigned int i = 0; i != node->mNumChildren; i++){
+	for(uint32_t i = 0; i != node->mNumChildren; i++){
 		getThemAll(numMeshes, numIndices, numVertices, node->mChildren[i], scene);
 	}
 }
@@ -285,27 +286,26 @@ void loadModel(Model* model, const char* path){
 		return;
 	}
 
-	unsigned int numMeshs = 0, numIndices = 0, numVertices = 0;
-	getThemAll(&numMeshs, &numIndices, &numVertices, scene->mRootNode, scene);
+	getThemAll(&model->numMeshs, &model->numIndices, &model->numVertices, scene->mRootNode, scene);
 
-	unsigned int size_of_the_array_buffer_in_bytes   = numVertices * size_of_vertex;
-	unsigned int size_of_the_element_buffer_in_bytes = numIndices  * size_of_vertex;
-	printf("first vertexNumber = %d\nfirst indexNumber = %d\n", numVertices, numIndices);
+	uint32_t size_of_the_array_buffer_in_bytes   = model->numVertices * size_of_vertex;
+	uint32_t size_of_the_element_buffer_in_bytes = model->numIndices  * size_of_vertex;
+	printf("first vertexNumber = %d\nfirst indexNumber = %d\n", model->numVertices, model->numIndices);
 
-	glGenVertexArrays(true, &VAO);
-	glGenBuffers(true, &VBO);
-	glGenBuffers(true, &EBO);
+	glGenVertexArrays(true, &model->VAO);
+	glGenBuffers(true, &model->VBO);
+	glGenBuffers(true, &model->EBO);
 
-	glBindVertexArray(VAO);
+	glBindVertexArray(model->VAO);
 
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, model->VBO);
 	glBufferData(GL_ARRAY_BUFFER, size_of_the_array_buffer_in_bytes, nullptr, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model->EBO);
 
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, size_of_the_element_buffer_in_bytes, nullptr, GL_STATIC_DRAW);
  
-	unsigned int difference = strrchr(path, '/') - path;
+	uint32_t difference = strrchr(path, '/') - path;
 	const char* directory ;
 	directory = strndup(path, difference);
 
@@ -371,7 +371,21 @@ void Model::Draw(Shader &shader){
 
 	// upload the inddeces to the GPU
 	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(prevMeshNumIndices), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, static_cast<uint32_t>(prevMeshNumIndices), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+
+	glActiveTexture(GL_TEXTURE0);
+}
+
+// draws the model, and thus all its meshes
+void Model::Draw(Shader &shader, uint32_t count){
+	// batch the textures and upload them the GPU
+	GLint location = glGetUniformLocation(shader.ID, "texture_diffuse");
+	glUniform1iv(location, diffuseTexturesIDs.size(), diffuseTexturesIDs.data());
+
+	// upload the inddeces to the GPU
+	glBindVertexArray(VAO);
+	glDrawElementsInstanced(GL_TRIANGLES, static_cast<uint32_t>(prevMeshNumIndices), GL_UNSIGNED_INT, 0, count);
 	glBindVertexArray(0);
 
 	glActiveTexture(GL_TEXTURE0);
@@ -388,4 +402,3 @@ Model::~Model(){
 
 //std::unordered_map<const char*, BoneInfo, strHash, strequal_to>& Model::GetBoneInfoMap() const { return boneInfoMap; }
 //std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& Model::GetBoneInfoMap() const { return boneInfoMap; }
-uint8_t* Model::GetBoneCount() const { return &m_BoneCounter; }

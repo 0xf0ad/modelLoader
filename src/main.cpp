@@ -9,6 +9,7 @@
 #include "../headers/camera.h"
 #include "../headers/animator.h"
 #include <GLFW/glfw3.h>
+#include <cstdint>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <stdlib.h>
@@ -17,21 +18,21 @@
 #include <x86intrin.h>
 
 /* -======settings======- */
-#define WIN_WIDTH                  1280		// window width
-#define WIN_HEIGHT                  720		// window height
-#define glslVersion "#version 450 core"		// glsl version used by ImGui
-#define IWANNASAMPLE               true		// do i want multi sampling anti-aliasing ?
-#define MSAA_LVL                      4		// anti-aliassing leve
-#define IWANNAADPTHBUFFER          true		// di i want a depth buffer ?
-#define IWANNACULLFACES            true		// do i want a face culler ?
-#define IWANNABLENDER              true		// do i want to enable blending alpha-values (transparency) ?
-#define IWANNATRACKMOUSEPOS       true		// do i want to display mouse positions ?
-#define IWANNAUSEAFRAMEBUFFER     false		// do i want to use a frame buffer ?
-#define IWANNASTENCILBUFFER        true		// do i want to enable the stancil buffer ?
-#define IWANNAGEOMETRYSHADER      false		// do i want a geometry shader ? obviously NO
-#define IWANNAASKYBOX              true		// do i want a skybox or a cubemap ?
+int WIN_WIDTH   =                 1280;     // window width
+int WIN_HEIGHT  =                  720;     // window height
+#define glslVersion "#version 450 core"     // glsl version used by ImGui
+#define IWANNASAMPLE               true     // do i want multi sampling anti-aliasing ?
+#define MSAA_LVL                      4     // anti-aliassing leve
+#define IWANNAADPTHBUFFER          true     // di i want a depth buffer ?
+#define IWANNACULLFACES            true     // do i want a face culler ?
+#define IWANNABLENDER              true     // do i want to enable blending alpha-values (transparency) ?
+#define IWANNATRACKMOUSEPOS        true     // do i want to display mouse positions ?
+#define IWANNAUSEAFRAMEBUFFER     false     // do i want to use a frame buffer ?
+#define IWANNASTENCILBUFFER        true     // do i want to enable the stancil buffer ?
+#define IWANNAGEOMETRYSHADER      false     // do i want a geometry shader ? obviously NO
+#define IWANNAASKYBOX              true     // do i want a skybox or a cubemap ?
 
-#define LOG(s)        printf("%s\n", s)		// print any loged "thing" into the stdout (the console)
+#define LOG(s)        printf("%s\n", s)     // print any loged "thing" into the stdout (the console)
 
 // camera
 Camera camera(glm::vec3(0.0f, 3.0f, 9.0f));
@@ -145,9 +146,15 @@ int main(int argc, const char** argv){
 
 
 	printf("%llu\tticks on shader 1\n", cyclesDiffrence);
+	
+	initCycleID = __rdtsc();
+	Shader boneShader("shaders/bone.vert", "shaders/bone.frag");
+	finishCylceID = __rdtsc();
+	cyclesDiffrence = finishCylceID - initCycleID;
+	printf("%llu\tticks on shader 4\n", cyclesDiffrence);
 
 	initCycleID = __rdtsc();
-	Shader outLiner ("shaders/outliner.vert", "shaders/outliner.frag");
+	Shader outLiner("shaders/outliner.vert", "shaders/outliner.frag");
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
 
@@ -160,32 +167,13 @@ int main(int argc, const char** argv){
 	finishCylceID = __rdtsc();
 	cyclesDiffrence = finishCylceID - initCycleID;
 
-	Shader linesShader("shaders/lineShader.vert", "shaders/lineShader.frag");
-	
-	unsigned int LVBO;
-	unsigned int LVAO;
-	float linePoints[] = {
-		0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f
-	};
-
-	glGenVertexArrays(1, &LVAO);
-	glGenBuffers(1, &LVBO);
-
-
-	glBindBuffer(GL_ARRAY_BUFFER, LVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(linePoints), linePoints, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, sizeof(linePoints)/(sizeof(float[3])), GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-	glEnableVertexAttribArray(0);
-
-
 	printf("%llu\tticks on shader 3\n", cyclesDiffrence);
 
 	ubo VP = ubo("VP", 2 * sizeof(glm::mat4));
 	VP.bind(0);
 	ourShader.bind_ubo(&VP);
 	outLiner.bind_ubo(&VP);
+	boneShader.bind_ubo(&VP);
 	skyBoxShader.bind_ubo(&VP);
 
 	#if IWANNAUSEAFRAMEBUFFER
@@ -202,7 +190,8 @@ int main(int argc, const char** argv){
 	initCycleID = __rdtsc();
 
 	Model ourModel(argv[1]);
-	
+	Model bonemodel("models/assets/bone.obj");
+
 	finishCylceID = __rdtsc();
 	LOG("model got loaded");
 	cyclesDiffrence = finishCylceID - initCycleID;
@@ -228,6 +217,10 @@ int main(int argc, const char** argv){
 
 	ourShader.use();
 	ourShader.setBool("animated", animated);
+	ourShader.setFloat("modelsize", 1.0f);
+	boneShader.use();
+	boneShader.setBool("animated", animated);
+	boneShader.setFloat("modelsize", 1.0f);
 	outLiner.use();
 	outLiner.setBool ("animated", animated);
 
@@ -258,9 +251,19 @@ int main(int argc, const char** argv){
 	VP.editBuffer(sizeof(glm::mat4), sizeof(glm::mat4), &view);
 	glm::vec3 AxisRot = glm::vec3(0.0f);
 	float rotDegre = 0.0f;
+	float modelsize = 1.0f;
+	float animespeed = 1.0f;
+	float animationplay = 0.0f; // its a boolean but its better be float to easly multiply (i know this doesnt make sense but trust me I am an engineer)
 	bool mooving = false;
 	int animIndex = 0;
 	char uniform[] = "b_Mats[   ]";
+	char boneUni[] = "offsets[   ]";
+
+	boneShader.use();
+	for (uint8_t i = 0; i != ourModel.offsets.size(); i++){
+		sprintf(boneUni, "offsets[%u]", i);
+		boneShader.setMat4(uniform, ourModel.offsets[i]);
+	}
 
 	// render loop
 	// -----------
@@ -295,9 +298,9 @@ int main(int argc, const char** argv){
 		#endif
 		glEnable(GL_DEPTH_TEST);
 		float *clrColorPtr = (float*)&clear_color;
-		glClearColor(*clrColorPtr, *(clrColorPtr+1), *(clrColorPtr+2), *(clrColorPtr+3));
+		//glClearColor(*clrColorPtr, *(clrColorPtr+1), *(clrColorPtr+2), *(clrColorPtr+3));
 		// those commented implementation do the same think
-		//glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		//glClearColor(*(float*)&clear_color, *((float*)&clear_color+1), *((float*)&clear_color+2), *((float*)&clear_color+3));
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -323,8 +326,13 @@ int main(int argc, const char** argv){
 			VP.editBuffer(0, sizeof(glm::mat4), &projection);
 		}
 		ImGui::SliderFloat("Camera Speed", &camera.maxSpeed, 0.0f, 50.0f);
+		if(ImGui::SliderFloat("model size (inverslly)", &modelsize, 0.0f, 20.0f)){
+			ourShader.use();
+			ourShader.setFloat("modelsize", modelsize);
+			boneShader.use();
+			boneShader.setFloat("modelsize", modelsize);
+		}
 		ImGui::SliderFloat("Mouse Sensitivity",&camera.mMouseSensitivity, 0.0f, 1.0f);
-		//if (ImGui::Button("Botton")) { }                                 // Buttons return true when clicked
 
 		// controlling face rendering (render only front faces or only back ones)
 		ImGui::Checkbox("mapping uniforms", &ourShader.mapped);
@@ -332,12 +340,8 @@ int main(int argc, const char** argv){
 
 		#if IWANNACULLFACES
 			ImGui::SameLine();
-			if (ImGui::Button("apply face culling")){
-				if (cullFace)
-					glEnable(GL_CULL_FACE);
-				else
-					glDisable(GL_CULL_FACE);
-			}
+			if (ImGui::Button("apply face culling"))
+				cullFace ? glEnable(GL_CULL_FACE) : glDisable(GL_CULL_FACE);
 		#endif
 
 		ImGui::Checkbox("squad", &G_squad);
@@ -346,12 +350,9 @@ int main(int argc, const char** argv){
 		// --------------------------
 		ImGui::Checkbox("Render on wireframe", &wireFrame);
 		ImGui::SameLine();
-		if (ImGui::Button("apply wireframe")){
-			if (wireFrame)
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			else
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		}
+		if (ImGui::Button("apply wireframe"))
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL - wireFrame);
+
 
 		// controlling V-Sync (fix framerate to display refreshrate(likely 60 Hz))
 		// -----------------------------------------------------------------------
@@ -370,20 +371,12 @@ int main(int argc, const char** argv){
 				animator->PlayAnimation(animation);
 				LOG("animator got updated to the new animation");
 			}
+
+			ImGui::SliderFloat("animation speed", &animespeed, 0.0f, 10);
+			const char* astring = animationplay ? "pause" : "play";
+			if(ImGui::Button(astring))
+				animationplay = animationplay == 1.0f ? 0.0f : 1.0f;
 		}
-
-
-		//float line_vertex[]={ 10,10,10, 20,20,20 };
-
-		//glVertexPointer(2, GL_FLOAT, 0, line_vertex);
-		//glDrawArrays(GL_LINES, 0, 2);
-
-		/*glBegin(GL_LINES);
-			glColor3f (0.0f, 0.0f, 0.0f);
-			glVertex3f(10, 10, 10);
-			glVertex3f(20, 20, 20);
-		glEnd();*/
-
 
 		mooving = ShowCordDialog(&show_cordSet_window, &AxisRot, &rotDegre);
 
@@ -404,9 +397,11 @@ int main(int argc, const char** argv){
 		ourShader.use();
 		// seting uniforms
 		ourShader.setMat4("model", model);
-		if(mooving){
+		boneShader.use();
+		boneShader.setMat4("model", model);
+
+		if(mooving)
 			model = glm::rotate(model, rotDegre, AxisRot);
-		}
 
 		#if IWANNAASKYBOX
 		skyBoxShader.use();
@@ -414,18 +409,18 @@ int main(int argc, const char** argv){
 		#endif
 
 		if (animated){
-			animator->UpdateAnimation(deltaTime);
+			animator->UpdateAnimation(deltaTime, animespeed * animationplay);
 			ourShader.use();
 			for (uint8_t i = 0; i != animator->boneNumber; i++){
 				sprintf(uniform, "b_Mats[%u]", i);
 				ourShader.setMat4(uniform, animator->mFinalBoneMatrices[i]);
 			}
+			boneShader.use();
+			for (uint8_t i = 0; i != animator->boneNumber; i++){
+				sprintf(uniform, "b_Mats[%u]", i);
+				boneShader.setMat4(uniform, animator->mFinalBoneMatrices[i]);
+			}
 		}
-
-		/*linesShader.use();
-		glBindVertexArray(LVAO);
-		glDrawArrays(GL_LINES, 0, 2);*/
-
 
 		#if IWANNASTENCILBUFFER
 		// write to stencil buffer
@@ -434,7 +429,10 @@ int main(int argc, const char** argv){
 		#endif
 
 		// draw our model
+		ourShader.use();
 		ourModel.Draw(ourShader);
+		boneShader.use();
+		bonemodel.Draw(boneShader, ourModel.m_BoneCounter);
 
 		if(outlined){
 			glDisable(GL_DEPTH_TEST);
@@ -444,11 +442,13 @@ int main(int argc, const char** argv){
 			outLiner.setFloat("scale", scale);
 			outLiner.setMat4 ("model", model);
 			ourModel.Draw(outLiner);
-			if (animated)
+			if (animated){
+				outLiner.use();
 				for (uint8_t i = 0; i != animator->boneNumber; i++){
 					sprintf(uniform, "b_Mats[%u]", i);
-					ourShader.setMat4(uniform, animator->mFinalBoneMatrices[i]);
+					outLiner.setMat4(uniform, animator->mFinalBoneMatrices[i]);
 				}
+			}
 			glStencilMask(0xFF);
 			glStencilFunc(GL_ALWAYS, false, 0xFF);
 			glEnable(GL_DEPTH_TEST);

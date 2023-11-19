@@ -62,7 +62,7 @@ Bone::~Bone(){
 	free(mPositions);
 	free(mRotations);
 	free(mScales);
-	printf("i am being called, do u expect me to answer");
+	printf("i am being called, do rly u expect me to answer ?");
 }
 
 // Gets normalized value for Lerp & Slerp
@@ -74,7 +74,7 @@ inline uint binarySearchIndex(const float animationTime, const KeyPosition* posi
 	if(offset >= end)
 		return positions[offset].timeStamp <= animationTime ? offset+1 : offset;
 
-	int mid = (offset + end) >> 1;
+	uint mid = (offset + end) >> 1;
 	if(positions[mid].timeStamp < animationTime)
 		return binarySearchIndex(animationTime, positions, mid+1, end);
 
@@ -86,7 +86,7 @@ inline uint binarySearchIndex(const float animationTime, const KeyRotation* rota
 	if(offset >= end)
 		return rotations[offset].timeStamp <= animationTime ? offset+1 : offset;
 
-	int mid = (offset + end) >> 1;
+	uint mid = (offset + end) >> 1;
 	if(rotations[mid].timeStamp < animationTime)
 		return binarySearchIndex(animationTime, rotations, mid+1, end);
 
@@ -98,7 +98,7 @@ inline uint binarySearchIndex(const float animationTime, const KeyScale* scaling
 	if(offset >= end)
 		return scalings[offset].timeStamp <= animationTime ? offset+1 : offset;
 
-	int mid = (offset + end) >> 1;
+	uint mid = (offset + end) >> 1;
 	if(scalings[mid].timeStamp < animationTime)
 		return binarySearchIndex(animationTime, scalings, mid+1, end);
 
@@ -111,65 +111,63 @@ inline uint binarySearchIndex(const float animationTime, const KeyScale* scaling
 // the current animation time
 inline uint getIndex(const float animationTime, const KeyPosition* positions){
 
-static uint prevResult = 0;
-if(prevResult < numPositions || animationTime > positions[prevResult].timeStamp)
+	static uint prevResult = 0;
 
-#if BINARYSEARCHINDEX
-	prevResult = binarySearchIndex(animationTime, positions, 0, numPositions) - 1;
-#else
-	for (uint i = 0; i != (numRotations - 1); i++){
-		if (animationTime < rotations[i+1].timeStamp){
-			prevResult = i;
-			return i;
-		}
-	}
-#endif
+	if(prevResult < numPositions || animationTime > positions[prevResult].timeStamp)
+		#if BINARYSEARCHINDEX
+			prevResult = binarySearchIndex(animationTime, positions, 0, numPositions) - 1;
+		#else
+			for (uint i = 0; i != (numRotations - 1); i++){
+				if (animationTime < rotations[i+1].timeStamp){
+					prevResult = i;
+					return i;
+				}
+			}
+		#endif
 
-return prevResult;
+	return prevResult;
 }
 
 // Gets the current index on mKeyRotations to interpolate to based on the
 // current animation time
 inline uint getIndex(const float animationTime, const KeyRotation* rotations){
 
-static uint prevResult = 0;
+	static uint prevResult = 0;
 
-if(prevResult < numRotations || animationTime > rotations[prevResult].timeStamp)
+	if(prevResult < numRotations || animationTime > rotations[prevResult].timeStamp)
+		#if BINARYSEARCHINDEX
+			prevResult = binarySearchIndex(animationTime, rotations, 0, numPositions) - 1;
+		#else
+			for (uint i = 0; i != (numRotations - 1); i++){
+				if (animationTime < rotations[i+1].timeStamp){
+					prevResult = i;
+					return i;
+				}
+			}
+		#endif
 
-#if BINARYSEARCHINDEX
-	prevResult = binarySearchIndex(animationTime, rotations, 0, numPositions) - 1;
-#else
-	for (uint i = 0; i != (numRotations - 1); i++){
-		if (animationTime < rotations[i+1].timeStamp){
-			prevResult = i;
-			return i;
-		}
-	}
-#endif
-
-return prevResult;
+	return prevResult;
 }
 
 // Gets the current index on mKeyScalings to interpolate to based on the
 // current animation time
 inline uint getIndex(const float animationTime, const KeyScale* scales){
 
-static uint prevResult = 0;
+	static uint prevResult = 0;
 
-if(prevResult < numScalings || animationTime > scales[prevResult].timeStamp)
+	if(prevResult < numScalings || animationTime > scales[prevResult].timeStamp)
+		#if BINARYSEARCHINDEX
+			prevResult = binarySearchIndex(animationTime, scales, 0, numPositions) - 1;
+		#else
+			for (uint i = 0; i != (numRotations - 1); i++){
+				if (animationTime < rotations[i+1].timeStamp){
+					prevResult = i;
+					return i;
+				}
+			}
+		#endif
 
-#if BINARYSEARCHINDEX
-	prevResult = binarySearchIndex(animationTime, scales, 0, numPositions) - 1;
-#else
-	for (uint i = 0; i != (numRotations - 1); i++){
-		if (animationTime < rotations[i+1].timeStamp){
-			prevResult = i;
-			return i;
-		}
-	}
-#endif
-
-return prevResult;
+	return prevResult;
 }
 
 // figures out which position keys to interpolate b/w and performs the interpolation 
@@ -177,20 +175,12 @@ return prevResult;
 inline const glm::mat4 interpolate(const float animationTime, const KeyPosition* positions){
 	static glm::mat4 result = glm::translate(glm::mat4(1.0f), positions[0].position);
 
-	if (numScalings == 1){
+	if (numScalings == 1)
 		return glm::translate(glm::mat4(1.0f), positions[0].position);
-	}
-
-	static uint prevIndex = 0;
 
 	uint index = getIndex(animationTime, positions);
-
-	if(true){
-		prevIndex = index;
-		float scalarFactor = GetScaleFactor(positions[index].timeStamp, positions[index + 1].timeStamp, animationTime);
-
-		result = glm::translate(glm::mat4(1.0f),mix(positions[index].position, positions[index + 1].position, scalarFactor));
-	}
+	float scalarFactor = GetScaleFactor(positions[index].timeStamp, positions[index + 1].timeStamp, animationTime);
+	result = glm::translate(glm::mat4(1.0f),mix(positions[index].position, positions[index + 1].position, scalarFactor));
 
 	return result;
 }
@@ -200,53 +190,48 @@ inline const glm::mat4 interpolate(const float animationTime, const KeyPosition*
 inline const glm::mat4 interpolate(const float animationTime, const KeyRotation* rotations){
 	static glm::mat4 result;
 
-	if (numRotations == 1){
+	if (numRotations == 1)
 		return glm::toMat4(glm::normalize(rotations[0].orientation));
-	}
-
-	static uint prevIndex = 0;
 
 	uint index = getIndex(animationTime, rotations);
 
-	if(true){
-		prevIndex = index;
-		float scalarFactor = GetScaleFactor(rotations[index].timeStamp, rotations[index + 1].timeStamp, animationTime);
+	float scalarFactor = GetScaleFactor(rotations[index].timeStamp, rotations[index + 1].timeStamp, animationTime);
 
-		glm::quat O_returned;
-		glm::quat N_returned;
+	glm::quat O_returned;
+	glm::quat N_returned;
 
-		/*
-		* WHY DOES CUBIC INTERPOLATION SEEMS LIKE THE LINEAR ONE IT SHOULD NOT BE THAT WAY
-		*/
+	/*
+	* WHY DOES CUBIC INTERPOLATION SEEMS LIKE THE LINEAR ONE IT SHOULD NOT BE THAT WAY
+	*/
 
-		/*
-		* FUCK IT I AM ONLY GOING TO USE THE SLERP, SQUAD IS JUST UNNECESSARY HEADACH
-		*/
+	/*
+	* FUCK IT I AM ONLY GOING TO USE THE SLERP, SQUAD IS JUST UNNECESSARY HEADACH
+	*/
 
-		if(G_squad){
-			N_returned = glm::slerp(rotations[index].orientation, rotations[index+1].orientation, scalarFactor);
-			/*O_returned = mix(N_returned , mix(glm::intermediate(m_Rotations[index-1].orientation, m_Rotations[index].orientation, m_Rotations[index+1].orientation)
-											,glm::intermediate(m_Rotations[index].orientation, m_Rotations[index+1].orientation, m_Rotations[index+2].orientation), scalarFactor)
-							,2*scalarFactor*(1-scalarFactor));*/
+	if(G_squad){
+		N_returned = glm::slerp(rotations[index].orientation, rotations[index+1].orientation, scalarFactor);
+		/*O_returned = mix(N_returned , mix(glm::intermediate(m_Rotations[index-1].orientation, m_Rotations[index].orientation, m_Rotations[index+1].orientation)
+										,glm::intermediate(m_Rotations[index].orientation, m_Rotations[index+1].orientation, m_Rotations[index+2].orientation), scalarFactor)
+						,2*scalarFactor*(1-scalarFactor));*/
 
-			//O_returned = squad_from_data(m_Rotations, index, scalarFactor);
-			result = glm::toMat4(N_returned);
-		}else{
-			/*O_returned = glm::squad(m_Rotations[index].orientation, m_Rotations[index+1].orientation,
-					//   m_Rotations[index].orientation * glm::exp((glm::log(q * m_Rotations[index+1].orientation) + glm::log(q * m_Rotations[index-1].orientation)) * -0.25f),
-					//   m_Rotations[index+1].orientation * glm::exp((glm::log(q * m_Rotations[index].orientation) + glm::log(q * m_Rotations[index+2].orientation)) * -0.25f),
-					intermediate(m_Rotations[index-1].orientation, m_Rotations[index].orientation, m_Rotations[index+1].orientation),
-					intermediate(m_Rotations[index].orientation, m_Rotations[index+1].orientation, m_Rotations[index+2].orientation),
-					scalarFactor);*/
-			O_returned = all_in_one_squad(rotations[index-1].orientation, rotations[index].orientation, rotations[index+1].orientation, rotations[index+2].orientation, scalarFactor);
-			//O_returned = nlerp(m_Rotations[index].orientation, m_Rotations[index+1].orientation, scalarFactor);
-			/*O_returned.x = glm::smoothstep(rotations[index].orientation.x, rotations[index+1].orientation.x, scalarFactor);
-			O_returned.y = glm::smoothstep(rotations[index].orientation.y, rotations[index+1].orientation.y, scalarFactor);
-			O_returned.z = glm::smoothstep(rotations[index].orientation.z, rotations[index+1].orientation.z, scalarFactor);
-			O_returned.w = glm::smoothstep(rotations[index].orientation.w, rotations[index+1].orientation.w, scalarFactor);*/
-			result = glm::toMat4(glm::normalize(O_returned));
-		}
+		//O_returned = squad_from_data(m_Rotations, index, scalarFactor);
+		result = glm::toMat4(N_returned);
+	}else{
+		/*O_returned = glm::squad(m_Rotations[index].orientation, m_Rotations[index+1].orientation,
+				//   m_Rotations[index].orientation * glm::exp((glm::log(q * m_Rotations[index+1].orientation) + glm::log(q * m_Rotations[index-1].orientation)) * -0.25f),
+				//   m_Rotations[index+1].orientation * glm::exp((glm::log(q * m_Rotations[index].orientation) + glm::log(q * m_Rotations[index+2].orientation)) * -0.25f),
+				intermediate(m_Rotations[index-1].orientation, m_Rotations[index].orientation, m_Rotations[index+1].orientation),
+				intermediate(m_Rotations[index].orientation, m_Rotations[index+1].orientation, m_Rotations[index+2].orientation),
+				scalarFactor);*/
+		O_returned = all_in_one_squad(rotations[index-1].orientation, rotations[index].orientation, rotations[index+1].orientation, rotations[index+2].orientation, scalarFactor);
+		//O_returned = nlerp(m_Rotations[index].orientation, m_Rotations[index+1].orientation, scalarFactor);
+		/*O_returned.x = glm::smoothstep(rotations[index].orientation.x, rotations[index+1].orientation.x, scalarFactor);
+		O_returned.y = glm::smoothstep(rotations[index].orientation.y, rotations[index+1].orientation.y, scalarFactor);
+		O_returned.z = glm::smoothstep(rotations[index].orientation.z, rotations[index+1].orientation.z, scalarFactor);
+		O_returned.w = glm::smoothstep(rotations[index].orientation.w, rotations[index+1].orientation.w, scalarFactor);*/
+		result = glm::toMat4(glm::normalize(O_returned));
 	}
+
 	return result;
 }
 

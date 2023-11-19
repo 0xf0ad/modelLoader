@@ -34,7 +34,7 @@ public:
 #if BONENAME
 	const char* mName;
 #endif
-	unsigned int mID;
+	uint32_t mID;
 
 	// reads keyframes from aiNodeAnim
 	Bone() = default;

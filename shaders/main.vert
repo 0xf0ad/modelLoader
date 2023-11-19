@@ -15,9 +15,8 @@ ivec4 boneIds = ivec4((uint( bones         & 255u)),
                       (uint((bones >> 24u) & 255u)));
 
 uniform mat4 model;
-
+uniform float modelsize;
 uniform bool animated;
-
 uniform mat4 b_Mats[250];
 mat4 BoneTransform;
 
@@ -33,26 +32,14 @@ out VS_OUT{
 
 void main(){
 	if (!animated){
-		gl_Position = STDprojection * STDview * model * vec4(pos, 1.0);
-
-	}else{
+		gl_Position = STDprojection * STDview * model * vec4(pos, modelsize);
+	} else {
 		BoneTransform  = b_Mats[boneIds[0]] * weights[0];
 		BoneTransform += b_Mats[boneIds[1]] * weights[1];
 		BoneTransform += b_Mats[boneIds[2]] * weights[2];
 		BoneTransform += b_Mats[boneIds[3]] * weights[3];
 
-		vec4 PosL = BoneTransform * vec4(pos, 1.0);
-		gl_Position = STDprojection * STDview * model * PosL;
-
-		// calculate normals
-		//mat3 normalMatrix = transpose(inverse(mat3(BoneTransform)));
-		//vec3 T = normalize(normalMatrix * aTangent);
-		//vec3 B = normalize(normalMatrix * aBitangent);
-		//vec3 N = normalize(normalMatrix * norm);
-
-		//vec4 NormalL = BoneTransform * vec4(Normal, 0.0);
-		//Normal0 = (gWorld * NormalL).xyz;
-		//WorldPos0 = (gWorld * PosL).xyz;
+		gl_Position = STDprojection * STDview * model * BoneTransform * vec4(pos, modelsize);
 	}
 	vs_out.TexCoords = tex;
 	vs_out.TextureID = textureID;

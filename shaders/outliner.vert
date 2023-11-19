@@ -20,29 +20,22 @@ layout (std140) uniform VP{
 };
 
 uniform bool animated;
-const int MAX_BONE_INFLUENCE = 4;
-uniform mat4 finalBonesMatrices[100];
+uniform mat4 b_Mats[100];
 mat4 BoneTransform;
 
 void main(){
-    if(!animated){
-        gl_Position = STDprojection * STDview * model * vec4((aPosition + (aNormals * scale)), 1.0f);
-    }else{
-        BoneTransform  = finalBonesMatrices[boneIds[0]] * weights[0];
-        BoneTransform += finalBonesMatrices[boneIds[1]] * weights[1];
-		BoneTransform += finalBonesMatrices[boneIds[2]] * weights[2];
-		BoneTransform += finalBonesMatrices[boneIds[3]] * weights[3];
+	if(!animated){
+		gl_Position = STDprojection * STDview * model * vec4((aPosition + (aNormals * scale)), 1.0f);
+	}else{
+		BoneTransform  = b_Mats[boneIds[0]] * weights[0];
+		BoneTransform += b_Mats[boneIds[1]] * weights[1];
+		BoneTransform += b_Mats[boneIds[2]] * weights[2];
+		BoneTransform += b_Mats[boneIds[3]] * weights[3];
 
-        //vec4 NormalL = BoneTransform * vec4(aNormals, 0.0);
-        
-        //calculate the normals
-        mat3 normalMatrix = transpose(inverse(mat3(BoneTransform)));
-        //vec3 T = normalize(normalMatrix * aTangent);
-        //vec3 B = normalize(normalMatrix * aBitangent);
-        vec3 N = normalize(normalMatrix * aNormals);
-		
-        vec4 PosL = BoneTransform * vec4((aPosition + (N.xyz * scale)), 1.0f);
+		//calculate the normals
+		vec3 Normal = mat3(transpose(inverse(STDview * model))) * aNormals;
+
+		vec4 PosL = BoneTransform * vec4((aPosition + (Normal * scale)), 1.0f);
 		gl_Position = STDprojection * STDview * model * PosL;
-        //vec4 NormalL = BoneTransform * vec4(Normal, 0.0);
-    }
+	}
 }

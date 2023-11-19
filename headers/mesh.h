@@ -62,7 +62,7 @@ public:
 	std::vector<Vertex>  vertices;
 	std::vector<GLuint>  indices;
 	std::vector<Texture> textures;
-	unsigned int VAO, VBO, EBO;
+	uint32_t VAO, VBO, EBO;
 
 	Mesh(const std::vector<Vertex>&  vertices,
 	     const std::vector<uint>&    indices,

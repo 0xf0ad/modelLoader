@@ -6,7 +6,7 @@ a program that loads 3D models
 ------------------
 
 ```bash
-git clone https://github.com/hadsitewa3r/modelLoader.git && \
+git clone https://github.com/0x48616d7a6100/modelLoader.git && \
 cd modelLoader && \
 make
 ```

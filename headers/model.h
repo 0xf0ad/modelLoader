@@ -35,9 +35,9 @@ struct stdstrequal_to{
 
 struct stdstrHash{
 	int operator()(const std::string& str) const{
-		unsigned int long value = 0;
+		uint64_t value = 0;
 
-		for(unsigned int i = 0; i != str.size(); i++)
+		for(uint32_t i = 0; i != str.size(); i++)
 			value = value * 37 + str[i];
 
 		return value;
@@ -47,7 +47,14 @@ struct stdstrHash{
 class Model {
 public:
 
+	uint32_t VAO, VBO, EBO;
+	uint32_t numMeshs = 0, numIndices = 0, numVertices = 0;
+	uint8_t  m_BoneCounter       = 1;
+	uint32_t prevMeshNumVertices = 0;
+	uint32_t prevMeshNumIndices  = 0;
+
 	std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> boneInfoMap;
+	std::vector<glm::mat4> offsets;
 
 	// constructor, expects a filepath to a 3D model.
 	Model(const char* path);
@@ -59,9 +66,9 @@ public:
 	~Model();
 
 	// draws the model, and thus all its meshes
-	void Draw(Shader &shader);
+	void Draw(Shader& shader);
+	void Draw(Shader& shader, uint32_t count);
 
 	//std::unordered_map<const char*, BoneInfo, strHash, strequal_to>& GetBoneInfoMap() const;
 	//std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& GetBoneInfoMap() const;
-	uint8_t* GetBoneCount() const;
 };

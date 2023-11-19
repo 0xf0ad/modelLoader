@@ -8,7 +8,7 @@
 class CubeMap{
 public:
 
-	unsigned int cubeMapVAO, cubeMapVBO, cubemapTexture;
+	uint32_t cubeMapVAO, cubeMapVBO, cubemapTexture;
 
 	CubeMap();
 
