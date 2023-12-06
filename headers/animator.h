@@ -1,6 +1,7 @@
 #pragma once
 
 #include <assimp/Importer.hpp>
+#include <cstdint>
 #include <glm/fwd.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/matrix.hpp>
@@ -14,6 +15,7 @@
 class Animator{
 public:
 	glm::mat4 mFinalBoneMatrices[256];
+	glm::mat4 mParentBoneMatrices[256];
 	Animation* mCurrentAnimation;
 	float mCurrentTime = 0.0f;
 	uint8_t boneNumber;
@@ -39,21 +41,19 @@ public:
 	}
 
 	void CalculateBoneTransform(const AssimpNodeData* node, const glm::mat4* parentTransform){
-		const glm::mat4* nodeTransform;
+		glm::mat4 ParentTimesNode;
 		const BoneInfo* boneInfo = node->bone;
 
 		if(boneInfo){
-			Bone* bone = mCurrentAnimation->BonesArray[boneInfo->id];
+			uint8_t boneindex = boneInfo->id;
+			Bone* bone = mCurrentAnimation->BonesArray[boneindex];
 			bone->Update(mCurrentTime);
-			nodeTransform = &bone->localTransform;
-		}else{
-			nodeTransform = &node->transformation;
-		}
-
-		glm::mat4 ParentTimesNode = mul_Mat4Mat4(*parentTransform, *nodeTransform);
-
-		if(boneInfo)
-			mFinalBoneMatrices[boneInfo->id] = mul_Mat4Mat4(ParentTimesNode, boneInfo->offset);
+			mParentBoneMatrices[boneindex] = *parentTransform;
+			ParentTimesNode = mul_Mat4Mat4(mParentBoneMatrices[boneindex], bone->localTransform);
+			mFinalBoneMatrices[boneindex] = mul_Mat4Mat4(ParentTimesNode, boneInfo->offset);
+		} else {
+			ParentTimesNode = mul_Mat4Mat4(*parentTransform, node->transformation);
+		}			
 
 		for (uint32_t i = 0; i != node->children.size(); i++)
 			CalculateBoneTransform(&node->children[i], &ParentTimesNode);

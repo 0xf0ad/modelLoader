@@ -11,8 +11,7 @@ uniform float modelsize;
 
 uniform bool animated;
 
-uniform mat4 b_Mats[125];
-uniform mat4 offsets[125];
+uniform mat4 p_Mats[125];
 mat4 BoneTransform;
 
 layout (std140) uniform VP{
@@ -21,12 +20,10 @@ layout (std140) uniform VP{
 };
 
 
-// THIS SHIYT AIYNT WORKING
-
 void main(){
 	if (!animated){
 		gl_Position = STDprojection * STDview * model * vec4(pos, modelsize);
 	}else{
-		gl_Position = STDprojection * STDview * model * b_Mats[gl_InstanceID] /* (offsets[gl_InstanceID] */ * vec4(pos, 1.0f);
+		gl_Position = STDprojection * STDview * model * p_Mats[gl_InstanceID] * vec4(pos, 1.0);
 	}
 }

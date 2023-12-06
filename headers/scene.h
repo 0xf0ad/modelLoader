@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <vector>
 #include <x86intrin.h>
 
 /* -======settings======- */
@@ -41,16 +42,19 @@ struct Scene{
 	const char* window_name;
 	uint32_t    resolution[2];
 
-	Camera*     camera;
-
-	bool        enable_depth;
-	bool        enable_culling;
-	bool        enable_blending;
-	bool        enable_stencilling;
-	bool        enable_samplling;
-	bool        enable_framebuffer;
-	bool        enable_cubemap;
-	bool        enable_vsync;
+	union{
+	struct{
+		bool    enable_depth;
+		bool    enable_culling;
+		bool    enable_blending;
+		bool    enable_stencilling;
+		bool    enable_samplling;
+		bool    enable_framebuffer;
+		bool    enable_cubemap;
+		bool    enable_vsync;
+	};
+		uint8_t flags;
+	};
 
 	uint32_t    VAO, VBO, EBO;
 
@@ -59,10 +63,13 @@ struct Scene{
 	uint32_t    texture_count;
 
 	CubeMap*    skybox;
-	Model*      models;
+	std::vector<Camera> cameras;
+	std::vector<Model>  models;
+	std::vector<Shader> shaders;
 };
 
-inline bool init();
+inline bool initwindow(Scene* scene);
+inline void addshaders(Scene* scene, uint8_t number, const char** scripts);
 inline void update();
 
 

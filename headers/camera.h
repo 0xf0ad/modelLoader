@@ -25,8 +25,8 @@ enum cameraCmd {
 // Default camera values
 #define YAW        -HALF_PI // -90.0 degrees
 #define PITCH         0.00f
-#define maxSPEED      07.5f
-#define minSPEED      02.5f
+#define maxSPEED       7.5f
+#define minSPEED       2.5f
 #define SENSITIVITY   0.25f
 #define FOV         HALF_PI //  90.0 degrees
 

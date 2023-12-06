@@ -28,7 +28,7 @@ public:
 
 	FrameBuffer(uint32_t weight, uint32_t height){
 
-		Shader shader("shaders/frmebuffervs","shaders/frmebufferfs");
+		Shader shader("shaders/framebuffer.vert","shaders/framebuffer.frag");
 		mFBOShader = &shader;
 
 		glGenFramebuffers(1, &mFBO);

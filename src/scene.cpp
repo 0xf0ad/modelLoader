@@ -5,7 +5,7 @@
 Scene* m_scene;
 
 
-inline bool init(Scene* scene){
+inline bool initwindow(Scene* scene){
 	m_scene = scene;
 	// glfw: initialize and configure
 	// ------------------------------
@@ -71,6 +71,15 @@ inline bool init(Scene* scene){
 	else
 		scene->skybox = nullptr;
 
+}
+
+
+inline bool addshaders(Scene* scene, uint8_t number, const char** scripts){
+	if (number % 2)
+		return true;
+	scene->shaders.reserve(number);
+	for (uint8_t i = 0; i < number; i += 2)
+		scene->shaders.emplace_back(scripts[i], scripts[i+1]);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

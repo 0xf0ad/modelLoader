@@ -255,15 +255,9 @@ int main(int argc, const char** argv){
 	float animespeed = 1.0f;
 	float animationplay = 0.0f; // its a boolean but its better be float to easly multiply (i know this doesnt make sense but trust me I am an engineer)
 	bool mooving = false;
+	bool renderbones = false;
 	int animIndex = 0;
-	char uniform[] = "b_Mats[   ]";
-	char boneUni[] = "offsets[   ]";
-
-	boneShader.use();
-	for (uint8_t i = 0; i != ourModel.offsets.size(); i++){
-		sprintf(boneUni, "offsets[%u]", i);
-		boneShader.setMat4(uniform, ourModel.offsets[i]);
-	}
+	char uniform[] = "b_Mats[   ]"; // bone matrices
 
 	// render loop
 	// -----------
@@ -329,8 +323,10 @@ int main(int argc, const char** argv){
 		if(ImGui::SliderFloat("model size (inverslly)", &modelsize, 0.0f, 20.0f)){
 			ourShader.use();
 			ourShader.setFloat("modelsize", modelsize);
-			boneShader.use();
-			boneShader.setFloat("modelsize", modelsize);
+			if (renderbones){
+				boneShader.use();
+				boneShader.setFloat("modelsize", modelsize);
+			}
 		}
 		ImGui::SliderFloat("Mouse Sensitivity",&camera.mMouseSensitivity, 0.0f, 1.0f);
 
@@ -372,6 +368,8 @@ int main(int argc, const char** argv){
 				LOG("animator got updated to the new animation");
 			}
 
+			ImGui::Checkbox("show bones", &renderbones);
+
 			ImGui::SliderFloat("animation speed", &animespeed, 0.0f, 10);
 			const char* astring = animationplay ? "pause" : "play";
 			if(ImGui::Button(astring))
@@ -388,8 +386,6 @@ int main(int argc, const char** argv){
 
 		ShowOverlay(&showOverlay);
 
-
-
 		// render the loaded model by setting the model transformation
 		view = camera.getViewMatrix();
 		VP.editBuffer(sizeof(glm::mat4), sizeof(glm::mat4), &view);
@@ -397,8 +393,10 @@ int main(int argc, const char** argv){
 		ourShader.use();
 		// seting uniforms
 		ourShader.setMat4("model", model);
-		boneShader.use();
-		boneShader.setMat4("model", model);
+		if (renderbones){
+			boneShader.use();
+			boneShader.setMat4("model", model);
+		}
 
 		if(mooving)
 			model = glm::rotate(model, rotDegre, AxisRot);
@@ -415,10 +413,12 @@ int main(int argc, const char** argv){
 				sprintf(uniform, "b_Mats[%u]", i);
 				ourShader.setMat4(uniform, animator->mFinalBoneMatrices[i]);
 			}
-			boneShader.use();
-			for (uint8_t i = 0; i != animator->boneNumber; i++){
-				sprintf(uniform, "b_Mats[%u]", i);
-				boneShader.setMat4(uniform, animator->mFinalBoneMatrices[i]);
+			if (renderbones){
+				boneShader.use();
+				for (uint8_t i = 1; i != animator->boneNumber; i++){
+					sprintf(uniform, "p_Mats[%u]", i);
+					boneShader.setMat4(uniform, animator->mParentBoneMatrices[i]);
+				}
 			}
 		}
 
@@ -431,8 +431,12 @@ int main(int argc, const char** argv){
 		// draw our model
 		ourShader.use();
 		ourModel.Draw(ourShader);
-		boneShader.use();
-		bonemodel.Draw(boneShader, ourModel.m_BoneCounter);
+		if (renderbones){
+			glDisable(GL_DEPTH_TEST);
+			boneShader.use();
+			bonemodel.Draw(boneShader, ourModel.m_BoneCounter - 1);
+			glEnable(GL_DEPTH_TEST);
+		}
 
 		if(outlined){
 			glDisable(GL_DEPTH_TEST);
