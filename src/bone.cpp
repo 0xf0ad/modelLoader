@@ -9,7 +9,7 @@
 #define BINARYSEARCHINDEX     true
 #define BICUBIC_INTERPOLATION true
 
-static uint numPositions, numRotations, numScalings;
+static uint32_t numPositions, numRotations, numScalings;
 extern bool G_squad;
 
 // reads keyframes from aiNodeAnim
@@ -27,17 +27,17 @@ Bone::Bone(const char* name, int ID, const aiNodeAnim* channel){
 	mRotations = (KeyRotation*) malloc(sizeof(KeyRotation[numRotations]));
 	mScales    = (KeyScale*)    malloc(sizeof(KeyScale[numScalings]));
 
-	for (uint i = 0; i != numPositions; i++){
+	for (uint32_t i = 0; i != numPositions; i++){
 		mPositions[i].position = assimpVec2glm(channel->mPositionKeys[i].mValue);
 		mPositions[i].timeStamp = channel->mPositionKeys[i].mTime;
 	}
 
-	for (uint i = 0; i != numRotations; i++){
+	for (uint32_t i = 0; i != numRotations; i++){
 		mRotations[i].orientation = assimpQuat2glm(channel->mRotationKeys[i].mValue);
 		mRotations[i].timeStamp = channel->mRotationKeys[i].mTime;
 	}
 
-	for (uint i = 0; i != numScalings; i++){
+	for (uint32_t i = 0; i != numScalings; i++){
 		mScales[i].scale = assimpVec2glm(channel->mScalingKeys[i].mValue);
 		mScales[i].timeStamp = channel->mScalingKeys[i].mTime;
 	}
@@ -70,11 +70,11 @@ inline float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float anim
 	return (animationTime - lastTimeStamp) / (nextTimeStamp - lastTimeStamp);
 }
 
-inline uint binarySearchIndex(const float animationTime, const KeyPosition* positions, uint offset, uint end){
+inline uint32_t binarySearchIndex(const float animationTime, const KeyPosition* positions, uint32_t offset, uint32_t end){
 	if(offset >= end)
 		return positions[offset].timeStamp <= animationTime ? offset+1 : offset;
 
-	uint mid = (offset + end) >> 1;
+	uint32_t mid = (offset + end) >> 1;
 	if(positions[mid].timeStamp < animationTime)
 		return binarySearchIndex(animationTime, positions, mid+1, end);
 
@@ -82,11 +82,11 @@ inline uint binarySearchIndex(const float animationTime, const KeyPosition* posi
 		return binarySearchIndex(animationTime, positions, offset, mid);
 }
 
-inline uint binarySearchIndex(const float animationTime, const KeyRotation* rotations, uint offset, uint end){
+inline uint32_t binarySearchIndex(const float animationTime, const KeyRotation* rotations, uint32_t offset, uint32_t end){
 	if(offset >= end)
 		return rotations[offset].timeStamp <= animationTime ? offset+1 : offset;
 
-	uint mid = (offset + end) >> 1;
+	uint32_t mid = (offset + end) >> 1;
 	if(rotations[mid].timeStamp < animationTime)
 		return binarySearchIndex(animationTime, rotations, mid+1, end);
 
@@ -94,11 +94,11 @@ inline uint binarySearchIndex(const float animationTime, const KeyRotation* rota
 		return binarySearchIndex(animationTime, rotations, offset, mid);
 }
 
-inline uint binarySearchIndex(const float animationTime, const KeyScale* scalings, uint offset, uint end){
+inline uint32_t binarySearchIndex(const float animationTime, const KeyScale* scalings, uint32_t offset, uint32_t end){
 	if(offset >= end)
 		return scalings[offset].timeStamp <= animationTime ? offset+1 : offset;
 
-	uint mid = (offset + end) >> 1;
+	uint32_t mid = (offset + end) >> 1;
 	if(scalings[mid].timeStamp < animationTime)
 		return binarySearchIndex(animationTime, scalings, mid+1, end);
 
@@ -109,15 +109,15 @@ inline uint binarySearchIndex(const float animationTime, const KeyScale* scaling
 
 // Gets the current index on mKeyPositions to interpolate to based on
 // the current animation time
-inline uint getIndex(const float animationTime, const KeyPosition* positions){
+inline uint32_t getIndex(const float animationTime, const KeyPosition* positions){
 
-	static uint prevResult = 0;
+	static uint32_t prevResult = 0;
 
 	if(prevResult < numPositions || animationTime > positions[prevResult].timeStamp)
 		#if BINARYSEARCHINDEX
 			prevResult = binarySearchIndex(animationTime, positions, 0, numPositions) - 1;
 		#else
-			for (uint i = 0; i != (numRotations - 1); i++){
+			for (uint32_t i = 0; i != (numRotations - 1); i++){
 				if (animationTime < rotations[i+1].timeStamp){
 					prevResult = i;
 					return i;
@@ -130,15 +130,15 @@ inline uint getIndex(const float animationTime, const KeyPosition* positions){
 
 // Gets the current index on mKeyRotations to interpolate to based on the
 // current animation time
-inline uint getIndex(const float animationTime, const KeyRotation* rotations){
+inline uint32_t getIndex(const float animationTime, const KeyRotation* rotations){
 
-	static uint prevResult = 0;
+	static uint32_t prevResult = 0;
 
 	if(prevResult < numRotations || animationTime > rotations[prevResult].timeStamp)
 		#if BINARYSEARCHINDEX
 			prevResult = binarySearchIndex(animationTime, rotations, 0, numPositions) - 1;
 		#else
-			for (uint i = 0; i != (numRotations - 1); i++){
+			for (uint32_t i = 0; i != (numRotations - 1); i++){
 				if (animationTime < rotations[i+1].timeStamp){
 					prevResult = i;
 					return i;
@@ -151,15 +151,15 @@ inline uint getIndex(const float animationTime, const KeyRotation* rotations){
 
 // Gets the current index on mKeyScalings to interpolate to based on the
 // current animation time
-inline uint getIndex(const float animationTime, const KeyScale* scales){
+inline uint32_t getIndex(const float animationTime, const KeyScale* scales){
 
-	static uint prevResult = 0;
+	static uint32_t prevResult = 0;
 
 	if(prevResult < numScalings || animationTime > scales[prevResult].timeStamp)
 		#if BINARYSEARCHINDEX
 			prevResult = binarySearchIndex(animationTime, scales, 0, numPositions) - 1;
 		#else
-			for (uint i = 0; i != (numRotations - 1); i++){
+			for (uint32_t i = 0; i != (numRotations - 1); i++){
 				if (animationTime < rotations[i+1].timeStamp){
 					prevResult = i;
 					return i;
@@ -178,7 +178,7 @@ inline const glm::mat4 interpolate(const float animationTime, const KeyPosition*
 	if (numScalings == 1)
 		return glm::translate(glm::mat4(1.0f), positions[0].position);
 
-	uint index = getIndex(animationTime, positions);
+	uint32_t index = getIndex(animationTime, positions);
 	float scalarFactor = GetScaleFactor(positions[index].timeStamp, positions[index + 1].timeStamp, animationTime);
 	result = glm::translate(glm::mat4(1.0f),mix(positions[index].position, positions[index + 1].position, scalarFactor));
 
@@ -193,7 +193,7 @@ inline const glm::mat4 interpolate(const float animationTime, const KeyRotation*
 	if (numRotations == 1)
 		return glm::toMat4(glm::normalize(rotations[0].orientation));
 
-	uint index = getIndex(animationTime, rotations);
+	uint32_t index = getIndex(animationTime, rotations);
 
 	float scalarFactor = GetScaleFactor(rotations[index].timeStamp, rotations[index + 1].timeStamp, animationTime);
 
@@ -246,7 +246,7 @@ inline const glm::mat4 interpolate(float animationTime, const KeyScale* scales){
 		return constResult;
 	}
 
-	uint index = getIndex(animationTime, scales);
+	uint32_t index = getIndex(animationTime, scales);
 	float scalarFactor = GetScaleFactor(scales[index].timeStamp, scales[index + 1].timeStamp, animationTime);
 
 	result = glm::scale(glm::mat4(1.0f), mix(scales[index].scale, scales[index+1].scale, scalarFactor));

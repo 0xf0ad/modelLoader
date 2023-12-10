@@ -39,7 +39,7 @@ static uint8_t     size_of_vertex = sizeof(Vertex);
 
 
 
-uint TextureFromFile(const char* path, const char* directory, const aiTexture* emTexture/*, bool gamma = false*/){
+uint32_t TextureFromFile(const char* path, const char* directory, const aiTexture* emTexture/*, bool gamma = false*/){
 
 	size_t strlenth = strlen(directory) + strlen(path) + 2;
 	char filename[strlenth];
@@ -167,14 +167,14 @@ void processMesh(Model* model, aiMesh* mesh, const aiScene* scene, const char* d
 		aiFace face = mesh->mFaces[i];
 		for(uint32_t j = 0; j != face.mNumIndices; j++){
 			uint32_t tmpCuzPtrs = face.mIndices[j] + model->prevMeshNumVertices;
-			glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, (((i * face.mNumIndices) + j + model->prevMeshNumIndices) * sizeof(uint)), sizeof(tmpCuzPtrs), &tmpCuzPtrs);
+			glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, (((i * face.mNumIndices) + j + model->prevMeshNumIndices) * sizeof(uint32_t)), sizeof(tmpCuzPtrs), &tmpCuzPtrs);
 		}
 	}
 
 	// process bones
 	// -------------
 	if(mesh->HasBones()){
-		for(uint boneIndex = 0; boneIndex != mesh->mNumBones; boneIndex++){
+		for(uint32_t boneIndex = 0; boneIndex != mesh->mNumBones; boneIndex++){
 			uint8_t boneID = 0;
 			aiBone* bone = mesh->mBones[boneIndex];
 			const char* boneName = bone->mName.C_Str();
@@ -191,7 +191,7 @@ void processMesh(Model* model, aiMesh* mesh, const aiScene* scene, const char* d
 			}
 			assert(boneID);
 
-			for(uint weightIndex = 0; weightIndex != mesh->mBones[boneIndex]->mNumWeights; weightIndex++){
+			for(uint32_t weightIndex = 0; weightIndex != mesh->mBones[boneIndex]->mNumWeights; weightIndex++){
 				uint32_t vertexId = bone->mWeights[weightIndex].mVertexId;
 				assert(vertexId <= (mesh->mNumVertices));
 
@@ -244,9 +244,9 @@ void processMesh(Model* model, aiMesh* mesh, const aiScene* scene, const char* d
 
 // processes a node in a recursive fashion. Processes each individual mesh located at 
 // the node and repeats this process on its children nodes (if any).
-void processNode(Model* model, aiNode *node, const aiScene *scene, uint offset, const char* dir){
+void processNode(Model* model, aiNode *node, const aiScene *scene, uint32_t offset, const char* dir){
 	// process all the node's meshes (if any)
-	uint i = offset;
+	uint32_t i = offset;
 	for(; i != (node->mNumMeshes + offset); i++)
 		processMesh(model, scene->mMeshes[node->mMeshes[i - offset]], scene, dir);
 
@@ -256,7 +256,7 @@ void processNode(Model* model, aiNode *node, const aiScene *scene, uint offset, 
 
 // get the number of meshes and indices and verices from a model and stick it into 
 // 3 variables entered by ther addresses as parametres
-void getThemAll(uint* numMeshes, uint* numIndices, uint* numVertices, aiNode* node, const aiScene* scene){
+void getThemAll(uint32_t* numMeshes, uint32_t* numIndices, uint32_t* numVertices, aiNode* node, const aiScene* scene){
 
 	*numMeshes += node->mNumMeshes;
 

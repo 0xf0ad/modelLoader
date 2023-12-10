@@ -2,6 +2,8 @@
 
 #include <assimp/material.h>
 
+#include <stdlib.h>
+#include <stdint.h>
 #include "shader.h"
 #include <vector>
 
@@ -10,6 +12,21 @@
 #define TANGENT                            false
 #define BITANGENT                          false
 #define IWANTMYIMPLEMENTATIONOFTEXTUREENUM false
+
+#ifndef _GNU_SOURCE
+inline char* strndup(const char* src, size_t size){
+	size_t len = strnlen(src, size);
+	len = len < size ? len : size;
+	char* dst = (char*)malloc(len + 1);
+
+	if (!dst)
+		return NULL;
+
+	memcpy(dst, src, len);
+	dst[len] = '\0';
+	return dst;
+}
+#endif
 
 struct Vertex {
 	// position
@@ -64,14 +81,14 @@ public:
 	std::vector<Texture> textures;
 	uint32_t VAO, VBO, EBO;
 
-	Mesh(const std::vector<Vertex>&  vertices,
-	     const std::vector<uint>&    indices,
-	     const std::vector<Texture>& textures);
+	Mesh(const std::vector<Vertex>&   vertices,
+	     const std::vector<uint32_t>& indices,
+	     const std::vector<Texture>&  textures);
 	
-	Mesh(const std::vector<uint>&    indices,
-	     const std::vector<Texture>& textures);
+	Mesh(const std::vector<uint32_t>& indices,
+	     const std::vector<Texture>&  textures);
 	
-	Mesh(const std::vector<Texture>& textures);
+	Mesh(const std::vector<Texture>&  textures);
 
 	Mesh(){
 			//printf("OMG i just allocated %zu bytes\n", sizeof(*this));

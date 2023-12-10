@@ -1,3 +1,4 @@
+#include "../headers/mesh.h"
 #include "../headers/ubo.h"
 #include <stddef.h>
 #include <string.h>

@@ -1,9 +1,9 @@
 #include "../headers/bone.h"
 #include <glm/ext/vector_float3.hpp>
 
-Mesh::Mesh(const std::vector<Vertex>&  vertices,
-           const std::vector<uint>&    indices,
-           const std::vector<Texture>& textures):
+Mesh::Mesh(const std::vector<Vertex>&   vertices,
+           const std::vector<uint32_t>& indices,
+           const std::vector<Texture>&  textures):
            vertices(vertices), indices(indices), textures(textures){
 
 
@@ -12,8 +12,8 @@ Mesh::Mesh(const std::vector<Vertex>&  vertices,
 	//setupMesh();
 }
 
-Mesh::Mesh(const std::vector<uint>&    indices,
-           const std::vector<Texture>& textures):
+Mesh::Mesh(const std::vector<uint32_t>& indices,
+           const std::vector<Texture>&  textures):
            indices(indices), textures(textures){
 
 	//printf("OMG i just allocated %zu bytes\n", sizeof(*this));

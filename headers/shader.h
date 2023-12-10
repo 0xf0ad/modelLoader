@@ -2,10 +2,8 @@
 
 #include "libs/glad/glad.h"
 #include "libs/assimp_glm_helpers.h"
-#include <cstdint>
 #include <unordered_map>
 
-#include <bits/types/FILE.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>

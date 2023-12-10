@@ -101,7 +101,7 @@ void CubeMap::drawCubeMap(){
 	glBindVertexArray(cubeMapVAO);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-	glDrawElements(GL_TRIANGLES, (sizeof(skyboxIndices) / sizeof(uint)), GL_UNSIGNED_INT, &skyboxIndices);
+	glDrawElements(GL_TRIANGLES, (sizeof(skyboxIndices) / sizeof(skyboxIndices[0])), GL_UNSIGNED_INT, &skyboxIndices);
 	glBindVertexArray(0);
 
 	glDepthFunc(GL_LESS); // set depth function back to default

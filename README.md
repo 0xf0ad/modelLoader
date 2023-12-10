@@ -11,15 +11,11 @@ cd modelLoader && \
 make
 ```
 
-or prefferebly compile with CMake
+or prefferebly compile with CMake using the build script
 
 ```bash
 cd modelLoader
-mkdir build\
-cd build\
-cmake ..
-cmake --build .
-cd ..
+./build.sh
 ```
 
 if you want to access the tool as a command from the tharminal you can add
@@ -50,11 +46,12 @@ sudo pacman -S glfw glm assimp
 ```
 
 ## using the tool
+### Linux / other UNIX-like systems
 -----------------
 you can use the tool after clonning and compiling the source code by executing
 
 ```bash
-./load [the path of 3D the model file] [the path to the animation if existed]
+./load <the path of 3D the model file> <the path to the animation if existed>
 ```
 
 if the model contain animations you can load it without them by speciffying the model path at the first argument, or with animation by re-entring the model file's path twice for example
@@ -70,11 +67,24 @@ the reason it is like that is for some files mainly .mdl and .md5 for IDteck and
 you actially can access the tool from the therminal without 'cd'ing into the git directory if you install it and you can lunch it by
 
 ```bash
-load [the path of the 3D model file] [the path to the animation if there is any]
+load <the path of the 3D model file> <the path to the animation if there is any>
 ```
 
-(for now the animation is not yat implemented so you can only view 3D models at T-Pose)
 (dont try to run the program whitout running a display server, it wont work, I tried it :) )
+
+### Windows
+installing gentoo and building this repo is far easier than building it with windows
+this is how you compile that project to windows using linux or using MinGW on windows
+
+you should first compile extenal libraries
+- glfw (download it from the official website and extract the .a file from the MinGW folder and move to /usr/x86_64-w64-mingw32/lib/ or the path to your libraries)
+- assimp (you should clone the official assimp repo and build it using MinGW(good luck doing that you will need it a lot))
+- place the assimp's dll on the same directory of you other libraries and build this project using
+```bash
+./build.sh -DCMAKE_SYSTEM_NAME=Windows
+```
+- now gather the dlls (libassimp-5.dll and libgcc_s_seh-1.dll and libstdc++-6.dll and libwinpthread-1.dll) to your local directory
+- try to run it, it may or may not work (it did for me and stopt doing that)
 
 ## keybinding
 -------------

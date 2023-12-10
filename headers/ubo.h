@@ -1,3 +1,5 @@
+#ifndef _UBO_H
+#define _UBO_H
 #include "libs/glad/glad.h"
 #include <stdint.h>
 #include <stdlib.h>
@@ -23,3 +25,4 @@ public:
 	void editBuffer(size_t offset, size_t size, void* data);
 	void freeBuffer();
 };
+#endif

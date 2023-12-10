@@ -1,5 +1,5 @@
 #include "../headers/shader.h"
-#include <cstdio>
+#include <stdio.h>
 
 #define IWASNOTCOOL         false // cuz I am cool, and i use C
 #define CACHSHADERLOCATIONS  true // idk why but it just give me worst results
@@ -39,9 +39,9 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath){
 
 	// 1 - retrieve the vertex and fragment source code from filepath
 	// --------------------------------------------------------------
-	char *vertexCode,   *fragmentCode;
-	FILE *v_ShaderFile, *f_ShaderFile;
-	uint  v_StreamSize,  f_StreamSize;
+	char     *vertexCode,   *fragmentCode;
+	FILE     *v_ShaderFile, *f_ShaderFile;
+	uint32_t v_StreamSize,  f_StreamSize;
 
 	// open file
 	v_ShaderFile = fopen(vertexPath  , "r");
