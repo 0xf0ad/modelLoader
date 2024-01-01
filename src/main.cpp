@@ -370,7 +370,7 @@ int main(int argc, const char** argv){
 
 			ImGui::Checkbox("show bones", &renderbones);
 
-			ImGui::SliderFloat("animation speed", &animespeed, 0.0f, 10);
+			ImGui::SliderFloat("animation speed", &animespeed, -10.0f, 10.0f);
 			const char* astring = animationplay ? "pause" : "play";
 			if(ImGui::Button(astring))
 				animationplay = animationplay == 1.0f ? 0.0f : 1.0f;

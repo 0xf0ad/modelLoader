@@ -29,6 +29,7 @@ public:
 	void UpdateAnimation(float dt, float speed){
 		if (mCurrentAnimation){
 			mCurrentTime += mCurrentAnimation->mTicksPerSecond * dt * speed;
+			mCurrentTime += mCurrentAnimation->mDuration * (mCurrentTime < 0);
 			mCurrentTime = fmodf(mCurrentTime, mCurrentAnimation->mDuration);
 			glm::mat4 rootNode(1.0f);
 			CalculateBoneTransform(&mCurrentAnimation->mRootNode, &rootNode);
