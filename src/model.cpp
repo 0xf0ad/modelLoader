@@ -34,8 +34,7 @@ static uint8_t     size_of_vertex = sizeof(Vertex);
 	aiComponent_TANGENTS_AND_BITANGENTS |\
 	aiComponent_COLORS                  |\
 	aiComponent_LIGHTS                  |\
-	aiComponent_CAMERAS                 |\
-	aiComponent_ANIMATIONS
+	aiComponent_CAMERAS
 
 
 
@@ -44,6 +43,11 @@ uint32_t TextureFromFile(const char* path, const char* directory, const aiTextur
 	size_t strlenth = strlen(directory) + strlen(path) + 2;
 	char filename[strlenth];
 	snprintf(filename, strlenth, "%s/%s", directory, path);
+
+	for(size_t i = 0; i != strlenth; i++)
+		if(filename[i] == '\\')
+			filename[i] = '/';
+
 	printf("load texture : %s\n", filename);
 
 	uint32_t textureID;
@@ -51,7 +55,7 @@ uint32_t TextureFromFile(const char* path, const char* directory, const aiTextur
 
 	int width, height, nrComponents;
 	uint8_t* data;
-	
+
 	// check if the texture is embedded on the model file
 	if(!emTexture)
 		data = stbi_load(filename, &width, &height, &nrComponents, 0);
@@ -60,17 +64,12 @@ uint32_t TextureFromFile(const char* path, const char* directory, const aiTextur
 		                           &width, &height, &nrComponents, 0);
 
 	if(data){
-		GLenum format;
-		if (nrComponents == 1)
-			format = GL_RED;
-		else if (nrComponents == 3)
-			format = GL_RGB;
-		else if (nrComponents == 4)
-			format = GL_RGBA;
-		else{
+		GLenum format = GL_FALSE;
+		GLenum formats[4] = {GL_RED, GL_FALSE, GL_RGB, GL_RGBA};
+		if(nrComponents < 5)
+			format = formats[nrComponents - 1];
+		else
 			fprintf(stderr, "texture: \"%s\" has %d component which is invalid\n", filename, nrComponents);
-			format = GL_FALSE;
-		}
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
 		glBindTexture(GL_TEXTURE_2D, textureID);
@@ -80,7 +79,7 @@ uint32_t TextureFromFile(const char* path, const char* directory, const aiTextur
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	}else{
+	} else {
 		fprintf(stderr, "Texture failed to load at path: %s\n\t%s |/| %s\n%p\n", filename, directory, path, emTexture);
 	}
 
@@ -292,6 +291,9 @@ void loadModel(Model* model, const char* path){
 	uint32_t size_of_the_element_buffer_in_bytes = model->numIndices  * size_of_vertex;
 	printf("first vertexNumber = %d\nfirst indexNumber = %d\n", model->numVertices, model->numIndices);
 
+	model->hasAnimation = scene->HasAnimations();
+
+
 	glGenVertexArrays(true, &model->VAO);
 	glGenBuffers(true, &model->VBO);
 	glGenBuffers(true, &model->EBO);
@@ -390,15 +392,7 @@ void Model::Draw(Shader &shader, uint32_t count){
 
 	glActiveTexture(GL_TEXTURE0);
 }
-
 Model::~Model(){
-	
-	/*for(auto iter : boneInfoMap)
-		iter.second;
-
-	boneInfoMap.clear();*/
-	//printf("Allo, i there an one ?, %d\n", boneInfoMap.size());
 }
-
 //std::unordered_map<const char*, BoneInfo, strHash, strequal_to>& Model::GetBoneInfoMap() const { return boneInfoMap; }
 //std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to>& Model::GetBoneInfoMap() const { return boneInfoMap; }

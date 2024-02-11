@@ -33,6 +33,4 @@ void ubo::editBuffer(size_t offset, size_t size, void* data){
 
 void ubo::freeBuffer(){
 	bufferSize = 0;
-	//free(buffer);
-	//buffer = nullptr;
 }

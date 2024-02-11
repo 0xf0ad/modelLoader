@@ -1,7 +1,5 @@
 TODO : optimize things
-TODO : visualize bones when animated
 TODO : select the model loaded from GUI
-TODO : release compiled binary for windows OS
 TODO : add level loader (maybe and a external map editor)
 TODO : add a TODO list
 TODO : add telemetry and back doors to windows binary so i can spy on them and sell there DATA

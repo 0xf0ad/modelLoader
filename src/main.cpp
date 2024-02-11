@@ -58,6 +58,7 @@ static bool ShowCordDialog(bool* p_open, glm::vec3 *AxisRot, float *rotDegre);
 int main(int argc, const char** argv){
 	bool animated = true;
 	bool showOverlay = true;
+	bool hasAnimation = true;
 
 	// check for number of arguments
 	if(argc == 1){
@@ -67,6 +68,8 @@ int main(int argc, const char** argv){
 		animated = false;
 	}
 
+	const char* animationPath = animated ? argv[2] : argv[1];
+	animated = false;
 
 	unsigned long long initCycleID, finishCylceID, cyclesDiffrence;
 
@@ -200,20 +203,6 @@ int main(int argc, const char** argv){
 
 	Animation *animation;
 	Animator  *animator;
-
-	/*if(ourModel.loadAnim()){
-		animation = (Animation*) ourModel.loadAnim();
-		LOG("animation got loaded from model");
-		animator  = new Animator(animation);
-		LOG("animator got created from model");
-	}else*/ if (animated){
-		animation = new Animation(argv[2], &ourModel);
-		LOG("animation got loaded");
-		animator  = new Animator(animation);
-		animator->PlayAnimation(animation);
-		animator->mCurrentTime=0.0f;
-		LOG("animator got created");
-	}
 
 	ourShader.use();
 	ourShader.setBool("animated", animated);
@@ -357,12 +346,34 @@ int main(int argc, const char** argv){
 		if (ImGui::Button("apply V-Sync"))
 			glfwSwapInterval(V_Sync);
 
+		if(ourModel.hasAnimation){
+			if(ImGui::Checkbox("animate", &animated)){
+				if(animated){
+					animation = new Animation(animationPath, &ourModel);
+					LOG("new animation got allocatedhh");
+					animator  = new Animator(animation);
+					animator->PlayAnimation(animation);
+					animator->mCurrentTime=0.0f;
+					LOG("animator got createdhh");
+				} else {
+					delete animation;
+					delete animator;
+				}
+				ourShader.use();
+				ourShader.setBool("animated", animated);
+				boneShader.use();
+				boneShader.setBool("animated", animated);
+				outLiner.use();
+				outLiner.setBool ("animated", animated);
+			}
+		}
+
 
 		if(animated){
 			if(ImGui::Combo("animations", &animIndex, animation->mAnimationsNames, animation->mNumAnimations)){
 				delete animation;
 				LOG("animation got deleted");
-				animation = new Animation(argv[2], &ourModel, animIndex);
+				animation = new Animation(animationPath, &ourModel, animIndex);
 				LOG("new animation got allocated");
 				animator->PlayAnimation(animation);
 				LOG("animator got updated to the new animation");

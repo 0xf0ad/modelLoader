@@ -52,6 +52,7 @@ public:
 	uint8_t  m_BoneCounter       = 1;
 	uint32_t prevMeshNumVertices = 0;
 	uint32_t prevMeshNumIndices  = 0;
+	bool hasAnimation = false;
 
 	std::unordered_map<std::string, BoneInfo, stdstrHash, stdstrequal_to> boneInfoMap;
 	std::vector<glm::mat4> offsets;
