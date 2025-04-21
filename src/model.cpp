@@ -328,18 +328,6 @@ void loadModel(Model* model, const char* path){
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, size_of_vertex, (void*)(offsetof(Vertex, TexCoords)));
 
-	#if false
-	// vertex tangent
-	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeofVertex, (void*)offsetof(Vertex, Tangent));
-	#endif
-
-	#if false
-	// vertex bitangent
-	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeofVertex, (void*)offsetof(Vertex, Bitangent));
-	#endif
-
 	// material id used by the vertx
 	glEnableVertexAttribArray(3);
 	glVertexAttribIPointer(3, 1, GL_UNSIGNED_BYTE , size_of_vertex, (void*)(offsetof(Vertex, textureIndex)));

@@ -12,7 +12,6 @@ uniform float modelsize;
 uniform bool animated;
 
 uniform mat4 p_Mats[125];
-mat4 BoneTransform;
 
 layout (std140) uniform VP{
 	mat4 STDprojection;

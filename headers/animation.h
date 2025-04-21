@@ -79,7 +79,7 @@ public:
 			fprintf(stderr, "pre-processor did not complet\n");
 		}
 		if(!scene->HasAnimations()){
-			fprintf(stderr, "that path doesn't have animations\n");
+			fprintf(stderr, "the file %s path doesn't have animations\n", animationPath);
 			return;
 		}
 
@@ -90,7 +90,6 @@ public:
 		// reserve the number of bones to the hashed map and the bones vector(dynamic array)
 		boneNum = model->m_BoneCounter - 1;
 		printf("numBones : %d\n", boneNum);
-		//mBones.reserve(boneNum);
 		BonesArray = (Bone**) malloc(sizeof(Bone[boneNum+1]));
 		mBoneInfoMap = &model->boneInfoMap;
 		mBoneInfoMap->reserve(boneNum);

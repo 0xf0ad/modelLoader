@@ -62,7 +62,6 @@ Bone::~Bone(){
 	free(mPositions);
 	free(mRotations);
 	free(mScales);
-	printf("i am being called, do rly u expect me to answer ?");
 }
 
 // Gets normalized value for Lerp & Slerp

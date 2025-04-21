@@ -9,13 +9,11 @@
 #include "../headers/camera.h"
 #include "../headers/animator.h"
 #include <GLFW/glfw3.h>
-#include <cstdint>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <x86intrin.h>
 
 /* -======settings======- */
 int WIN_WIDTH   =                 1280;     // window width
@@ -142,35 +140,12 @@ int main(int argc, const char** argv){
 
 	// build and compile shaders
 	// -------------------------
-	initCycleID = __rdtsc();
 	Shader ourShader("shaders/main.vert", "shaders/main.frag");
-	finishCylceID = __rdtsc();
-	cyclesDiffrence = finishCylceID - initCycleID;
-
-
-	printf("%llu\tticks on shader 1\n", cyclesDiffrence);
-	
-	initCycleID = __rdtsc();
 	Shader boneShader("shaders/bone.vert", "shaders/bone.frag");
-	finishCylceID = __rdtsc();
-	cyclesDiffrence = finishCylceID - initCycleID;
-	printf("%llu\tticks on shader 4\n", cyclesDiffrence);
-
-	initCycleID = __rdtsc();
 	Shader outLiner("shaders/outliner.vert", "shaders/outliner.frag");
-	finishCylceID = __rdtsc();
-	cyclesDiffrence = finishCylceID - initCycleID;
-
-	printf("%llu\tticks on shader 2\n", cyclesDiffrence);
-
-	initCycleID = __rdtsc();
 	#if IWANNAASKYBOX
 	Shader skyBoxShader("shaders/skybox.vert", "shaders/skybox.frag");
 	#endif
-	finishCylceID = __rdtsc();
-	cyclesDiffrence = finishCylceID - initCycleID;
-
-	printf("%llu\tticks on shader 3\n", cyclesDiffrence);
 
 	ubo VP = ubo("VP", 2 * sizeof(glm::mat4));
 	VP.bind(0);
@@ -190,16 +165,12 @@ int main(int argc, const char** argv){
 
 	// load models
 	// -----------
-	initCycleID = __rdtsc();
 
 	Model ourModel(argv[1]);
 	Model bonemodel("models/assets/bone.obj");
 
-	finishCylceID = __rdtsc();
 	LOG("model got loaded");
 	cyclesDiffrence = finishCylceID - initCycleID;
-
-	printf("%llu\tticks on loading model\n", cyclesDiffrence);
 
 	Animation *animation;
 	Animator  *animator;
@@ -226,7 +197,6 @@ int main(int argc, const char** argv){
 	bool cullFace            = true;
 	bool wireFrame           = false;
 	bool V_Sync              = false;
-	//float f                = 0.0f;
 	float scale              = 0.0f;
 	ImVec4 clear_color = ImVec4(0.2f, 0.3f, 0.3f, 1.0f);
 
@@ -376,7 +346,7 @@ int main(int argc, const char** argv){
 				animation = new Animation(animationPath, &ourModel, animIndex);
 				LOG("new animation got allocated");
 				animator->PlayAnimation(animation);
-				LOG("animator got updated to the new animation");
+				LOG("new animation is now playing");
 			}
 
 			ImGui::Checkbox("show bones", &renderbones);

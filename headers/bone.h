@@ -2,9 +2,10 @@
 
 #include "model.h"
 #include "libs/assimp_glm_helpers.h"
-#include <glm/gtx/quaternion.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+
 #define BONENAME true
 
 struct KeyPosition{

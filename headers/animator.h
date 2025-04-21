@@ -1,7 +1,6 @@
 #pragma once
 
 #include <assimp/Importer.hpp>
-#include <cstdint>
 #include <glm/fwd.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/matrix.hpp>
@@ -19,7 +18,7 @@ public:
 	Animation* mCurrentAnimation;
 	float mCurrentTime = 0.0f;
 	uint8_t boneNumber;
-	
+
 	Animator(Animation* animation){
 		boneNumber = animation->boneNum + 1;
 		printf("boneNum %d\n", boneNumber);
