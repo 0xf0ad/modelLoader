@@ -5,7 +5,6 @@
 *.slo
 *.lo
 *.o
-*.obj
 
 # Precompiled Headers
 *.gch
@@ -35,8 +34,7 @@
 .vscode/
 bin/
 build/
-models/boblamp/
-modelLoader/
+test/
 
 # custom files i dont want to share
 run.sh
