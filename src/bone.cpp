@@ -35,7 +35,6 @@ Bone::Bone(const char* name, int ID, const aiNodeAnim* channel){
 	for (uint32_t i = 0; i != numRotations; i++){
 		mRotations[i].orientation = assimpQuat2glm(channel->mRotationKeys[i].mValue);
 		mRotations[i].timeStamp = channel->mRotationKeys[i].mTime;
-		printf("%i\t%f\n", i, channel->mRotationKeys[i].mTime);
 	}
 
 	for (uint32_t i = 0; i != numScalings; i++){
@@ -134,7 +133,6 @@ inline uint32_t getIndex(const float animationTime, const KeyRotation* rotations
 	if(prevResult < numRotations || animationTime > rotations[prevResult].timeStamp){
 		#if BINARYSEARCHINDEX
 			prevResult = binarySearchIndex(animationTime, rotations, 0, numRotations) - 1;
-			//printf("ind: %d\t%f\n", prevResult, animationTime);
 		#else
 			for (uint32_t i = 0; i != (numRotations - 1); i++){
 				if (animationTime < rotations[i+1].timeStamp){

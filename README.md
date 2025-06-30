@@ -8,17 +8,17 @@ a program that loads 3D models
 ```bash
 git clone https://github.com/0xf0ad/modelLoader.git && \
 cd modelLoader && \
-make
-```
-
-or prefferebly compile with CMake using the build script
-
-```bash
-cd modelLoader
 ./build.sh
 ```
 
-if you want to access the tool as a command from the tharminal you can add
+as a last result (might not work) compile with make
+
+```bash
+cd modelLoader
+make
+```
+
+if you want to access the tool as a command from the terminal you can add
 
 ```bash
 sudo make install
@@ -57,8 +57,8 @@ you can use the tool after clonning and compiling the source code by executing
 if the model contain animations you can load it without them by speciffying the model path at the first argument, or with animation by re-entring the model file's path twice for example
 
 ```bash
-./load ~/Documents/a_guy_running.fbx #to load the 3D model without animations
-./load ~/Documents/a_guy_running.fbx ~/Documents/a_guy_running.fbx #to load the 3D model with their animating
+./load a_guy_running.fbx
+./load a_guy_running.md5mesh a_guy_running.md5anim #if the mesh and animation existe on seprate files, make sure to specify the mesh file first and animation one thereafter
 ```
 
 the reason it is like that is for some files mainly .mdl and .md5 for IDteck and GldSrc and Source engines separate the 3D models and animations on several files
@@ -67,10 +67,8 @@ the reason it is like that is for some files mainly .mdl and .md5 for IDteck and
 you actially can access the tool from the therminal without 'cd'ing into the git directory if you install it and you can lunch it by
 
 ```bash
-load <the path of the 3D model file> <the path to the animation if there is any>
+load <mesh file> <animation file>
 ```
-
-(dont try to run the program whitout running a display server, it wont work, I tried it :) )
 
 ### Windows
 installing gentoo and building this repo is far easier than building it with windows
