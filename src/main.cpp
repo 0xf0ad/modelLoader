@@ -167,7 +167,7 @@ int main(int argc, const char** argv){
 	// -----------
 
 	Model ourModel(argv[1]);
-	Model bonemodel("models/assets/bone.obj");
+	Model bonemodel("assets/bone.obj");
 
 	LOG("model got loaded");
 	cyclesDiffrence = finishCylceID - initCycleID;

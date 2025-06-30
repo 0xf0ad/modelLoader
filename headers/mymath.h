@@ -35,7 +35,7 @@ inline const glm::quat mix(const glm::quat& a, const glm::quat& b, const float t
 	return result;
 }
 
-inline const glm::quat inverse (const glm::quat& q){
+inline const glm::quat inverse(const glm::quat& q){
 	return glm::quat((q.w), -(q.x), -(q.y), -(q.z));
 }
 
@@ -125,8 +125,6 @@ inline glm::mat4 mul_Mat4Mat4(const glm::mat4& m1, const glm::mat4& m2) {
 
 	glm::mat4 result;
 	__m128 row;
-	//const float* mat1 = &(*m2)[0][0];
-	//const float* mat2 = &(*m2)[0][0];
 	__m128 colum0 = _mm_loadu_ps(&(m1)[0][0]);
 	__m128 colum1 = _mm_loadu_ps(&(m1)[1][0]);
 	__m128 colum2 = _mm_loadu_ps(&(m1)[2][0]);
