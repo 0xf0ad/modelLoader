@@ -42,7 +42,7 @@ if animations are embeded into the model file, animations could be loaded sepera
 
 ### Windows
 installing gentoo and building this repo is far easier than building it with windows
-this is how you compile that project to windows using linux or using MinGW on windows
+this is how you compile that project to windows from linux or using MinGW on windows
 
 you should first compile extenal libraries
 - glfw (download it from the official website and extract the .a file from the MinGW folder and move to /usr/x86_64-w64-mingw32/lib/ or the path to your libraries)
@@ -51,8 +51,8 @@ you should first compile extenal libraries
 ```bash
 ./build.sh -DCMAKE_SYSTEM_NAME=Windows
 ```
-- now gather the dlls (libassimp-5.dll and libgcc_s_seh-1.dll and libstdc++-6.dll and libwinpthread-1.dll) to your local directory
-- try to run it, it may or may not work (it did for me and stopt doing that)
+- gather the DLLs (libassimp-5.dll and libgcc_s_seh-1.dll and libstdc++-6.dll and libwinpthread-1.dll) to your local directory
+- it now may or may not work
 
 ## keybinding
 -------------
@@ -68,8 +68,6 @@ you should first compile extenal libraries
 |ESCAPE                |exit the application       |
 
 you can change the binding by modifying the souce code (suckless phelo) by modifing the processInput function on the bottom of main.cpp
-
-(I propably i will emplement the UI, and when I do I will remove some keyBindings) 
 
 ## file extetion supported
 --------------------------
@@ -115,8 +113,8 @@ you can change the binding by modifying the souce code (suckless phelo) by modif
 ## library used
 
 * glad : a library to load OpenGL (http://glad.dav1d.de/)
-* glfw : a firmware to commenicate with the graphics card driver (https://www.glfw.org/)
-* glm : a library that support leniar algebra (https://glm.g-truc.net/)
+* glfw : a firmware to communicate with the graphics card driver (https://www.glfw.org/)
+* glm : a linear algebra library (https://glm.g-truc.net/)
 * stb_image : a library to load images with variaus formats (https://github.com/nothings/stb/)
 * assimp : a library to load 3D models with variaus formats (https://github.com/assimp/assimp/)
 * ImGui : a library to reander a Graphical User Interface (https://github.com/ocornut/imgui/)
