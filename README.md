@@ -1,8 +1,12 @@
 # modelLoader
-a program that loads 3D models 
+loads and displays 3D models and their respective skeletal animations
 =======
 
-## clonig the repo
+![GIF](lol.gif)
+
+Figure 1 : zombie model from Half-Life
+
+## clonig and building the repo
 ------------------
 
 ```bash
@@ -11,35 +15,10 @@ cd modelLoader && \
 ./build.sh
 ```
 
-as a last result (might not work) compile with make
-
-```bash
-cd modelLoader
-make
-```
-
-if you want to access the tool as a command from the terminal you can add
-
-```bash
-sudo make install
-```
-
-after you install the tool you or done with it if didn't install it you can clean the directory from binaries that way you can recompile it if you want to re-use it and cleanning up will not uninstall the tool from your computer if you installed it
-
-```bash
-make clean
-```
-
-if you installed it and want to uninstall it you can do that by executing
-
-```bash
-sudo rm /usr/bin/load
-```
-
 ### dependencies
 ----------------
 
-the repo is dependent on some librarys you should install from your package manager,those librarys are GLFW GLM Assimp on arch linux you can execute the folling command to install them
+the repo is dependent on some libraries you should install from your package manager, those libraries are GLFW, GLM and Assimp on arch linux you can execute the folling command and you'll be good to go
 
 ```bash
 sudo pacman -S glfw glm assimp
@@ -48,26 +27,17 @@ sudo pacman -S glfw glm assimp
 ## using the tool
 ### Linux / other UNIX-like systems
 -----------------
-you can use the tool after clonning and compiling the source code by executing
+you can use the tool after clonning and compiling the repo by executing
 
 ```bash
-./load <the path of 3D the model file> <the path to the animation if existed>
+./load <the path of 3D the model file> <the path to the animation if it existes>
 ```
 
-if the model contain animations you can load it without them by speciffying the model path at the first argument, or with animation by re-entring the model file's path twice for example
+if animations are embeded into the model file, animations could be loaded seperatly from runtime
 
 ```bash
 ./load a_guy_running.fbx
 ./load a_guy_running.md5mesh a_guy_running.md5anim #if the mesh and animation existe on seprate files, make sure to specify the mesh file first and animation one thereafter
-```
-
-the reason it is like that is for some files mainly .mdl and .md5 for IDteck and GldSrc and Source engines separate the 3D models and animations on several files
-
-
-you actially can access the tool from the therminal without 'cd'ing into the git directory if you install it and you can lunch it by
-
-```bash
-load <mesh file> <animation file>
 ```
 
 ### Windows
